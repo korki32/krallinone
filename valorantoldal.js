@@ -41,7 +41,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function drawWheel() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        agents.forEach((agent, index) => {
+        const activeAgents = agents.filter(agent => !agent.excluded);
+        const angleStep = (2 * Math.PI) / activeAgents.length;
+
+        activeAgents.forEach((agent, index) => {
             const angle = index * angleStep;
             ctx.beginPath();
             ctx.moveTo(radius, radius);
@@ -79,8 +82,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 requestAnimationFrame(animate);
             } else {
                 spinning = false; // Megállítjuk a pörgetést
+                const activeAgents = agents.filter(agent => !agent.excluded);
                 const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
-                const winner = agents[winnerIndex];
+                const winner = activeAgents[winnerIndex];
                 resultDisplay.textContent = `Az új agent: ${winner.name}`;
             }
         }
