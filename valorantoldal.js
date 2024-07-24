@@ -29,9 +29,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const canvas = document.getElementById('wheel');
     const ctx = canvas.getContext('2d');
     const spinButton = document.getElementById('spin');
-    const resultDisplay = document.getElementById('result');
-    const indicator = document.getElementById('indicator');
-
+    const spinSound = document.getElementById('spin-sound');
+    const stopSound = document.getElementById('stop-sound');
+    
     const radius = canvas.width / 2;
     let currentAngle = 0;
     let spinning = false; // Állapot a kerék pörgetéséhez
@@ -80,12 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 requestAnimationFrame(animate);
             } else {
                 spinning = false; // Megállítjuk a pörgetést
-                const activeAgents = agents.filter(agent => !agent.excluded);
-                const angleStep = (2 * Math.PI) / activeAgents.length;
-                const normalizedAngle = (2 * Math.PI - (currentAngle % (2 * Math.PI))) % (2 * Math.PI);
-                const winnerIndex = Math.floor(normalizedAngle / angleStep) % activeAgents.length;
-                const winner = activeAgents[winnerIndex];
-                resultDisplay.textContent = `Az új agent: ${winner.name}`;
+                stopSound.play(); // Lejátszuk a megállási hangot
             }
         }
 
@@ -117,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (spinning) return; // Ha már pörög a kerék, ne indítsunk el új pörgetést
 
         spinning = true; // Elindítjuk a pörgetést
+        spinSound.play(); // Lejátszuk a pörgetési hangot
         const fastSpinAngle = Math.random() * 2 * Math.PI + 5 * Math.PI; // Gyors pörgetés szöge
         const fastSpinDuration = 2000; // Gyors pörgetés 2 másodperc alatt
         spinWheel(fastSpinAngle, fastSpinDuration);
