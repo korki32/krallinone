@@ -61,27 +61,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function spinWheel(spinAngle, spinDuration) {
         const startTime = Date.now();
+        const initialAngle = currentAngle;
 
         function animate() {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / spinDuration, 1);
-            currentAngle += spinAngle * progress;
+            currentAngle = initialAngle + spinAngle * progress;
             drawWheel();
-            indicator.style.transform = `rotate(${(currentAngle % (2 * Math.PI))}rad)`;
+            indicator.style.transform = `rotate(${currentAngle % (2 * Math.PI)}rad)`;
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                if (spinDuration === 6000) {
-                    // Oldal betöltésekor történő forgatás
-                    const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
-                    const winner = agents[winnerIndex];
-                    resultDisplay.textContent = `Kezdő agent: ${winner.name}`;
-                } else {
-                    // Manuális pörgetés
-                    const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
-                    const winner = agents[winnerIndex];
-                    resultDisplay.textContent = `Az új agent: ${winner.name}`;
-                }
+                const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
+                const winner = agents[winnerIndex];
+                resultDisplay.textContent = `Az új agent: ${winner.name}`;
             }
         }
 
@@ -91,7 +84,9 @@ document.addEventListener('DOMContentLoaded', function () {
     drawWheel();
 
     // Oldal betöltésekor automatikus pörgetés
-    spinWheel(Math.random() * 2 * Math.PI + 5 * Math.PI, 6000);
+    setTimeout(() => {
+        spinWheel(Math.random() * 2 * Math.PI + 5 * Math.PI, 6000);
+    }, 1000); // 1 másodperc késleltetés az oldal betöltése után
 
     spinButton.addEventListener('click', function () {
         spinWheel(Math.random() * 2 * Math.PI + 5 * Math.PI, 2000); // Manuális pörgetés 2 másodperc alatt
