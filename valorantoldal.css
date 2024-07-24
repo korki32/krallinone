@@ -85,12 +85,15 @@ footer {
     width: 100px;
     height: 100px;
     border-radius: 10px;
-    border: 2px solid #fff;
+    border: 2px solid green;
 }
 .agent p {
     color: #fff;
 }
-
+.agent img.inactive {
+    border-color: red;
+    filter: grayscale(100%);
+}
 /* Pörgető kerék */
 .wheel-container {
     text-align: center;
