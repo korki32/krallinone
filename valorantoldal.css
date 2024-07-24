@@ -70,15 +70,19 @@ footer {
     border: 2px solid #fff;
     border-radius: 50%;
     background: #000;
+    width: 300px;
+    height: 300px;
     position: relative;
 }
 
 #indicator {
     position: absolute;
-    top: -20px; /* Adjust this value to position the arrow correctly */
+    top: -30px; /* Adjust this value to position the arrow correctly */
     left: 50%;
     transform: translateX(-50%);
     font-size: 24px;
     color: #fff;
     z-index: 10;
+    width: 20px;
+    text-align: center;
 }
