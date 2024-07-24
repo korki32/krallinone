@@ -58,39 +58,39 @@ footer {
 }
 
 /* Agentek*/
+.agent-class {
+    margin: 20px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    text-align: center;
+}
+.agent-class img.icon {
+    width: 50px;
+    height: 50px;
+}
+.agent-class h2 {
+    color: #fff;
+}
+.agent-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+.agent {
+    text-align: center;
+}
+.agent img {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    border: 2px solid #fff;
+}
+.agent p {
+    color: #fff;
+}
 
-     .agent-class {
-            margin: 20px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 10px;
-            text-align: center;
-        }
-        .agent-class img.icon {
-            width: 50px;
-            height: 50px;
-        }
-        .agent-class h2 {
-            color: #fff;
-        }
-        .agent-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-        }
-        .agent {
-            text-align: center;
-        }
-        .agent img {
-            width: 100px;
-            height: 100px;
-            border-radius: 10px;
-            border: 2px solid #fff;
-        }
-        .agent p {
-            color: #fff;
-        }
 /* Pörgető kerék */
 .wheel-container {
     text-align: center;
