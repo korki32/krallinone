@@ -70,6 +70,7 @@ footer {
     border: 2px solid #fff;
     border-radius: 50%;
     background: #000;
+    position: relative;
 }
 
 #indicator {
