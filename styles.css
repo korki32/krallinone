@@ -57,6 +57,6 @@ footer {
 
 /* Valorant oldal stílusok */
 body.valorant {
-    background: url('images/valorantbackground.jpg') no-repeat center center fixed;
+    background: url('images/valorantbackground.jpg')
     background-size: cover;
 }
