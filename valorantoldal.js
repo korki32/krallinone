@@ -68,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const progress = Math.min(elapsed / spinDuration, 1);
             currentAngle = initialAngle + spinAngle * progress;
             drawWheel();
-            indicator.style.transform = `rotate(${currentAngle % (2 * Math.PI)}rad)`;
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
