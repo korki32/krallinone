@@ -75,32 +75,10 @@ footer {
 
 #indicator {
     position: absolute;
-    top: -30px;
+    top: -20px; /* Adjust this value to position the arrow correctly */
     left: 50%;
     transform: translateX(-50%);
     font-size: 24px;
     color: #fff;
-}
-
-#spin {
-    background: #ff5722;
-    border: none;
-    padding: 10px 20px;
-    color: #fff;
-    font-size: 16px;
-    text-decoration: none;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    display: inline-block;
-    margin-top: 20px;
-}
-
-#spin:hover {
-    background: #e64a19;
-}
-
-#result {
-    color: #fff;
-    margin-top: 20px;
+    z-index: 10;
 }
