@@ -7,6 +7,8 @@ body {
     min-height: 100vh;
     background: linear-gradient(to right, #f8cdda, #1f4037);
     color: #fff;
+    background: url('images/valorant/valorant_background.jpg') no-repeat center center fixed;
+    background-size: cover;
 }
 
 header {
@@ -55,6 +57,40 @@ footer {
     padding: 10px;
 }
 
+/* Agentek*/
+
+     .agent-class {
+            margin: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            text-align: center;
+        }
+        .agent-class img.icon {
+            width: 50px;
+            height: 50px;
+        }
+        .agent-class h2 {
+            color: #fff;
+        }
+        .agent-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .agent {
+            text-align: center;
+        }
+        .agent img {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            border: 2px solid #fff;
+        }
+        .agent p {
+            color: #fff;
+        }
 /* Pörgető kerék */
 .wheel-container {
     text-align: center;
