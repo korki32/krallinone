@@ -117,4 +117,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const fastSpinDuration = 2000; // Gyors pörgetés 2 másodperc alatt
         spinWheel(fastSpinAngle, fastSpinDuration);
     });
+
+    // Agent képek kattintás eseménykezelése
+    const agentElements = document.querySelectorAll('.agent img');
+    agentElements.forEach((img, index) => {
+        img.addEventListener('click', function () {
+            img.classList.toggle('inactive'); // Inaktív/aktív állapot kapcsolása
+            if (img.classList.contains('inactive')) {
+                // Agent eltávolítása a listából
+                agents[index].excluded = true;
+            } else {
+                // Agent visszahelyezése a listába
+                delete agents[index].excluded;
+            }
+            drawWheel(); // Újra rajzoljuk a kereket az aktuális agent listával
+        });
+    });
 });
