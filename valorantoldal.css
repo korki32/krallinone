@@ -67,9 +67,9 @@ footer {
 }
 
 #wheel {
-    width: 400px; /* Adjust according to your size */
-    height: 400px; /* Adjust according to your size */
-    border: 3px solid #fff;
+    width: 500px; /* Adjust according to your size */
+    height: 500px; /* Adjust according to your size */
+    border: 2px solid #fff;
     border-radius: 50%;
     background: #000;
     position: relative;
@@ -78,7 +78,7 @@ footer {
 
 #indicator {
     position: absolute;
-    top: -30px; /* Adjust this value to position the arrow correctly */
+    top: -50px; /* Adjust this value to position the arrow correctly */
     left: 50%;
     transform: translateX(-50%);
     font-size: 24px;
