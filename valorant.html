@@ -9,32 +9,13 @@
         body {
             background: url('images/valorant/valorant_background.jpg') no-repeat center center fixed;
             background-size: cover;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-        header {
-            text-align: center;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
-        }
-        .content {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            padding: 20px;
         }
         .agent-class {
-            flex: 1 1 calc(50% - 40px); /* Adjust to fit two classes per row */
-            max-width: calc(50% - 40px);
             margin: 20px;
             padding: 20px;
             background: rgba(0, 0, 0, 0.7);
             border-radius: 10px;
             text-align: center;
-            box-sizing: border-box;
         }
         .agent-class img.icon {
             width: 50px;
@@ -77,18 +58,6 @@
         .button:hover {
             background: #e64a19;
         }
-        footer {
-            text-align: center;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
-        }
-        @media (max-width: 768px) {
-            .agent-class {
-                flex: 1 1 100%; /* Full width on smaller screens */
-                max-width: 100%;
-            }
-        }
     </style>
 </head>
 <body>
@@ -96,7 +65,7 @@
         <h1>Valorant Agent Wheel</h1>
     </header>
     <main>
-        <section class="content">
+        <section>
             <div class="agent-class">
                 <img src="images/valorant/initiator_icon.png" alt="Initiator Icon" class="icon">
                 <h2>Initiator</h2>
