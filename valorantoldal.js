@@ -75,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function () {
             currentAngle = initialAngle + spinAngle * easing(progress);
             drawWheel();
             canvas.style.transform = `rotate(${currentAngle}rad)`;
-            indicator.style.transform = `rotate(${currentAngle}rad)`;
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
@@ -98,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 currentAngle += spinAngle;
                 drawWheel();
                 canvas.style.transform = `rotate(${currentAngle}rad)`;
-                indicator.style.transform = `rotate(${currentAngle}rad)`;
                 requestAnimationFrame(animate);
             }
         }
