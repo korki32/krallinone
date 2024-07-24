@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const radius = canvas.width / 2;
     const angleStep = (2 * Math.PI) / agents.length;
     let currentAngle = 0;
+    let targetAngle = 0; // Az új cél szög
 
     function drawWheel() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -66,9 +67,10 @@ document.addEventListener('DOMContentLoaded', function () {
         function animate() {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / spinDuration, 1);
-            currentAngle = initialAngle + spinAngle * progress;
+            currentAngle = initialAngle + spinAngle * (progress < 0.5 ? (2 * progress) : (2 - 2 * progress));
             drawWheel();
             canvas.style.transform = `rotate(${currentAngle}rad)`;
+            indicator.style.transform = `rotate(${currentAngle}rad)`;
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
@@ -81,14 +83,20 @@ document.addEventListener('DOMContentLoaded', function () {
         animate();
     }
 
+    function startSpin() {
+        const spinDuration = 6000;
+        const slowSpinAngle = Math.random() * 2 * Math.PI; // Lassú pörgetés szöge
+        spinWheel(slowSpinAngle, spinDuration);
+    }
+
     drawWheel();
 
     // Oldal betöltésekor automatikus pörgetés
-    setTimeout(() => {
-        spinWheel(Math.random() * 2 * Math.PI + 5 * Math.PI, 6000);
-    }, 1000); // 1 másodperc késleltetés az oldal betöltése után
+    setTimeout(startSpin, 1000); // 1 másodperc késleltetés az oldal betöltése után
 
     spinButton.addEventListener('click', function () {
-        spinWheel(Math.random() * 2 * Math.PI + 5 * Math.PI, 2000); // Manuális pörgetés 2 másodperc alatt
+        const fastSpinAngle = Math.random() * 2 * Math.PI + 5 * Math.PI; // Gyors pörgetés szöge
+        const fastSpinDuration = 2000; // Manuális pörgetés 2 másodperc alatt
+        spinWheel(fastSpinAngle, fastSpinDuration);
     });
 });
