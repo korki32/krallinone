@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const ctx = canvas.getContext('2d');
     const spinButton = document.getElementById('spin');
     const resultDisplay = document.getElementById('result');
+    const indicator = document.getElementById('indicator');
 
     const radius = canvas.width / 2;
     const angleStep = (2 * Math.PI) / agents.length;
@@ -58,9 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function spinWheel() {
-        const spinAngle = Math.random() * 2 * Math.PI;
-        const spinDuration = 2000;
+    function spinWheel(spinAngle, spinDuration) {
         const startTime = Date.now();
 
         function animate() {
@@ -68,12 +67,21 @@ document.addEventListener('DOMContentLoaded', function () {
             const progress = Math.min(elapsed / spinDuration, 1);
             currentAngle += spinAngle * progress;
             drawWheel();
+            indicator.style.transform = `rotate(${(currentAngle % (2 * Math.PI))}rad)`;
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
-                const winner = agents[winnerIndex];
-                resultDisplay.textContent = `Az új agent: ${winner.name}`;
+                if (spinDuration === 6000) {
+                    // Oldal betöltésekor történő forgatás
+                    const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
+                    const winner = agents[winnerIndex];
+                    resultDisplay.textContent = `Kezdő agent: ${winner.name}`;
+                } else {
+                    // Manuális pörgetés
+                    const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
+                    const winner = agents[winnerIndex];
+                    resultDisplay.textContent = `Az új agent: ${winner.name}`;
+                }
             }
         }
 
@@ -82,6 +90,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     drawWheel();
 
-    spinButton.addEventListener('click', spinWheel);
-});
+    // Oldal betöltésekor automatikus pörgetés
+    spinWheel(Math.random() * 2 * Math.PI + 5 * Math.PI, 6000);
 
+    spinButton.addEventListener('click', function () {
+        spinWheel(Math.random() * 2 * Math.PI + 5 * Math.PI, 2000); // Manuális pörgetés 2 másodperc alatt
+    });
+});
