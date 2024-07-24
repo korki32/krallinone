@@ -54,9 +54,3 @@ footer {
     text-align: center;
     padding: 10px;
 }
-
-/* Valorant oldal stílusok */
-body.valorant {
-    background: url('images/valorantbackground.jpg')
-    background-size: cover;
-}
