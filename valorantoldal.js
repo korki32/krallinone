@@ -33,9 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const indicator = document.getElementById('indicator');
 
     const radius = canvas.width / 2;
-    const angleStep = (2 * Math.PI) / agents.length;
     let currentAngle = 0;
-    let targetAngle = 0; // Az új cél szög
     let spinning = false; // Állapot a kerék pörgetéséhez
 
     function drawWheel() {
@@ -83,7 +81,9 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 spinning = false; // Megállítjuk a pörgetést
                 const activeAgents = agents.filter(agent => !agent.excluded);
-                const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
+                const angleStep = (2 * Math.PI) / activeAgents.length;
+                const normalizedAngle = currentAngle % (2 * Math.PI);
+                const winnerIndex = Math.floor((normalizedAngle + angleStep / 2) / angleStep) % activeAgents.length;
                 const winner = activeAgents[winnerIndex];
                 resultDisplay.textContent = `Az új agent: ${winner.name}`;
             }
