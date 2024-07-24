@@ -60,20 +60,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function spinWheel(spinAngle, spinDuration) {
+    function spinWheel(spinAngle, spinDuration, isImmediateSpin = false) {
         const startTime = Date.now();
         const initialAngle = currentAngle;
+        const easing = (progress) => {
+            // Easing function for the spinning animation
+            return progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+        };
 
         function animate() {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / spinDuration, 1);
-            currentAngle = initialAngle + spinAngle * (progress < 0.5 ? (2 * progress) : (2 - 2 * progress));
+            currentAngle = initialAngle + spinAngle * easing(progress);
             drawWheel();
             canvas.style.transform = `rotate(${currentAngle}rad)`;
             indicator.style.transform = `rotate(${currentAngle}rad)`;
             if (progress < 1) {
                 requestAnimationFrame(animate);
-            } else {
+            } else if (isImmediateSpin) {
+                // Calculate winner only after immediate spin
                 const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
                 const winner = agents[winnerIndex];
                 resultDisplay.textContent = `Az új agent: ${winner.name}`;
@@ -83,20 +88,20 @@ document.addEventListener('DOMContentLoaded', function () {
         animate();
     }
 
-    function startSpin() {
-        const spinDuration = 6000;
+    function startSlowSpin() {
         const slowSpinAngle = Math.random() * 2 * Math.PI; // Lassú pörgetés szöge
-        spinWheel(slowSpinAngle, spinDuration);
+        const slowSpinDuration = 10000; // Lassú pörgetés 10 másodperc alatt
+        spinWheel(slowSpinAngle, slowSpinDuration);
     }
 
     drawWheel();
 
-    // Oldal betöltésekor automatikus pörgetés
-    setTimeout(startSpin, 1000); // 1 másodperc késleltetés az oldal betöltése után
+    // Oldal betöltésekor lassú pörgetés
+    setTimeout(startSlowSpin, 1000); // 1 másodperc késleltetés az oldal betöltése után
 
     spinButton.addEventListener('click', function () {
         const fastSpinAngle = Math.random() * 2 * Math.PI + 5 * Math.PI; // Gyors pörgetés szöge
         const fastSpinDuration = 2000; // Manuális pörgetés 2 másodperc alatt
-        spinWheel(fastSpinAngle, fastSpinDuration);
+        spinWheel(fastSpinAngle, fastSpinDuration, true); // `true` jelzi, hogy az azonnali pörgetés után ki akarjuk írni az eredményt
     });
 });
