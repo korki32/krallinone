@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
         spinning = true; // Elindítjuk a pörgetést
         spinSound.play(); // Lejátszuk a pörgetési hangot
         const fastSpinAngle = Math.random() * 2 * Math.PI + 5 * Math.PI; // Gyors pörgetés szöge
-        const fastSpinDuration = 5600; // Gyors pörgetés 5 másodperc alatt
+        const fastSpinDuration = 6800; // Gyors pörgetés 6 másodperc alatt
         spinWheel(fastSpinAngle, fastSpinDuration);
     });
 
