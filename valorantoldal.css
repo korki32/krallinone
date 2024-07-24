@@ -50,20 +50,6 @@ button {
 button:hover {
     background: #e64a19;
 }
-buttonbck {
-    background: #ff5722;
-    border: none;
-    padding: 10px 20px;
-    margin-top: 20px;
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-buttonbck:hover {
-    background: #e64a19;
-}
 footer {
     background: rgba(0, 0, 0, 0.5);
     text-align: center;
