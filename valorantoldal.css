@@ -61,11 +61,24 @@ footer {
     margin: 20px;
 }
 
+.wheel-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 #wheel {
     border: 2px solid #fff;
     border-radius: 50%;
     background: #000;
-    margin: 0 auto;
+}
+
+#indicator {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: #fff;
 }
 
 #spin {
