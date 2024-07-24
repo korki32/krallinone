@@ -67,12 +67,13 @@ footer {
 }
 
 #wheel {
-    border: 2px solid #fff;
+    width: 400px; /* Adjust according to your size */
+    height: 400px; /* Adjust according to your size */
+    border: 3px solid #fff;
     border-radius: 50%;
     background: #000;
-    width: 300px;
-    height: 300px;
     position: relative;
+    transition: transform 0.2s ease-out;
 }
 
 #indicator {
@@ -83,6 +84,4 @@ footer {
     font-size: 24px;
     color: #fff;
     z-index: 10;
-    width: 20px;
-    text-align: center;
 }
