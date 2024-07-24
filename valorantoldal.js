@@ -31,12 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const spinButton = document.getElementById('spin');
     const resultDisplay = document.getElementById('result');
     const indicator = document.getElementById('indicator');
-
     const radius = canvas.width / 2;
     const angleStep = (2 * Math.PI) / agents.length;
     let currentAngle = 0;
-    let targetAngle = 0; // Az új cél szög
-    let spinning = false; // Állapot a kerék pörgetéséhez
+    let spinning = false;
 
     function drawWheel() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -62,57 +60,43 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function spinWheel(spinAngle, spinDuration) {
+        if (spinning) return;
+        spinning = true;
         const startTime = Date.now();
         const initialAngle = currentAngle;
-        const easing = (progress) => {
-            // Easing function for the spinning animation
-            return progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-        };
 
         function animate() {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / spinDuration, 1);
-            currentAngle = initialAngle + spinAngle * easing(progress);
+            currentAngle = initialAngle + spinAngle * progress;
             drawWheel();
             canvas.style.transform = `rotate(${currentAngle}rad)`;
+            indicator.style.transform = `rotate(${currentAngle}rad)`;
+
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                spinning = false; // Megállítjuk a pörgetést
-                const winnerIndex = Math.floor((currentAngle % (2 * Math.PI)) / angleStep);
+                const normalizedAngle = (currentAngle % (2 * Math.PI) + (2 * Math.PI)) % (2 * Math.PI);
+                const winnerIndex = Math.floor(normalizedAngle / angleStep) % agents.length;
                 const winner = agents[winnerIndex];
                 resultDisplay.textContent = `Az új agent: ${winner.name}`;
+                spinning = false;
             }
         }
 
         animate();
     }
 
-    function startContinuousSpin() {
-        const spinAngle = 0.01; // Lassú forgási sebesség (szög)
-        const spinDuration = 100; // Forgási frissítések gyakorisága (ms)
-
-        function animate() {
-            if (!spinning) {
-                currentAngle += spinAngle;
-                drawWheel();
-                canvas.style.transform = `rotate(${currentAngle}rad)`;
-                requestAnimationFrame(animate);
-            }
-        }
-
-        animate();
+    function startSlowSpin() {
+        const slowSpinAngle = Math.random() * 2 * Math.PI; // Lassú pörgetés szöge
+        const slowSpinDuration = 10000; // Lassú pörgetés 10 másodperc alatt
+        spinWheel(slowSpinAngle, slowSpinDuration);
     }
 
-    drawWheel();
-
-    // Oldal betöltésekor folyamatos pörgetés
-    startContinuousSpin();
+    // Automatikus lassú pörgetés az oldal betöltésekor
+    startSlowSpin();
 
     spinButton.addEventListener('click', function () {
-        if (spinning) return; // Ha már pörög a kerék, ne indítsunk el új pörgetést
-
-        spinning = true; // Elindítjuk a pörgetést
         const fastSpinAngle = Math.random() * 2 * Math.PI + 5 * Math.PI; // Gyors pörgetés szöge
         const fastSpinDuration = 2000; // Gyors pörgetés 2 másodperc alatt
         spinWheel(fastSpinAngle, fastSpinDuration);
