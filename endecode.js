@@ -49,7 +49,7 @@ function encodeMessage() {
             break;
     }
 
-    document.getElementById("result").innerText = encodedMessage || "Kérlek, adj meg egy üzenetet!";
+    document.getElementById("result").innerText = encodedMessage || "Please enter a message!";
 }
 
 function decodeMessage() {
@@ -79,7 +79,7 @@ function decodeMessage() {
             break;
     }
 
-    document.getElementById("result").innerText = decodedMessage || "Kérlek, adj meg egy üzenetet!";
+    document.getElementById("result").innerText = decodedMessage || "Please enter a message!";
 }
 
 function rot13(str) {
