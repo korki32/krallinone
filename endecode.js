@@ -44,17 +44,34 @@ function encodeMessage() {
 // Üzenet dekódolása
 function decodeMessage() {
     var message = document.getElementById("message").value;
-    var cipher = document.getElementById("cipher").value;
-    var shift = parseInt(document.getElementById("shift").value) || 0;
-    var decodedMessage;
-
-    if (cipher === "caesar") {
-        decodedMessage = caesarCipher(message, 26 - shift);
-    } else if (cipher === "rot13") {
-        decodedMessage = rot13(message);
-    } else if (cipher === "atbash") {
-        decodedMessage = atbashCipher(message);
-    }
-
+    var decodedMessage = detectAndDecode(message);
     document.getElementById("result").innerText = decodedMessage;
 }
+
+// Kódolás típusának felismerése és dekódolás
+function detectAndDecode(message) {
+    // Próbáljuk meg ROT13-mal dekódolni
+    var decodedROT13 = rot13(message);
+    if (isValidMessage(decodedROT13)) {
+        return decodedROT13;
+    }
+
+    // Próbáljuk meg Atbash-sel dekódolni
+    var decodedAtbash = atbashCipher(message);
+    if (isValidMessage(decodedAtbash)) {
+        return decodedAtbash;
+    }
+
+    // Próbáljuk meg Caesar-kóddal dekódolni, különböző eltolásokkal
+    for (var shift = 1; shift < 26; shift++) {
+        var decodedCaesar = caesarCipher(message, 26 - shift);
+        if (isValidMessage(decodedCaesar)) {
+            return decodedCaesar;
+        }
+    }
+
+    // Ha egyik sem volt sikeres
+    return "Ismeretlen kódolás vagy hibás üzenet.";
+}
+
+// Egyszerű ellenőrzés arra, hogy a dekódolt üzenet érvényes-e
