@@ -25,12 +25,10 @@ function processMessage() {
 function encodeMessage() {
     var message = document.getElementById("message").value;
     var cipher = document.getElementById("cipher").value;
-    var shift = parseInt(document.getElementById("shift").value) || 0;
+
     var encodedMessage;
 
-    if (cipher === "caesar") {
-        encodedMessage = caesarCipher(message, shift);
-    } else if (cipher === "rot13") {
+    if (cipher === "rot13") {
         encodedMessage = rot13(message);
     } else if (cipher === "atbash") {
         encodedMessage = atbashCipher(message);
@@ -56,13 +54,6 @@ function detectAndDecode(message) {
         return decodedAtbash;
     }
 
-    for (var shift = 1; shift < 26; shift++) {
-        var decodedCaesar = caesarCipher(message, 26 - shift);
-        if (isValidMessage(decodedCaesar)) {
-            return decodedCaesar;
-        }
-    }
-
     return "Ismeretlen kódolás vagy hibás üzenet.";
 }
 
@@ -74,13 +65,6 @@ function isValidMessage(message) {
         }
     }
     return false;
-}
-
-function caesarCipher(str, shift) {
-    return str.replace(/[a-z]/gi, function (char) {
-        var start = char <= 'Z' ? 65 : 97;
-        return String.fromCharCode(start + (char.charCodeAt(0) - start + shift) % 26);
-    });
 }
 
 function rot13(str) {
