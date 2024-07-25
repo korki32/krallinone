@@ -73,13 +73,9 @@ button:hover {
     border-radius: 5px;
     padding: 5px 10px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .switch button:hover {
     background: #0056b3;
-}
-
-.switch button.active {
-    background: #28a745;
 }
