@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hu">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,13 +10,14 @@
     <header>
         <h1>Encoded Message Creator And Translator</h1>
     </header>
+    
     <div class="container">
         <div class="switch">
             <button id="switch-btn" onclick="toggleMode()">Switch to Decode</button>
         </div>
-        <h1></h1>
+        
         <!-- Encode Section -->
-        <div id="encode-section">
+        <section id="encode-section">
             <textarea id="message" placeholder="Enter the message to be encoded..."></textarea>
             <select id="cipher">
                 <option value="rot13">ROT13</option>
@@ -26,10 +27,10 @@
                 <option value="hex">Hexadecimal</option>
                 <option value="url">URL Encode</option>
             </select>
-        </div>
+        </section>
         
         <!-- Decode Section -->
-        <div id="decode-section" style="display: none;">
+        <section id="decode-section" style="display: none;">
             <textarea id="decode-message" placeholder="Enter the message to be decoded..."></textarea>
             <select id="decode-cipher">
                 <option value="rot13">ROT13</option>
@@ -39,17 +40,19 @@
                 <option value="hex">Hexadecimal</option>
                 <option value="url">URL Decode</option>
             </select>
-        </div>
+        </section>
         
         <div class="buttons">
-            <button onclick="processMessage()">Kódolás</button>
+            <button onclick="processMessage()">Process</button>
         </div>
         
         <p>Result: <span id="result"></span></p>
     </div>
-    <script src="endecode.js"></script>
-        <footer>
+    
+    <footer>
         <p>&copy; 2024 Korki32.</p>
     </footer>
+    
+    <script src="endecode.js"></script>
 </body>
 </html>
