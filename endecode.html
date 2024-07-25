@@ -1,34 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="hu">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kódolt Üzenet Író és Fordító</title>
-    <script>
-        function rot13(str) {
-            return str.replace(/[A-Za-z]/g, function(c) {
-                return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".charAt(
-                    "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm".indexOf(c)
-                );
-            });
-        }
-
-        function encodeMessage() {
-            var message = document.getElementById("message").value;
-            var encodedMessage = rot13(message);
-            document.getElementById("result").innerText = encodedMessage;
-        }
-
-        function decodeMessage() {
-            var message = document.getElementById("message").value;
-            var decodedMessage = rot13(message);
-            document.getElementById("result").innerText = decodedMessage;
-        }
-    </script>
+    <link rel="stylesheet" href="endecode.css">
 </head>
 <body>
-    <h1>Kódolt Üzenet Író és Fordító</h1>
-    <textarea id="message" rows="4" cols="50" placeholder="Írd be az üzeneted..."></textarea><br>
-    <button onclick="encodeMessage()">Kódolás</button>
-    <button onclick="decodeMessage()">Dekódolás</button>
-    <p>Eredmény: <span id="result"></span></p>
+    <div class="container">
+        <h1>Kódolt Üzenet Író és Fordító</h1>
+        <textarea id="message" placeholder="Írd be az üzeneted..."></textarea>
+        <select id="cipher">
+            <option value="caesar">Caesar Kód</option>
+            <option value="rot13">ROT13</option>
+            <option value="atbash">Atbash</option>
+        </select>
+        <input type="number" id="shift" placeholder="Eltolás (Caesar Kódhoz)">
+        <div class="buttons">
+            <button onclick="encodeMessage()">Kódolás</button>
+            <button onclick="decodeMessage()">Dekódolás</button>
+        </div>
+        <p>Eredmény: <span id="result"></span></p>
+    </div>
+    <script src="endecode.js"></script>
 </body>
 </html>
