@@ -1,29 +1,17 @@
-// Caesar-kódoló és dekódoló függvény
-function caesarCipher(str, shift) {
-    return str.replace(/[a-z]/gi, function (char) {
-        var start = char <= 'Z' ? 65 : 97;
-        return String.fromCharCode(start + (char.charCodeAt(0) - start + shift) % 26);
-    });
+function switchMode(mode) {
+    if (mode === 'encode') {
+        document.getElementById('encode-section').style.display = 'block';
+        document.getElementById('decode-section').style.display = 'none';
+        document.getElementById('encode-btn').classList.add('active');
+        document.getElementById('decode-btn').classList.remove('active');
+    } else if (mode === 'decode') {
+        document.getElementById('encode-section').style.display = 'none';
+        document.getElementById('decode-section').style.display = 'block';
+        document.getElementById('encode-btn').classList.remove('active');
+        document.getElementById('decode-btn').classList.add('active');
+    }
 }
 
-// ROT13 kódoló és dekódoló függvény
-function rot13(str) {
-    return str.replace(/[a-z]/gi, function (char) {
-        return String.fromCharCode(
-            char.charCodeAt(0) + (char.toLowerCase() <= 'm' ? 13 : -13)
-        );
-    });
-}
-
-// Atbash kódoló és dekódoló függvény
-function atbashCipher(str) {
-    return str.replace(/[a-z]/gi, function (char) {
-        var start = char <= 'Z' ? 65 : 97;
-        return String.fromCharCode(start + 25 - (char.charCodeAt(0) - start));
-    });
-}
-
-// Üzenet kódolása
 function encodeMessage() {
     var message = document.getElementById("message").value;
     var cipher = document.getElementById("cipher").value;
@@ -41,28 +29,32 @@ function encodeMessage() {
     document.getElementById("result").innerText = encodedMessage;
 }
 
-// Üzenet dekódolása
 function decodeMessage() {
     var message = document.getElementById("message").value;
     var decodedMessage = detectAndDecode(message);
     document.getElementById("result").innerText = decodedMessage;
 }
 
-// Kódolás típusának felismerése és dekódolás
+function processMessage() {
+    var activeMode = document.getElementById('encode-btn').classList.contains('active') ? 'encode' : 'decode';
+    if (activeMode === 'encode') {
+        encodeMessage();
+    } else if (activeMode === 'decode') {
+        decodeMessage();
+    }
+}
+
 function detectAndDecode(message) {
-    // Próbáljuk meg ROT13-mal dekódolni
     var decodedROT13 = rot13(message);
     if (isValidMessage(decodedROT13)) {
         return decodedROT13;
     }
 
-    // Próbáljuk meg Atbash-sel dekódolni
     var decodedAtbash = atbashCipher(message);
     if (isValidMessage(decodedAtbash)) {
         return decodedAtbash;
     }
 
-    // Próbáljuk meg Caesar-kóddal dekódolni, különböző eltolásokkal
     for (var shift = 1; shift < 26; shift++) {
         var decodedCaesar = caesarCipher(message, 26 - shift);
         if (isValidMessage(decodedCaesar)) {
@@ -70,17 +62,37 @@ function detectAndDecode(message) {
         }
     }
 
-    // Ha egyik sem volt sikeres
     return "Ismeretlen kódolás vagy hibás üzenet.";
 }
 
-// Egyszerű ellenőrzés arra, hogy a dekódolt üzenet érvényes-e (példa: tartalmaz-e értelmes szavakat)
 function isValidMessage(message) {
     var words = message.split(" ");
     for (var i = 0; i < words.length; i++) {
         if (words[i].length > 1) {
-            return true; // Egyszerű példa: ha van olyan szó, ami hosszabb mint 1 karakter, érvényesnek tekintjük
+            return true;
         }
     }
     return false;
+}
+
+function caesarCipher(str, shift) {
+    return str.replace(/[a-z]/gi, function (char) {
+        var start = char <= 'Z' ? 65 : 97;
+        return String.fromCharCode(start + (char.charCodeAt(0) - start + shift) % 26);
+    });
+}
+
+function rot13(str) {
+    return str.replace(/[a-z]/gi, function (char) {
+        return String.fromCharCode(
+            char.charCodeAt(0) + (char.toLowerCase() <= 'm' ? 13 : -13)
+        );
+    });
+}
+
+function atbashCipher(str) {
+    return str.replace(/[a-z]/gi, function (char) {
+        var start = char <= 'Z' ? 65 : 97;
+        return String.fromCharCode(start + 25 - (char.charCodeAt(0) - start));
+    });
 }
