@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kódolt Üzenet Író és Fordító</title>
+    <script>
+        function rot13(str) {
+            return str.replace(/[A-Za-z]/g, function(c) {
+                return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".charAt(
+                    "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm".indexOf(c)
+                );
+            });
+        }
+
+        function encodeMessage() {
+            var message = document.getElementById("message").value;
+            var encodedMessage = rot13(message);
+            document.getElementById("result").innerText = encodedMessage;
+        }
+
+        function decodeMessage() {
+            var message = document.getElementById("message").value;
+            var decodedMessage = rot13(message);
+            document.getElementById("result").innerText = decodedMessage;
+        }
+    </script>
+</head>
+<body>
+    <h1>Kódolt Üzenet Író és Fordító</h1>
+    <textarea id="message" rows="4" cols="50" placeholder="Írd be az üzeneted..."></textarea><br>
+    <button onclick="encodeMessage()">Kódolás</button>
+    <button onclick="decodeMessage()">Dekódolás</button>
+    <p>Eredmény: <span id="result"></span></p>
+</body>
+</html>
