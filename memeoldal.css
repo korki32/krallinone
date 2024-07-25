@@ -93,3 +93,9 @@ h1 {
     height: auto;
     display: block;
 }
+
+.meme-option.selected {
+    border-color: #0099ff;
+    box-shadow: 0 0 10px rgba(0, 153, 255, 0.5);
+    transform: scale(1.1);
+}
