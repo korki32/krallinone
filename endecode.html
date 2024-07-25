@@ -16,11 +16,14 @@
         
         <!-- Encode Section -->
         <div id="encode-section">
-            <textarea id="message" placeholder="Írd be az üzeneted..."></textarea>
+            <textarea id="message" placeholder="Írd be a kódolandó üzenetet..."></textarea>
             <select id="cipher">
                 <option value="rot13">ROT13</option>
                 <option value="atbash">Atbash</option>
                 <option value="binary">Bináris</option>
+                <option value="base64">Base64</option>
+                <option value="hex">Hexadecimális</option>
+                <option value="url">URL Encode</option>
             </select>
         </div>
         
@@ -31,8 +34,10 @@
                 <option value="rot13">ROT13</option>
                 <option value="atbash">Atbash</option>
                 <option value="binary">Bináris</option>
+                <option value="base64">Base64</option>
+                <option value="hex">Hexadecimális</option>
+                <option value="url">URL Decode</option>
             </select>
-            <p>Az üzenet automatikusan dekódolásra kerül azonosított kódolási móddal.</p>
         </div>
         
         <div class="buttons">
