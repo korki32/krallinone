@@ -15,6 +15,7 @@ body {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     width: 300px;
     text-align: center;
+    position: relative;
 }
 
 h1 {
@@ -59,25 +60,26 @@ button:hover {
     background: #0056b3;
 }
 
-.mode-toggle {
-    margin-bottom: 20px;
+.switch {
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 
-.mode-toggle button {
-    width: 50%;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    background: #e0e0e0;
-    cursor: pointer;
-}
-
-.mode-toggle button.active {
+.switch button {
     background: #007bff;
     color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
 }
 
-p {
-    margin-top: 20px;
-    font-size: 16px;
+.switch button:hover {
+    background: #0056b3;
+}
+
+.switch button.active {
+    background: #28a745;
 }
