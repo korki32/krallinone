@@ -59,7 +59,7 @@ textarea {
     resize: none; /* Disable resizing */
     background: rgba(0, 0, 0, 0.5);
     color: #00ff00;
-    border: 1px solid #00ff00;
+    border: 1px solid #fff; /* White border */
     padding: 10px;
     font-family: Arial, sans-serif;
 }
@@ -72,7 +72,7 @@ select {
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #fff; /* White border */
     border-radius: 5px;
     background: rgba(0, 0, 0, 0.5);
     color: #00ff00;
@@ -87,7 +87,7 @@ select {
     background: rgba(0, 0, 0, 0.5);
     color: #00ff00;
     padding: 10px;
-    border: 1px solid #00ff00;
+    border: 1px solid #fff; /* White border */
 }
 
 .buttons {
