@@ -8,12 +8,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>Kódolt Üzenet Író és Fordító</h1>
-        
-        <div class="mode-toggle">
-            <button id="encode-btn" onclick="switchMode('encode')">Kódolás</button>
-            <button id="decode-btn" onclick="switchMode('decode')">Dekódolás</button>
+        <div class="switch">
+            <button id="switch-btn" onclick="toggleMode()">Switch to Decode</button>
         </div>
+        
+        <h1>Kódolt Üzenet Író és Fordító</h1>
         
         <div id="encode-section">
             <textarea id="message" placeholder="Írd be az üzeneted..."></textarea>
