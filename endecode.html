@@ -3,49 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kódolt Üzenet Író és Fordító</title>
+    <title>Encoded Message Creator And Translator</title>
     <link rel="stylesheet" href="endecode.css">
 </head>
 <body>
+    <header>
+        <h1>Encoded Message Creator And Translator</h1>
+    </header>
     <div class="container">
         <div class="switch">
             <button id="switch-btn" onclick="toggleMode()">Switch to Decode</button>
         </div>
         
-        <h1>Kódolt Üzenet Író és Fordító</h1>
-        
         <!-- Encode Section -->
         <div id="encode-section">
-            <textarea id="message" placeholder="Írd be az üzeneted..."></textarea>
+            <textarea id="message" placeholder="Enter the message to be encoded..."></textarea>
             <select id="cipher">
                 <option value="rot13">ROT13</option>
                 <option value="atbash">Atbash</option>
-                <option value="binary">Bináris</option>
+                <option value="binary">Binary</option>
                 <option value="base64">Base64</option>
-                <option value="hex">Hexadecimális</option>
+                <option value="hex">Hexadecimal</option>
                 <option value="url">URL Encode</option>
             </select>
         </div>
         
         <!-- Decode Section -->
         <div id="decode-section" style="display: none;">
-            <textarea id="decode-message" placeholder="Írd be a dekódolandó üzenetet..."></textarea>
+            <textarea id="decode-message" placeholder="Enter the message to be decoded..."></textarea>
             <select id="decode-cipher">
                 <option value="rot13">ROT13</option>
                 <option value="atbash">Atbash</option>
-                <option value="binary">Bináris</option>
+                <option value="binary">Binary</option>
                 <option value="base64">Base64</option>
-                <option value="hex">Hexadecimális</option>
+                <option value="hex">Hexadecimal</option>
                 <option value="url">URL Decode</option>
             </select>
-            <p>Az üzenet automatikusan dekódolásra kerül azonosított kódolási móddal.</p>
         </div>
         
         <div class="buttons">
-            <button onclick="processMessage()">Végrehajtás</button>
+            <button onclick="processMessage()">Kódolás</button>
         </div>
         
-        <p>Eredmény: <span id="result"></span></p>
+        <p>Result: <span id="result"></span></p>
     </div>
     <script src="endecode.js"></script>
         <footer>
