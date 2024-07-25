@@ -32,39 +32,28 @@ function encodeMessage() {
         encodedMessage = rot13(message);
     } else if (cipher === "atbash") {
         encodedMessage = atbashCipher(message);
+    } else if (cipher === "binary") {
+        encodedMessage = toBinary(message);
     }
 
-    document.getElementById("result").innerText = encodedMessage;
+    document.getElementById("result").innerText = encodedMessage || "Kérlek, adj meg egy üzenetet!";
 }
 
 function decodeMessage() {
     var message = document.getElementById("decode-message").value;
-    var decodedMessage = detectAndDecode(message);
-    document.getElementById("result").innerText = decodedMessage;
-}
+    var cipher = document.getElementById("decode-cipher").value;
 
-function detectAndDecode(message) {
-    var decodedROT13 = rot13(message);
-    if (isValidMessage(decodedROT13)) {
-        return decodedROT13;
+    var decodedMessage;
+
+    if (cipher === "rot13") {
+        decodedMessage = rot13(message);
+    } else if (cipher === "atbash") {
+        decodedMessage = atbashCipher(message);
+    } else if (cipher === "binary") {
+        decodedMessage = fromBinary(message);
     }
 
-    var decodedAtbash = atbashCipher(message);
-    if (isValidMessage(decodedAtbash)) {
-        return decodedAtbash;
-    }
-
-    return "Ismeretlen kódolás vagy hibás üzenet.";
-}
-
-function isValidMessage(message) {
-    var words = message.split(" ");
-    for (var i = 0; i < words.length; i++) {
-        if (words[i].length > 1) {
-            return true;
-        }
-    }
-    return false;
+    document.getElementById("result").innerText = decodedMessage || "Kérlek, adj meg egy üzenetet!";
 }
 
 function rot13(str) {
@@ -76,8 +65,20 @@ function rot13(str) {
 }
 
 function atbashCipher(str) {
-    return str.replace(/[a-z]/gi, function (char) {
+    return str.replace(/[a-zA-Z]/g, function (char) {
         var start = char <= 'Z' ? 65 : 97;
         return String.fromCharCode(start + 25 - (char.charCodeAt(0) - start));
     });
+}
+
+function toBinary(str) {
+    return str.split('').map(function (char) {
+        return char.charCodeAt(0).toString(2).padStart(8, '0');
+    }).join(' ');
+}
+
+function fromBinary(str) {
+    return str.split(' ').map(function (binary) {
+        return String.fromCharCode(parseInt(binary, 2));
+    }).join('');
 }
