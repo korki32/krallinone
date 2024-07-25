@@ -40,7 +40,7 @@ function encodeMessage() {
 }
 
 function decodeMessage() {
-    var message = document.getElementById("message").value;
+    var message = document.getElementById("decode-message").value;
     var decodedMessage = detectAndDecode(message);
     document.getElementById("result").innerText = decodedMessage;
 }
