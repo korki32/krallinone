@@ -9,17 +9,30 @@
 <body>
     <div class="container">
         <h1>Kódolt Üzenet Író és Fordító</h1>
-        <textarea id="message" placeholder="Írd be az üzeneted..."></textarea>
-        <select id="cipher">
-            <option value="caesar">Caesar Kód</option>
-            <option value="rot13">ROT13</option>
-            <option value="atbash">Atbash</option>
-        </select>
-        <input type="number" id="shift" placeholder="Eltolás (Caesar Kódhoz)">
-        <div class="buttons">
-            <button onclick="encodeMessage()">Kódolás</button>
-            <button onclick="decodeMessage()">Dekódolás</button>
+        
+        <div class="mode-toggle">
+            <button id="encode-btn" onclick="switchMode('encode')">Kódolás</button>
+            <button id="decode-btn" onclick="switchMode('decode')">Dekódolás</button>
         </div>
+        
+        <div id="encode-section">
+            <textarea id="message" placeholder="Írd be az üzeneted..."></textarea>
+            <select id="cipher">
+                <option value="caesar">Caesar Kód</option>
+                <option value="rot13">ROT13</option>
+                <option value="atbash">Atbash</option>
+            </select>
+            <input type="number" id="shift" placeholder="Eltolás (Caesar Kódhoz)">
+        </div>
+        
+        <div id="decode-section" style="display: none;">
+            <p>Az üzenet automatikusan dekódolásra kerül azonosított kódolási móddal.</p>
+        </div>
+        
+        <div class="buttons">
+            <button onclick="processMessage()">Végrehajtás</button>
+        </div>
+        
         <p>Eredmény: <span id="result"></span></p>
     </div>
     <script src="endecode.js"></script>
