@@ -3,23 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meme Maker</title>
-    <link rel="stylesheet" href="memeoldal.css">
+    <title>Meme Generátor</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Minecraft Teljesítmény Generátor</h1>
-    <div id="generator">
-        <select id="api-select">
-            <option value="minecraftskinstealer">Minecraft Skin Stealer</option>
-            <option value="otherapi">Másik API</option>
-            <!-- Add more options here -->
-        </select>
-        <input type="text" id="description" placeholder="Leírás (max 20 karakter)" maxlength="20">
-        <button id="generate-button">Generálás</button>
+    <div class="container">
+        <h1>Meme Generátor</h1>
+        <div id="meme-grid">
+            <div class="meme-option" data-meme="pikachu">
+                <img src="https://api.popcat.xyz/pikachu?text=" alt="Pikachu">
+                <p>Pikachu (Meglepődés)</p>
+            </div>
+            <div class="meme-option" data-meme="oogway">
+                <img src="https://api.popcat.xyz/oogway?text=" alt="Oogway">
+                <p>Oogway (Idézet)</p>
+            </div>
+            <div class="meme-option" data-meme="fact">
+                <img src="https://api.popcat.xyz/facts?text=" alt="Fact">
+                <p>Fact</p>
+            </div>
+            <div class="meme-option" data-meme="sadcat">
+                <img src="https://api.popcat.xyz/sadcat?text=" alt="Sadcat">
+                <p>Sadcat</p>
+            </div>
+            <div class="meme-option" data-meme="sbburn">
+                <img src="https://luminabot.xyz/api/image/burn?text=" alt="SpongyaBob Burn">
+                <p>SpongyaBob (Papír égetés)</p>
+            </div>
+            <div class="meme-option" data-meme="lisapresents">
+                <img src="https://luminabot.xyz/api/image/lisa-presents?text=" alt="Lisa Presents">
+                <p>Lisa (Prezentáció)</p>
+            </div>
+            <div class="meme-option" data-meme="dipperworthless">
+                <img src="https://frenchnoodles.xyz/api/endpoints/worthless/?text=" alt="Dipper Worthless">
+                <p>Dipper (Értéktelen)</p>
+            </div>
+            <div class="meme-option" data-meme="changemymind">
+                <img src="https://frenchnoodles.xyz/api/endpoints/changemymind/?text=" alt="Change My Mind">
+                <p>Change My Mind</p>
+            </div>
+            <div class="meme-option" data-meme="biden">
+                <img src="https://api.popcat.xyz/biden?text=" alt="Biden">
+                <p>Biden (Twitter Post)</p>
+            </div>
+        </div>
+        <div id="generator">
+            <input type="text" id="description" placeholder="Szöveg (max 100 karakter)" maxlength="100">
+            <button id="generate-button">Generálás</button>
+        </div>
+        <div id="result">
+            <img id="meme-image" alt="Meme kép">
+        </div>
     </div>
-    <div id="result">
-        <img id="achievement-image" alt="Teljesítmény kép">
-    </div>
-    <script src="memeoldal.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
