@@ -29,16 +29,18 @@ footer {
     padding: 20px;
     background: rgba(0, 0, 0, 0.7);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    position: relative;
 }
 
 .switch {
     text-align: right;
+    margin-bottom: 10px;
 }
 
 button {
     padding: 10px 20px;
-    background-color: #007bff;
-    color: #fff;
+    background-color: #00ff00;
+    color: #000;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -46,7 +48,7 @@ button {
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #00cc00;
 }
 
 textarea {
