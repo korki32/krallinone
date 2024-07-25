@@ -1,14 +1,24 @@
-function switchMode(mode) {
-    if (mode === 'encode') {
-        document.getElementById('encode-section').style.display = 'block';
-        document.getElementById('decode-section').style.display = 'none';
-        document.getElementById('encode-btn').classList.add('active');
-        document.getElementById('decode-btn').classList.remove('active');
-    } else if (mode === 'decode') {
+let currentMode = 'encode';
+
+function toggleMode() {
+    if (currentMode === 'encode') {
+        currentMode = 'decode';
+        document.getElementById('switch-btn').innerText = 'Switch to Encode';
         document.getElementById('encode-section').style.display = 'none';
         document.getElementById('decode-section').style.display = 'block';
-        document.getElementById('encode-btn').classList.remove('active');
-        document.getElementById('decode-btn').classList.add('active');
+    } else {
+        currentMode = 'encode';
+        document.getElementById('switch-btn').innerText = 'Switch to Decode';
+        document.getElementById('encode-section').style.display = 'block';
+        document.getElementById('decode-section').style.display = 'none';
+    }
+}
+
+function processMessage() {
+    if (currentMode === 'encode') {
+        encodeMessage();
+    } else {
+        decodeMessage();
     }
 }
 
@@ -33,15 +43,6 @@ function decodeMessage() {
     var message = document.getElementById("message").value;
     var decodedMessage = detectAndDecode(message);
     document.getElementById("result").innerText = decodedMessage;
-}
-
-function processMessage() {
-    var activeMode = document.getElementById('encode-btn').classList.contains('active') ? 'encode' : 'decode';
-    if (activeMode === 'encode') {
-        encodeMessage();
-    } else if (activeMode === 'decode') {
-        decodeMessage();
-    }
 }
 
 function detectAndDecode(message) {
