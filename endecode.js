@@ -28,12 +28,25 @@ function encodeMessage() {
 
     var encodedMessage;
 
-    if (cipher === "rot13") {
-        encodedMessage = rot13(message);
-    } else if (cipher === "atbash") {
-        encodedMessage = atbashCipher(message);
-    } else if (cipher === "binary") {
-        encodedMessage = toBinary(message);
+    switch (cipher) {
+        case "rot13":
+            encodedMessage = rot13(message);
+            break;
+        case "atbash":
+            encodedMessage = atbashCipher(message);
+            break;
+        case "binary":
+            encodedMessage = toBinary(message);
+            break;
+        case "base64":
+            encodedMessage = toBase64(message);
+            break;
+        case "hex":
+            encodedMessage = toHex(message);
+            break;
+        case "url":
+            encodedMessage = encodeURIComponent(message);
+            break;
     }
 
     document.getElementById("result").innerText = encodedMessage || "Kérlek, adj meg egy üzenetet!";
@@ -45,12 +58,25 @@ function decodeMessage() {
 
     var decodedMessage;
 
-    if (cipher === "rot13") {
-        decodedMessage = rot13(message);
-    } else if (cipher === "atbash") {
-        decodedMessage = atbashCipher(message);
-    } else if (cipher === "binary") {
-        decodedMessage = fromBinary(message);
+    switch (cipher) {
+        case "rot13":
+            decodedMessage = rot13(message);
+            break;
+        case "atbash":
+            decodedMessage = atbashCipher(message);
+            break;
+        case "binary":
+            decodedMessage = fromBinary(message);
+            break;
+        case "base64":
+            decodedMessage = fromBase64(message);
+            break;
+        case "hex":
+            decodedMessage = fromHex(message);
+            break;
+        case "url":
+            decodedMessage = decodeURIComponent(message);
+            break;
     }
 
     document.getElementById("result").innerText = decodedMessage || "Kérlek, adj meg egy üzenetet!";
@@ -80,5 +106,25 @@ function toBinary(str) {
 function fromBinary(str) {
     return str.split(' ').map(function (binary) {
         return String.fromCharCode(parseInt(binary, 2));
+    }).join('');
+}
+
+function toBase64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+}
+
+function fromBase64(str) {
+    return decodeURIComponent(escape(atob(str)));
+}
+
+function toHex(str) {
+    return str.split('').map(function (char) {
+        return char.charCodeAt(0).toString(16).padStart(2, '0');
+    }).join(' ');
+}
+
+function fromHex(str) {
+    return str.split(' ').map(function (hex) {
+        return String.fromCharCode(parseInt(hex, 16));
     }).join('');
 }
