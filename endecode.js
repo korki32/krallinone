@@ -74,4 +74,13 @@ function detectAndDecode(message) {
     return "Ismeretlen kódolás vagy hibás üzenet.";
 }
 
-// Egyszerű ellenőrzés arra, hogy a dekódolt üzenet érvényes-e
+// Egyszerű ellenőrzés arra, hogy a dekódolt üzenet érvényes-e (példa: tartalmaz-e értelmes szavakat)
+function isValidMessage(message) {
+    var words = message.split(" ");
+    for (var i = 0; i < words.length; i++) {
+        if (words[i].length > 1) {
+            return true; // Egyszerű példa: ha van olyan szó, ami hosszabb mint 1 karakter, érvényesnek tekintjük
+        }
+    }
+    return false;
+}
