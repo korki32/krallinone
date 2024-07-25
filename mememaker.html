@@ -1,20 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meme Maker</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="memeoldal.css">
 </head>
 <body>
-    <h1>Meme Maker</h1>
-    <div id="meme-container">
-        <input type="file" id="image-upload" accept="image/*">
-        <canvas id="meme-canvas"></canvas>
-        <input type="text" id="top-text" placeholder="Top Text">
-        <input type="text" id="bottom-text" placeholder="Bottom Text">
-        <button id="download-meme">Download Meme</button>
+    <h1>Minecraft Teljesítmény Generátor</h1>
+    <div id="generator">
+        <select id="api-select">
+            <option value="minecraftskinstealer">Minecraft Skin Stealer</option>
+            <option value="otherapi">Másik API</option>
+            <!-- Add more options here -->
+        </select>
+        <input type="text" id="description" placeholder="Leírás (max 20 karakter)" maxlength="20">
+        <button id="generate-button">Generálás</button>
     </div>
-    <script src="script.js"></script>
+    <div id="result">
+        <img id="achievement-image" alt="Teljesítmény kép">
+    </div>
+    <script src="memeoldal.js"></script>
 </body>
 </html>
