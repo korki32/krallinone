@@ -199,9 +199,19 @@ const reverseEmojiMap = Object.fromEntries(
 );
 
 function toKREmoji(str) {
-    return str.split('').map(char => emojiMap[char] || char).join(' ');
+    return str.split('').map(char => emojiMap[char] || char).join('');
 }
 
 function fromKREmoji(str) {
-    return str.split(' ').map(emoji => reverseEmojiMap[emoji] || '?').join('');
+    let result = '';
+    let temp = '';
+    for (let i = 0; i < str.length; i++) {
+        temp += str[i];
+        // Check if temp matches an emoji in the reverse map
+        if (reverseEmojiMap[temp]) {
+            result += reverseEmojiMap[temp];
+            temp = '';
+        }
+    }
+    return result;
 }
