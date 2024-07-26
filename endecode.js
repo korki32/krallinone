@@ -53,8 +53,8 @@ function encodeMessage() {
         case "morse":
             encodedMessage = toMorse(message);
             break;
-        case "md5":
-            encodedMessage = md5(message);
+        case "kremoji":
+            encodedMessage = toKREmoji(message);
             break;
     }
 
@@ -91,6 +91,9 @@ function decodeMessage() {
             break;
         case "morse":
             decodedMessage = fromMorse(message);
+            break;
+        case "kremoji":
+            decodedMessage = fromKREmoji(message);
             break;
     }
 
@@ -177,6 +180,33 @@ function fromMorse(str) {
     }).join('');
 }
 
-function md5(str) {
-    return CryptoJS.MD5(str).toString();
+const emojiMap = {
+    'a': '😀😁', 'b': '😂🤣', 'c': '😃😄', 'd': '😅😆', 'e': '😉😊', 'f': '😋😎', 'g': '😍😘', 'h': '😗😙',
+    'i': '😚☺️', 'j': '🙂🤗', 'k': '🤔😐', 'l': '😑😶', 'm': '🙄😏', 'n': '😣😥', 'o': '😮🤐', 'p': '😯😪',
+    'q': '😫😴', 'r': '😌😛', 's': '😜😝', 't': '🤤😒', 'u': '😓😔', 'v': '😕🙃', 'w': '🤑😲', 'x': '☹️🙁',
+    'y': '😖😞', 'z': '😟😤', 'á': '😢😭', 'é': '😦😧', 'í': '😨😩', 'ó': '🤯😬', 'ö': '😰😱', 'ő': '🥵🥶',
+    'ú': '🥴😳', 'ü': '🥺🤠', 'ű': '😎🤡', 'A': '😀😁', 'B': '😂🤣', 'C': '😃😄', 'D': '😅😆', 'E': '😉😊',
+    'F': '😋😎', 'G': '😍😘', 'H': '😗😙', 'I': '😚☺️', 'J': '🙂🤗', 'K': '🤔😐', 'L': '😑😶', 'M': '🙄😏',
+    'N': '😣😥', 'O': '😮🤐', 'P': '😯😪', 'Q': '😫😴', 'R': '😌😛', 'S': '😜😝', 'T': '🤤😒', 'U': '😓😔',
+    'V': '😕🙃', 'W': '🤑😲', 'X': '☹️🙁', 'Y': '😖😞', 'Z': '😟😤', 'Á': '😢😭', 'É': '😦😧', 'Í': '😨😩',
+    'Ó': '🤯😬', 'Ö': '😰😱', 'Ő': '🥵🥶', 'Ú': '🥴😳', 'Ü': '🥺🤠', 'Ű': '😎🤡', '0': '🔟0️⃣', '1': '1️⃣😀',
+    '2': '2️⃣😁', '3': '3️⃣😂', '4': '4️⃣🤣', '5': '5️⃣😃', '6': '6️⃣😄', '7': '7️⃣😅', '8': '8️⃣😆',
+    '9': '9️⃣😉', ' ': '⬜⬛'
+};
+
+const reverseEmojiMap = Object.fromEntries(
+    Object.entries(emojiMap).map(([char, emoji]) => [emoji, char])
+);
+
+function toKREmoji(str) {
+    return str.split('').map(function (char) {
+        return emojiMap[char] || char;
+    }).join(' ');
+}
+
+function fromKREmoji(str) {
+    const emojiPattern = /.{2}/g;
+    return str.match(emojiPattern).map(function (emoji) {
+        return reverseEmojiMap[emoji] || emoji;
+    }).join('');
 }
