@@ -53,6 +53,15 @@ function encodeMessage() {
         case "morse":
             encodedMessage = toMorse(message);
             break;
+        case "html-entities":
+            encodedMessage = toHTMLEntities(message);
+            break;
+        case "utf8":
+            encodedMessage = toUTF8(message);
+            break;
+        case "leet":
+            encodedMessage = toLeetSpeak(message);
+            break;
     }
 
     document.getElementById("result").innerText = encodedMessage || "Please enter a message!";
@@ -88,6 +97,15 @@ function decodeMessage() {
             break;
         case "morse":
             decodedMessage = fromMorse(message);
+            break;
+        case "html-entities":
+            decodedMessage = fromHTMLEntities(message);
+            break;
+        case "utf8":
+            decodedMessage = fromUTF8(message);
+            break;
+        case "leet":
+            decodedMessage = fromLeetSpeak(message);
             break;
     }
 
@@ -170,5 +188,41 @@ function toMorse(str) {
 function fromMorse(str) {
     return str.split(' ').map(function (code) {
         return reverseMorseCode[code] || code;
+    }).join('');
+}
+
+function toHTMLEntities(str) {
+    return str.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
+        return '&#'+i.charCodeAt(0)+';';
+    });
+}
+function fromHTMLEntities(str) {
+    var txt = document.createElement('textarea');
+    txt.innerHTML = str;
+    return txt.value;
+}
+
+function toUTF8(str) {
+    return unescape(encodeURIComponent(str));
+}
+function fromUTF8(str) {
+    return decodeURIComponent(escape(str));
+}
+
+function toLeetSpeak(str) {
+    var leetMap = {
+        'A': '4', 'B': '8', 'E': '3', 'G': '9', 'I': '1', 'O': '0', 'S': '5', 'T': '7'
+    };
+    return str.toUpperCase().split('').map(function (char) {
+        return leetMap[char] || char;
+    }).join('');
+}
+
+function fromLeetSpeak(str) {
+    var leetMap = {
+        '4': 'A', '8': 'B', '3': 'E', '9': 'G', '1': 'I', '0': 'O', '5': 'S', '7': 'T'
+    };
+    return str.split('').map(function (char) {
+        return leetMap[char] || char;
     }).join('');
 }
