@@ -7,42 +7,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <svg class="background" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="40" />
-    </svg>
-    <section class="nav">
+    <header>
         <h1>Korki32 WEB 2.0!</h1>
-        <h3 class="span loader">
-            <!-- ... loader spans ... -->
-        </h3>
-    </section>
-
-    <main class="main">
-        <section id="tab-val" class="slider">
-            <h1>VALORANT AGENT WHEEL</h1>
-            <h2>Build your own agent wheel</h2>
-        </section>
-        <section id="tab-meme" class="slider">
-            <h1>MEME MAKER</h1>
-            <h2>Create your own memes</h2>
-        </section>
-        <section id="tab-endecode" class="slider">
-            <h1>KÓDOLT ÜZI</h1>
-            <h2>Decode and encode messages</h2>
+    </header>
+    <main>
+        <section>
+            <h2>Válassz egy oldalt:</h2>
+            <div class="button-container">
+                <a href="valorant.html" class="button">Valorant Agent Wheel</a>
+                <a href="mememaker.html" class="button">Meme Maker</a>
+                <a href="endecode.html" class="button">Kódolt üzi</a>
+            </div>
         </section>
     </main>
-
-    <div class="nav-container">
-        <a href="#tab-val" class="nav-tab">VALORANT</a>
-        <a href="#tab-meme" class="nav-tab">MEME MAKER</a>
-        <a href="#tab-endecode" class="nav-tab">KÓDOLT ÜZI</a>
-        <span class="nav-tab-slider"></span>
-    </div>
-
     <footer>
         <p>&copy; 2024 Korki32.</p>
     </footer>
-
     <script src="scripts.js"></script>
 </body>
 </html>
