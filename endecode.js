@@ -62,6 +62,9 @@ function encodeMessage() {
         case "leet":
             encodedMessage = toLeetSpeak(message);
             break;
+        case "substitution":
+            encodedMessage = substitutionCipher(message);
+            break;
     }
 
     document.getElementById("result").innerText = encodedMessage || "Please enter a message!";
@@ -106,6 +109,9 @@ function decodeMessage() {
             break;
         case "leet":
             decodedMessage = fromLeetSpeak(message);
+            break;
+        case "substitution":
+            decodedMessage = substitutionCipher(message);
             break;
     }
 
@@ -225,4 +231,22 @@ function fromLeetSpeak(str) {
     return str.split('').map(function (char) {
         return leetMap[char] || char;
     }).join('');
+}
+const substitutionKey = {
+    'A': 'Q', 'B': 'W', 'C': 'E', 'D': 'R', 'E': 'T', 'F': 'Y', 'G': 'U',
+    'H': 'I', 'I': 'O', 'J': 'P', 'K': 'A', 'L': 'S', 'M': 'D', 'N': 'F',
+    'O': 'G', 'P': 'H', 'Q': 'J', 'R': 'K', 'S': 'L', 'T': 'Z', 'U': 'X',
+    'V': 'C', 'W': 'V', 'X': 'B', 'Y': 'N', 'Z': 'M', ' ': ' '
+};
+
+const reverseSubstitutionKey = Object.fromEntries(
+    Object.entries(substitutionKey).map(([key, value]) => [value, key])
+);
+
+function substitutionCipher(text) {
+    return text.toUpperCase().split('').map(char => substitutionKey[char] || char).join('');
+}
+
+function reverseSubstitutionCipher(text) {
+    return text.toUpperCase().split('').map(char => reverseSubstitutionKey[char] || char).join('');
 }
