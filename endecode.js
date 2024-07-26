@@ -193,9 +193,10 @@ const emojiMap = {
     '9': '9️⃣🐱', ' ': '⬜⬛'
 };
 
-const reverseEmojiMap = Object.fromEntries(
-    Object.entries(emojiMap).map(([char, emoji]) => [emoji, char])
-);
+const reverseEmojiMap = {};
+for (const [char, emoji] of Object.entries(emojiMap)) {
+    reverseEmojiMap[emoji] = char;
+}
 
 function toKREmoji(str) {
     return str.split('').map(function (char) {
