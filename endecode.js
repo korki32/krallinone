@@ -205,9 +205,9 @@ function toKREmoji(str) {
 }
 
 function fromKREmoji(str) {
-    // Módosítva, hogy 4 karakter hosszú emojipárokat keres
+    // Az emoji párok hossza 4 karakter
     const emojiPattern = /.{4}/g;
     return (str.match(emojiPattern) || []).map(function (emoji) {
-        return reverseEmojiMap[emoji] || emoji;
+        return reverseEmojiMap[emoji] || '?'; // Ha nem található, '?'-ot használunk
     }).join('');
 }
