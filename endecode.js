@@ -62,8 +62,8 @@ function encodeMessage() {
         case "leet":
             encodedMessage = toLeetSpeak(message);
             break;
-        case "substitution":
-            encodedMessage = substitutionCipher(message);
+        case "kr32emoji":
+            encodedMessage = toEmojiSpeak(message);
             break;
     }
 
@@ -110,8 +110,8 @@ function decodeMessage() {
         case "leet":
             decodedMessage = fromLeetSpeak(message);
             break;
-        case "substitution":
-            decodedMessage = substitutionCipher(message);
+        case "kr32emoji":
+            decodedMessage = fromEmojiSpeak(message);
             break;
     }
 
@@ -233,21 +233,32 @@ function fromLeetSpeak(str) {
     }).join('');
 }
 
-const substitutionKey = {
-    'A': 'Q', 'B': 'W', 'C': 'E', 'D': 'R', 'E': 'T', 'F': 'Y', 'G': 'U',
-    'H': 'I', 'I': 'O', 'J': 'P', 'K': 'A', 'L': 'S', 'M': 'D', 'N': 'F',
-    'O': 'G', 'P': 'H', 'Q': 'J', 'R': 'K', 'S': 'L', 'T': 'Z', 'U': 'X',
-    'V': 'C', 'W': 'V', 'X': 'B', 'Y': 'N', 'Z': 'M', ' ': ' '
+function toEmojiSpeak(str) {
+    var EmojiMap =  {
+    'A': '🍏', 'B': '🍌', 'C': '🌶️', 'D': '🍩', 'E': '🍆', 'F': '🍟', 'G': '🍇',
+    'H': '🍯', 'I': '🍦', 'J': '🍏', 'K': '🍪', 'L': '🍋', 'M': '🍈', 'N': '🍉',
+    'O': '🍊', 'P': '🍍', 'Q': '🍑', 'R': '🍒', 'S': '🍓', 'T': '🍅', 'U': '🍇',
+    'V': '🍉', 'W': '🍈', 'X': '🍋', 'Y': '🍍', 'Z': '🍎', ' ': '🆗',
+
+    'Á': '🥑', 'É': '🥥', 'Í': '🥝', 'Ó': '🥥', 'Ö': '🍍', 'Ő': '🍈', 'Ú': '🥑',
+    'Ü': '🍇', 'Ű': '🍉'
 };
-
-const reverseSubstitutionKey = Object.fromEntries(
-    Object.entries(substitutionKey).map(([key, value]) => [value, key])
-);
-
-function substitutionCipher(text) {
-    return text.toUpperCase().split('').map(char => substitutionKey[char] || char).join('');
+    return str.toUpperCase().split('').map(function (char) {
+        return EmojiMap[char] || char;
+    }).join('');
 }
 
-function reverseSubstitutionCipher(text) {
-    return text.toUpperCase().split('').map(char => reverseSubstitutionKey[char] || char).join('');
+function fromEmojispeak(str) {
+    var EmojiMap = {
+    '🍏': 'A', '🍌': 'B', '🌶️': 'C', '🍩': 'D', '🍆': 'E', '🍟': 'F', '🍇': 'G',
+    '🍯': 'H', '🍦': 'I', '🍏': 'J', '🍪': 'K', '🍋': 'L', '🍈': 'M', '🍉': 'N',
+    '🍊': 'O', '🍍': 'P', '🍑': 'Q', '🍒': 'R', '🍓': 'S', '🍅': 'T', '🍇': 'U',
+    '🍉': 'V', '🍈': 'W', '🍋': 'X', '🍍': 'Y', '🍎': 'Z', '🆗': ' ', // 🆗 as ' '
+    
+    '🥑': 'Á', '🥥': 'É', '🥝': 'Í', '🥥': 'Ó', '🍍': 'Ö', '🍈': 'Ő', '🥑': 'Ú',
+    '🍇': 'Ü', '🍉': 'Ű'
+};
+    return str.split('').map(function (char) {
+        return EmojiMap[char] || char;
+    }).join('');
 }
