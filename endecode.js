@@ -188,15 +188,14 @@ const emojiMap = {
     'F': '🌷💐', 'G': '🌹🥀', 'H': '🍂🍁', 'I': '🌿🌾', 'J': '🍄🍁', 'K': '🍒🍓', 'L': '🍅🍆', 'M': '🍇🍉',
     'N': '🍌🍍', 'O': '🍎🍏', 'P': '🍑🍒', 'Q': '🍓🍔', 'R': '🍟🍕', 'S': '🍲🍣', 'T': '🍦🍩', 'U': '🍫🍬',
     'V': '🍭🍮', 'W': '🍯🍰', 'X': '🍼🥛', 'Y': '☕🍵', 'Z': '🍶🍺', 'Á': '🍻🍸', 'É': '🍹🍷', 'Í': '🍾🥂',
-    'Ó': '🥃🍴', 'Ö': '🥄🍽', 'Ő': '🍕🍔', 'Ú': '🍲🍣', 'Ü': '🍜🍱', 'Ű': '🍛🍢', '0': '🐶🐱', '1': '🐭🐹',
-    '2': '🐰🦊', '3': '🐻🐼', '4': '🦁🐯', '5': '🐮🐷', '6': '🐸🐵', '7': '🐔🐧', '8': '🐦🐤', '9': '🐣🐥',
+    'Ó': '🥃🍴', 'Ö': '🥄🍽', 'Ő': '🍕🍔', 'Ú': '🍲🍣', 'Ü': '🍜🍱', 'Ű': '🍛🍢', '0': '🔵🔴', '1': '🔢🔢',
+    '2': '🔠🔢', '3': '🔡🔠', '4': '🔣🔡', '5': '🔢🔣', '6': '🔠🔠', '7': '🔡🔣', '8': '🔢🔣', '9': '🔣🔠',
     ' ': '⬜⬛'
 };
 
-const reverseEmojiMap = {};
-for (const [char, emoji] of Object.entries(emojiMap)) {
-    reverseEmojiMap[emoji] = char;
-}
+const reverseEmojiMap = Object.fromEntries(
+    Object.entries(emojiMap).map(([char, emojis]) => [emojis, char])
+);
 
 function toKREmoji(str) {
     return str.split('').map(function (char) {
@@ -207,7 +206,8 @@ function toKREmoji(str) {
 function fromKREmoji(str) {
     // Az emoji párok hossza 4 karakter
     const emojiPattern = /.{4}/g;
-    return (str.match(emojiPattern) || []).map(function (emoji) {
+    const emojis = str.match(emojiPattern) || [];
+    return emojis.map(function (emoji) {
         return reverseEmojiMap[emoji] || '?'; // Ha nem található, '?'-ot használunk
     }).join('');
 }
