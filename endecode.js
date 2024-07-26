@@ -193,10 +193,10 @@ const emojiMap = {
     ' ': '⬜⬛'
 };
 
-const reverseEmojiMap = {};
-for (const [char, emoji] of Object.entries(emojiMap)) {
-    reverseEmojiMap[emoji] = char;
-}
+// A reverseEmojiMap az új emoji-párok szerint frissítve
+const reverseEmojiMap = Object.fromEntries(
+    Object.entries(emojiMap).map(([char, emoji]) => [emoji, char])
+);
 
 function toKREmoji(str) {
     return str.split('').map(function (char) {
@@ -205,8 +205,9 @@ function toKREmoji(str) {
 }
 
 function fromKREmoji(str) {
-    const emojiPattern = /.{2}/g;
-    return str.match(emojiPattern).map(function (emoji) {
+    // Módosítva, hogy 4 karakter hosszú emojipárokat keres
+    const emojiPattern = /.{4}/g;
+    return (str.match(emojiPattern) || []).map(function (emoji) {
         return reverseEmojiMap[emoji] || emoji;
     }).join('');
 }
