@@ -248,7 +248,7 @@ function toEmojiSpeak(str) {
     }).join('');
 }
 
-function fromEmojispeak(str) {
+function fromEmojiSpeak(str) {
     var emojiMap = {
     '🍏': 'A', '🍌': 'B', '🌶️': 'C', '🍩': 'D', '🍆': 'E', '🍟': 'F', '🍇': 'G',
     '🍯': 'H', '🍦': 'I', '🌵': 'J', '🍪': 'K', '🍋': 'L', '🍈': 'M', '🍉': 'N',
