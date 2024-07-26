@@ -232,6 +232,7 @@ function fromLeetSpeak(str) {
         return leetMap[char] || char;
     }).join('');
 }
+
 const substitutionKey = {
     'A': 'Q', 'B': 'W', 'C': 'E', 'D': 'R', 'E': 'T', 'F': 'Y', 'G': 'U',
     'H': 'I', 'I': 'O', 'J': 'P', 'K': 'A', 'L': 'S', 'M': 'D', 'N': 'F',
