@@ -234,7 +234,7 @@ function fromLeetSpeak(str) {
 }
 
 function toEmojiSpeak(str) {
-var EmojiMap = {
+    var emojiMap = {
     'A': '🍏', 'B': '🍌', 'C': '🌶️', 'D': '🍩', 'E': '🍆', 'F': '🍟', 'G': '🍇',
     'H': '🍯', 'I': '🍦', 'J': '🌵', 'K': '🍪', 'L': '🍋', 'M': '🍈', 'N': '🍉',
     'O': '🍊', 'P': '🍍', 'Q': '🍑', 'R': '🍒', 'S': '🍓', 'T': '🍅', 'U': '🥨',
@@ -244,12 +244,12 @@ var EmojiMap = {
     'Ü': '🍕', 'Ű': '🌭'
 };
     return str.toUpperCase().split('').map(function (char) {
-        return EmojiMap[char] || char;
+        return emojiMap[char] || char;
     }).join('');
 }
 
 function fromEmojispeak(str) {
-var EmojiMap = {
+    var emojiMap = {
     '🍏': 'A', '🍌': 'B', '🌶️': 'C', '🍩': 'D', '🍆': 'E', '🍟': 'F', '🍇': 'G',
     '🍯': 'H', '🍦': 'I', '🌵': 'J', '🍪': 'K', '🍋': 'L', '🍈': 'M', '🍉': 'N',
     '🍊': 'O', '🍍': 'P', '🍑': 'Q', '🍒': 'R', '🍓': 'S', '🍅': 'T', '🥨': 'U',
@@ -259,6 +259,6 @@ var EmojiMap = {
     '🍕': 'Ü', '🌭': 'Ű'
 };
     return str.split('').map(function (char) {
-        return EmojiMap[char] || char;
+        return emojiMap[char] || char;
     }).join('');
 }
