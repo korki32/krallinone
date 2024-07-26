@@ -193,19 +193,20 @@ const emojiMap = {
     ' ': '⬜⬛'
 };
 
-const reverseEmojiMap = Object.fromEntries(
-    Object.entries(emojiMap).map(([char, emojis]) => [emojis, char])
-);
+const reverseEmojiMap = {};
+for (const [char, emojis] of Object.entries(emojiMap)) {
+    reverseEmojiMap[emojis] = char;
+}
 
 function toKREmoji(str) {
     return str.split('').map(function (char) {
-        return emojiMap[char] || char;
+        return emojiMap[char] || char; // Ha nem található, az eredeti karaktert használja
     }).join(' ');
 }
 
 function fromKREmoji(str) {
-    const emojiPattern = /.{1}/g;
-    const emojis = str.match(emojiPattern) || [];
+    const emojiPattern = /.{4}/g; // Két emoji, összesen 4 karakter
+    const emojis = str.match(emojiPattern) || []; // Keresd meg az összes emoji szekvenciát
     return emojis.map(function (emoji) {
         return reverseEmojiMap[emoji] || '?'; // Ha nem található, '?'-ot használunk
     }).join('');
