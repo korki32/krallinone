@@ -124,18 +124,3 @@ footer {
     z-index: 10;
     pointer-events: none; 
 }
-/* Kategoria pngs*/
-.category-icon {
-    border: 3px solid transparent; /* Alapértelmezett border szín: átlátszó */
-    border-radius: 50%; /* Kerek border a körhöz */
-    padding: 5px; /* Border vastagságának megfelelő térköz */
-    transition: border-color 0.3s ease; /* Simább színváltás */
-}
-
-.category-icon.active {
-    border-color: green; /* Zöld border, ha minden be van kapcsolva */
-}
-
-.category-icon.inactive {
-    border-color: red; /* Piros border, ha valamelyik ki van kapcsolva */
-}
