@@ -47,6 +47,15 @@ function encodeMessage() {
         case "url":
             encodedMessage = encodeURIComponent(message);
             break;
+        case "caesar":
+            encodedMessage = caesarCipher(message, 3);
+            break;
+        case "morse":
+            encodedMessage = toMorse(message);
+            break;
+        case "md5":
+            encodedMessage = md5(message);
+            break;
     }
 
     document.getElementById("result").innerText = encodedMessage || "Please enter a message!";
@@ -76,6 +85,12 @@ function decodeMessage() {
             break;
         case "url":
             decodedMessage = decodeURIComponent(message);
+            break;
+        case "caesar":
+            decodedMessage = caesarCipher(message, -3);
+            break;
+        case "morse":
+            decodedMessage = fromMorse(message);
             break;
     }
 
@@ -127,4 +142,41 @@ function fromHex(str) {
     return str.split(' ').map(function (hex) {
         return String.fromCharCode(parseInt(hex, 16));
     }).join('');
+}
+
+function caesarCipher(str, shift) {
+    return str.replace(/[a-zA-Z]/g, function (char) {
+        var start = char <= 'Z' ? 65 : 97;
+        return String.fromCharCode(start + (char.charCodeAt(0) - start + shift + 26) % 26);
+    });
+}
+
+const morseCode = {
+    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.',
+    'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.',
+    'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-',
+    'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--', 'Z': '--..',
+    '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
+    '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+    ' ': '/'
+};
+
+const reverseMorseCode = Object.fromEntries(
+    Object.entries(morseCode).map(([letter, code]) => [code, letter])
+);
+
+function toMorse(str) {
+    return str.toUpperCase().split('').map(function (char) {
+        return morseCode[char] || char;
+    }).join(' ');
+}
+
+function fromMorse(str) {
+    return str.split(' ').map(function (code) {
+        return reverseMorseCode[code] || code;
+    }).join('');
+}
+
+function md5(str) {
+    return CryptoJS.MD5(str).toString();
 }
