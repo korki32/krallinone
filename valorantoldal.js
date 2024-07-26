@@ -31,10 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const spinButton = document.getElementById('spin');
     const spinSound = document.getElementById('spin-sound');
     const stopSound = document.getElementById('stop-sound');
-
+    
     const radius = canvas.width / 2;
     let currentAngle = 0;
-    let spinning = false;
+    let spinning = false; // Állapot a kerék pörgetéséhez
 
     function drawWheel() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const startTime = Date.now();
         const initialAngle = currentAngle;
         const easing = (progress) => {
+            // Easing function for the spinning animation
             return progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
         };
 
@@ -78,8 +79,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                spinning = false;
-                stopSound.play();
+                spinning = false; // Megállítjuk a pörgetést
+                stopSound.play(); // Lejátszuk a megállási hangot
             }
         }
 
@@ -87,8 +88,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function startContinuousSpin() {
-        const spinAngle = 0.01;
-        const spinDuration = 100;
+        const spinAngle = 0.01; // Lassú forgási sebesség (szög)
+        const spinDuration = 100; // Forgási frissítések gyakorisága (ms)
 
         function animate() {
             if (!spinning) {
@@ -102,52 +103,34 @@ document.addEventListener('DOMContentLoaded', function () {
         animate();
     }
 
-    function updateCategoryBorders() {
-        // Végigmegyünk az összes kategória ikonon
-        document.querySelectorAll('.category-icon').forEach(icon => {
-            const category = icon.dataset.category;
-            const agentsInCategory = document.querySelectorAll(`.agent-class[data-category="${category}"] .agent img`);
-            const allActive = Array.from(agentsInCategory).every(img => !img.classList.contains('inactive'));
-
-            if (allActive) {
-                icon.classList.remove('inactive');
-                icon.classList.add('active');
-            } else {
-                icon.classList.remove('active');
-                icon.classList.add('inactive');
-            }
-        });
-    }
-
-    function updateAgentState(index, isActive) {
-        if (isActive) {
-            delete agents[index].excluded;
-        } else {
-            agents[index].excluded = true;
-        }
-        drawWheel();
-        updateCategoryBorders(); // Frissítjük a kategória ikonokat
-    }
-
     drawWheel();
+
+    // Oldal betöltésekor folyamatos pörgetés
     startContinuousSpin();
 
     spinButton.addEventListener('click', function () {
-        if (spinning) return;
+        if (spinning) return; // Ha már pörög a kerék, ne indítsunk el új pörgetést
 
-        spinning = true;
-        spinSound.play();
-        const fastSpinAngle = Math.random() * 2 * Math.PI + 5 * Math.PI;
-        const fastSpinDuration = 6800;
+        spinning = true; // Elindítjuk a pörgetést
+        spinSound.play(); // Lejátszuk a pörgetési hangot
+        const fastSpinAngle = Math.random() * 2 * Math.PI + 5 * Math.PI; // Gyors pörgetés szöge
+        const fastSpinDuration = 6800; // Gyors pörgetés 6 másodperc alatt
         spinWheel(fastSpinAngle, fastSpinDuration);
     });
 
+    // Agent képek kattintás eseménykezelése
     const agentElements = document.querySelectorAll('.agent img');
     agentElements.forEach((img, index) => {
         img.addEventListener('click', function () {
-            img.classList.toggle('inactive');
-            const isActive = !img.classList.contains('inactive');
-            updateAgentState(index, isActive);
+            img.classList.toggle('inactive'); // Inaktív/aktív állapot kapcsolása
+            if (img.classList.contains('inactive')) {
+                // Agent eltávolítása a listából
+                agents[index].excluded = true;
+            } else {
+                // Agent visszahelyezése a listába
+                delete agents[index].excluded;
+            }
+            drawWheel(); // Újra rajzoljuk a kereket az aktuális agent listával
         });
     });
 });
