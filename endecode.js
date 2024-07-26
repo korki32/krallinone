@@ -53,9 +53,6 @@ function encodeMessage() {
         case "morse":
             encodedMessage = toMorse(message);
             break;
-        case "kremoji":
-            encodedMessage = toKREmoji(message);
-            break;
     }
 
     document.getElementById("result").innerText = encodedMessage || "Please enter a message!";
@@ -91,9 +88,6 @@ function decodeMessage() {
             break;
         case "morse":
             decodedMessage = fromMorse(message);
-            break;
-        case "kremoji":
-            decodedMessage = fromKREmoji(message);
             break;
     }
 
@@ -177,41 +171,4 @@ function fromMorse(str) {
     return str.split(' ').map(function (code) {
         return reverseMorseCode[code] || code;
     }).join('');
-}
-
-const emojiMap = {
-    'a': '🌳', 'b': '🌵', 'c': '🍀', 'd': '🌸', 'e': '🌼', 'f': '🌷', 'g': '🌹', 'h': '🍂',
-    'i': '🌿', 'j': '🍄', 'k': '🍒', 'l': '🍅', 'm': '🍇', 'n': '🍌', 'o': '🍎', 'p': '🍑',
-    'q': '🍓', 'r': '🍟', 's': '🍲', 't': '🍦', 'u': '🍫', 'v': '🍭', 'w': '🍯', 'x': '🍼',
-    'y': '☕', 'z': '🍶', 'á': '🍻', 'é': '🍹', 'í': '🍾', 'ó': '🥃', 'ö': '🥄', 'ő': '🍕',
-    'ú': '🍲', 'ü': '🍜', 'ű': '🍛', 'A': '🌳', 'B': '🌵', 'C': '🍀', 'D': '🌸', 'E': '🌼',
-    'F': '🌷', 'G': '🌹', 'H': '🍂', 'I': '🌿', 'J': '🍄', 'K': '🍒', 'L': '🍅', 'M': '🍇',
-    'N': '🍌', 'O': '🍎', 'P': '🍑', 'Q': '🍓', 'R': '🍟', 'S': '🍲', 'T': '🍦', 'U': '🍫',
-    'V': '🍭', 'W': '🍯', 'X': '🍼', 'Y': '☕', 'Z': '🍶', 'Á': '🍻', 'É': '🍹', 'Í': '🍾',
-    'Ó': '🥃', 'Ö': '🥄', 'Ő': '🍕', 'Ú': '🍲', 'Ü': '🍜', 'Ű': '🍛', '0': '🔵', '1': '🔢',
-    '2': '🔠', '3': '🔡', '4': '🔣', '5': '🔢', '6': '🔠', '7': '🔡', '8': '🔢', '9': '🔣',
-    ' ': '⬜'
-};
-
-// Reverse map for decoding
-const reverseEmojiMap = Object.fromEntries(
-    Object.entries(emojiMap).map(([char, emoji]) => [emoji, char])
-);
-
-function toKREmoji(str) {
-    return str.split('').map(char => emojiMap[char] || char).join('');
-}
-
-function fromKREmoji(str) {
-    let result = '';
-    let temp = '';
-    for (let i = 0; i < str.length; i++) {
-        temp += str[i];
-        // Check if temp matches an emoji in the reverse map
-        if (reverseEmojiMap[temp]) {
-            result += reverseEmojiMap[temp];
-            temp = '';
-        }
-    }
-    return result;
 }
