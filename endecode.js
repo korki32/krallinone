@@ -258,6 +258,6 @@ function fromEmojiSpeak(str) {
     };
     const emojiMapReverse = Object.fromEntries(Object.entries(emojiMap).map(([key, value]) => [value, key]));
     return Array.from(str).map(function (char) {
-        return emojiMapReverse[char] || char;
+        return emojiMap[char] || char;
     }).join('');
 }
