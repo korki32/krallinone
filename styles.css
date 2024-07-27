@@ -159,10 +159,7 @@ body {
     flex-direction: column;
     min-height: 100vh;
     color: #fff;
-}
-
-h1 {
-    margin: 0;
+    background-size: cover;
 }
 
 header {
@@ -171,10 +168,16 @@ header {
     text-align: center;
 }
 
-footer {
-    background: rgba(0, 0, 0, 0.5);
-    text-align: center;
-    padding: 10px;
+h1 {
+    margin: 0;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
 section {
@@ -185,19 +188,22 @@ section {
 }
 
 button {
-    padding: 10px 20px;
-    background-color: #00ff00;
-    color: #000;
+    background: #ff5722;
     border: none;
-    border-radius: 5px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    color: #fff;
+    font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background 0.3s ease;
 }
 
 button:hover {
-    background-color: #00cc00;
+    background: #e64a19;
+}
+footer {
+    background: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    padding: 10px;
 }
 
-.buttons {
-    text-align: center;
-}
