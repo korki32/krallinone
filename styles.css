@@ -1,63 +1,133 @@
-html, body {
+@keyframes animStar {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-2000px);
+  }
+}
+
+@keyframes animStarFast {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-3000px);
+  }
+}
+
+@keyframes animStarSlow {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-1000px);
+  }
+}
+
+html {
   height: 100%;
-  margin: 0;
-  overflow: hidden;
   background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+  overflow: hidden;
 }
 
 #stars, #stars2, #stars3 {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* Avoids interfering with user interactions */
-  background: transparent;
+  bottom: 0;
+  right: 0;
+  z-index: -1;
 }
 
 #stars {
+  width: 1px;
+  height: 1px;
   background: transparent;
   box-shadow: 
-    0 0 1px #FFF, 100px 100px 1px #FFF, 200px 200px 1px #FFF, 300px 300px 1px #FFF,
-    400px 400px 1px #FFF, 500px 500px 1px #FFF, 600px 600px 1px #FFF, 700px 700px 1px #FFF,
-    800px 800px 1px #FFF, 900px 900px 1px #FFF, 1000px 1000px 1px #FFF, 1100px 1100px 1px #FFF,
-    1200px 1200px 1px #FFF, 1300px 1300px 1px #FFF, 1400px 1400px 1px #FFF, 1500px 1500px 1px #FFF,
-    1600px 1600px 1px #FFF, 1700px 1700px 1px #FFF, 1800px 1800px 1px #FFF, 1900px 1900px 1px #FFF,
-    2000px 2000px 1px #FFF;
+    100px 100px #FFF, 200px 200px #FFF, 300px 300px #FFF, 400px 400px #FFF, 500px 500px #FFF,
+    600px 600px #FFF, 700px 700px #FFF, 800px 800px #FFF, 900px 900px #FFF, 1000px 1000px #FFF,
+    1100px 1100px #FFF, 1200px 1200px #FFF, 1300px 1300px #FFF, 1400px 1400px #FFF, 1500px 1500px #FFF,
+    1600px 1600px #FFF, 1700px 1700px #FFF, 1800px 1800px #FFF, 1900px 1900px #FFF, 2000px 2000px #FFF,
+    2100px 2100px #FFF, 2200px 2200px #FFF, 2300px 2300px #FFF, 2400px 2400px #FFF, 2500px 2500px #FFF,
+    2600px 2600px #FFF, 2700px 2700px #FFF, 2800px 2800px #FFF, 2900px 2900px #FFF, 3000px 3000px #FFF;
   animation: animStar 50s linear infinite;
 }
 
-#stars2 {
+#stars:after {
+  content: " ";
+  position: absolute;
+  top: 2000px;
+  width: 1px;
+  height: 1px;
   background: transparent;
-  box-shadow:
-    0 0 2px #FFF, 200px 200px 2px #FFF, 400px 400px 2px #FFF, 600px 600px 2px #FFF,
-    800px 800px 2px #FFF, 1000px 1000px 2px #FFF, 1200px 1200px 2px #FFF, 1400px 1400px 2px #FFF,
-    1600px 1600px 2px #FFF, 1800px 1800px 2px #FFF, 2000px 2000px 2px #FFF;
+  box-shadow: 
+    100px 100px #FFF, 200px 200px #FFF, 300px 300px #FFF, 400px 400px #FFF, 500px 500px #FFF,
+    600px 600px #FFF, 700px 700px #FFF, 800px 800px #FFF, 900px 900px #FFF, 1000px 1000px #FFF,
+    1100px 1100px #FFF, 1200px 1200px #FFF, 1300px 1300px #FFF, 1400px 1400px #FFF, 1500px 1500px #FFF,
+    1600px 1600px #FFF, 1700px 1700px #FFF, 1800px 1800px #FFF, 1900px 1900px #FFF, 2000px 2000px #FFF,
+    2100px 2100px #FFF, 2200px 2200px #FFF, 2300px 2300px #FFF, 2400px 2400px #FFF, 2500px 2500px #FFF,
+    2600px 2600px #FFF, 2700px 2700px #FFF, 2800px 2800px #FFF, 2900px 2900px #FFF, 3000px 3000px #FFF;
+}
+
+#stars2 {
+  width: 2px;
+  height: 2px;
+  background: transparent;
+  box-shadow: 
+    200px 200px #FFF, 400px 400px #FFF, 600px 600px #FFF, 800px 800px #FFF, 1000px 1000px #FFF,
+    1200px 1200px #FFF, 1400px 1400px #FFF, 1600px 1600px #FFF, 1800px 1800px #FFF, 2000px 2000px #FFF,
+    2200px 2200px #FFF, 2400px 2400px #FFF, 2600px 2600px #FFF, 2800px 2800px #FFF, 3000px 3000px #FFF,
+    3200px 3200px #FFF, 3400px 3400px #FFF, 3600px 3600px #FFF, 3800px 3800px #FFF, 4000px 4000px #FFF,
+    4200px 4200px #FFF, 4400px 4400px #FFF, 4600px 4600px #FFF, 4800px 4800px #FFF, 5000px 5000px #FFF,
+    5200px 5200px #FFF, 5400px 5400px #FFF, 5600px 5600px #FFF, 5800px 5800px #FFF, 6000px 6000px #FFF;
   animation: animStarSlow 100s linear infinite;
 }
 
-#stars3 {
+#stars2:after {
+  content: " ";
+  position: absolute;
+  top: 2000px;
+  width: 2px;
+  height: 2px;
   background: transparent;
-  box-shadow:
-    0 0 3px #FFF, 300px 300px 3px #FFF, 600px 600px 3px #FFF, 900px 900px 3px #FFF,
-    1200px 1200px 3px #FFF, 1500px 1500px 3px #FFF, 1800px 1800px 3px #FFF, 2100px 2100px 3px #FFF,
-    2400px 2400px 3px #FFF, 2700px 2700px 3px #FFF, 3000px 3000px 3px #FFF;
+  box-shadow: 
+    200px 200px #FFF, 400px 400px #FFF, 600px 600px #FFF, 800px 800px #FFF, 1000px 1000px #FFF,
+    1200px 1200px #FFF, 1400px 1400px #FFF, 1600px 1600px #FFF, 1800px 1800px #FFF, 2000px 2000px #FFF,
+    2200px 2200px #FFF, 2400px 2400px #FFF, 2600px 2600px #FFF, 2800px 2800px #FFF, 3000px 3000px #FFF,
+    3200px 3200px #FFF, 3400px 3400px #FFF, 3600px 3600px #FFF, 3800px 3800px #FFF, 4000px 4000px #FFF,
+    4200px 4200px #FFF, 4400px 4400px #FFF, 4600px 4600px #FFF, 4800px 4800px #FFF, 5000px 5000px #FFF,
+    5200px 5200px #FFF, 5400px 5400px #FFF, 5600px 5600px #FFF, 5800px 5800px #FFF, 6000px 6000px #FFF;
+}
+
+#stars3 {
+  width: 3px;
+  height: 3px;
+  background: transparent;
+  box-shadow: 
+    300px 300px #FFF, 600px 600px #FFF, 900px 900px #FFF, 1200px 1200px #FFF, 1500px 1500px #FFF,
+    1800px 1800px #FFF, 2100px 2100px #FFF, 2400px 2400px #FFF, 2700px 2700px #FFF, 3000px 3000px #FFF,
+    3300px 3300px #FFF, 3600px 3600px #FFF, 3900px 3900px #FFF, 4200px 4200px #FFF, 4500px 4500px #FFF,
+    4800px 4800px #FFF, 5100px 5100px #FFF, 5400px 5400px #FFF, 5700px 5700px #FFF, 6000px 6000px #FFF,
+    6300px 6300px #FFF, 6600px 6600px #FFF, 6900px 6900px #FFF, 7200px 7200px #FFF, 7500px 7500px #FFF,
+    7800px 7800px #FFF, 8100px 8100px #FFF, 8400px 8400px #FFF, 8700px 8700px #FFF, 9000px 9000px #FFF;
   animation: animStarFast 150s linear infinite;
 }
 
-@keyframes animStar {
-  from { transform: translateY(0); }
-  to { transform: translateY(-100%); }
-}
-
-@keyframes animStarFast {
-  from { transform: translateY(0); }
-  to { transform: translateY(-150%); }
-}
-
-@keyframes animStarSlow {
-  from { transform: translateY(0); }
-  to { transform: translateY(-50%); }
+#stars3:after {
+  content: " ";
+  position: absolute;
+  top: 2000px;
+  width: 3px;
+  height: 3px;
+  background: transparent;
+  box-shadow: 
+    300px 300px #FFF, 600px 600px #FFF, 900px 900px #FFF, 1200px 1200px #FFF, 1500px 1500px #FFF,
+    1800px 1800px #FFF, 2100px 2100px #FFF, 2400px 2400px #FFF, 2700px 2700px #FFF, 3000px 3000px #FFF,
+    3300px 3300px #FFF, 3600px 3600px #FFF, 3900px 3900px #FFF, 4200px 4200px #FFF, 4500px 4500px #FFF,
+    4800px 4800px #FFF, 5100px 5100px #FFF, 5400px 5400px #FFF, 5700px 5700px #FFF, 6000px 6000px #FFF,
+    6300px 6300px #FFF, 6600px 6600px #FFF, 6900px 6900px #FFF, 7200px 7200px #FFF, 7500px 7500px #FFF,
+    7800px 7800px #FFF, 8100px 8100px #FFF, 8400px 8400px #FFF, 8700px 8700px #FFF, 9000px 9000px #FFF;
 }
 
 #title {
@@ -81,100 +151,101 @@ html, body {
   -webkit-text-fill-color: transparent;
 }
 
+
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  color: #f4f4f4;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #f4f4f4;
 }
 
 header, footer {
-  background: rgba(0, 0, 0, 0.7);
-  color: #FFFFFF;
-  padding: 20px;
-  text-align: center;
+    background: rgba(0, 0, 0, 0.7);
+    color: #FFFFFF;
+    padding: 20px;
+    text-align: center;
 }
 
 h1 {
-  margin: 0;
+    margin: 0;
 }
 
 footer {
-  padding: 10px;
+    padding: 10px;
 }
 
 .container {
-  width: 80%;
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.7);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  position: relative;
+    width: 80%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    position: relative;
 }
 
 .switch {
-  text-align: right;
-  margin-bottom: 10px;
+    text-align: right;
+    margin-bottom: 10px;
 }
 
 button {
-  padding: 10px 20px;
-  background-color: #00ff00;
-  color: #000;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+    padding: 10px 20px;
+    background-color: #00ff00;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 button:hover {
-  background-color: #00cc00;
+    background-color: #00cc00;
 }
 
 textarea {
-  width: 100%;
-  height: 100px;
-  box-sizing: border-box;
-  margin-bottom: 10px;
-  resize: none; /* Disable resizing */
-  background: rgba(0, 0, 0, 0.5);
-  color: #00ff00;
-  border: 1px solid #fff; /* White border */
-  padding: 10px;
-  font-family: Arial, sans-serif;
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    resize: none; /* Disable resizing */
+    background: rgba(0, 0, 0, 0.5);
+    color: #00ff00;
+    border: 1px solid #fff; /* White border */
+    padding: 10px;
+    font-family: Arial, sans-serif;
 }
 
 textarea#message, textarea#decode-message {
-  height: 150px;
+    height: 150px;
 }
 
 select {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #fff; /* White border */
-  border-radius: 5px;
-  background: rgba(0, 0, 0, 0.5);
-  color: #00ff00;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #fff; /* White border */
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #00ff00;
 }
 
 #result {
-  display: block;
-  word-wrap: break-word;
-  white-space: pre-wrap; /* Preserve whitespace */
-  max-width: 100%;
-  overflow-x: auto; /* Horizontal scrollbar if needed */
-  background: rgba(0, 0, 0, 0.5);
-  color: #00ff00;
-  padding: 10px;
-  border: 1px solid #fff; /* White border */
+    display: block;
+    word-wrap: break-word;
+    white-space: pre-wrap; /* Preserve whitespace */
+    max-width: 100%;
+    overflow-x: auto; /* Horizontal scrollbar if needed */
+    background: rgba(0, 0, 0, 0.5);
+    color: #00ff00;
+    padding: 10px;
+    border: 1px solid #fff; /* White border */
 }
 
 .buttons {
-  text-align: center;
+    text-align: center;
 }
 
 section {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
