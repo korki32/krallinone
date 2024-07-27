@@ -7,19 +7,20 @@ body {
     color: #f4f4f4;
 }
 
-header, footer {
-    background: rgba(0, 0, 0, 0.7);
-    color: #FFFFFF;
+footer {
+    background: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    padding: 10px;
+}
+
+header {
+    background: rgba(0, 0, 0, 0.5);
     padding: 20px;
     text-align: center;
 }
 
 h1 {
     margin: 0;
-}
-
-footer {
-    padding: 10px;
 }
 
 .container {
