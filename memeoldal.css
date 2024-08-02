@@ -18,10 +18,14 @@ body {
     width: 100%;
 }
 
+header {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    text-align: center;
+}
+
 h1 {
-    margin-bottom: 20px;
-    font-size: 2em;
-    color: #333;
+    margin: 0;
 }
 
 #meme-grid, #meme-grid-2 {
@@ -116,4 +120,10 @@ h1 {
 
 .nav-button.active {
     background-color: #ccc;
+}
+
+footer {
+    background: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    padding: 10px;
 }
