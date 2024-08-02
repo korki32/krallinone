@@ -71,6 +71,12 @@ document.getElementById('generate-button-2').addEventListener('click', () => {
         imageUrl = `https://frenchnoodles.xyz/api/endpoints/drake/?text1=${text1}&text2=${text2}`;
     } else if (selectedMemeType === 'pooh') {
         imageUrl = `https://api.popcat.xyz/pooh?text1=${text1}&text2=${text2}`;
+    } else if (selectedMemeType === 'spiderman') {
+        imageUrl = `https://api.memegen.link/images/spiderman/${text1}/${text2}`;
+    } else if (selectedMemeType === 'buzz') {
+        imageUrl = `https://api.memegen.link/images/buzz/${text1}/${text2}`;
+    } else if (selectedMemeType === 'blackman') {
+        imageUrl = `https://api.memegen.link/images/dbg/${text1}/${text2}`;
     } else {
         alert('Érvénytelen mém típus.');
         return;
