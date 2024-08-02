@@ -46,7 +46,6 @@
                 <p>Biden (Twitter Post)</p>
             </div>
         </div>
-
             </div>
             <div id="generator">
                 <input type="text" id="description" placeholder="Szöveg (max 100 karakter)" maxlength="100">
@@ -57,12 +56,39 @@
             </div>
         </div>
         <div id="page2" class="page">
-            <!-- 2 Textes oldal tartalma -->
-            <p>2 Textes oldal tartalma</p>
+            <div id="meme-grid2">
+                <div class="meme-option" data-meme="Choose">
+                    <img src="https://api.memegen.link/images/ds/text1/text2" alt="Choose">
+                    <p>Hard Choose</p>
+                </div>
+                <!-- További mém opciók -->
+            </div>
+            <div id="generator2">
+                <input type="text" id="description2-1" placeholder="Szöveg 1 (max 100 karakter)" maxlength="100">
+                <input type="text" id="description2-2" placeholder="Szöveg 2 (max 100 karakter)" maxlength="100">
+                <button class="generate-button" data-page="page2">Generálás</button>
+            </div>
+            <div id="result2">
+                <img class="meme-image" alt="Meme kép">
+            </div>
         </div>
         <div id="page3" class="page">
-            <!-- 3 Textes oldal tartalma -->
-            <p>3 Textes oldal tartalma</p>
+            <div id="meme-grid3">
+                <div class="meme-option" data-meme="pikachu">
+                    <img src="https://api.popcat.xyz/pikachu?text=text1&text2=text2&text3=text3" alt="Pikachu">
+                    <p>Pikachu (Meglepődés)</p>
+                </div>
+                <!-- További mém opciók -->
+            </div>
+            <div id="generator3">
+                <input type="text" id="description3-1" placeholder="Szöveg 1 (max 100 karakter)" maxlength="100">
+                <input type="text" id="description3-2" placeholder="Szöveg 2 (max 100 karakter)" maxlength="100">
+                <input type="text" id="description3-3" placeholder="Szöveg 3 (max 100 karakter)" maxlength="100">
+                <button class="generate-button" data-page="page3">Generálás</button>
+            </div>
+            <div id="result3">
+                <img class="meme-image" alt="Meme kép">
+            </div>
         </div>
     </div>
     <script src="memeoldal.js"></script>
