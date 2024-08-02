@@ -37,18 +37,46 @@ document.getElementById('generate-button').addEventListener('click', () => {
         imageUrl = `https://frenchnoodles.xyz/api/endpoints/changemymind/?text=${text}`;
     } else if (selectedMemeType === 'biden') {
         imageUrl = `https://api.popcat.xyz/biden?text=${text}`;
-    } else if (selectedMemeType === 'Choose') {
-        imageUrl = `https://api.memegen.link/images/ds/${text1}/${text2}`;
-    } else if (selectedMemeType === 'Drake') {
-        imageUrl = `https://frenchnoodles.xyz/api/endpoints/drake/?text1=${text1}&text2=${text2}`;
-    } else if (selectedMemeType === 'Pooh') {
-        imageUrl = `https://api.popcat.xyz/pooh?text1=${text1}&text2=${text2}`;
     } else {
         alert('Érvénytelen mém típus.');
         return;
     }
 
     const memeImage = document.getElementById('meme-image');
+    memeImage.src = imageUrl;
+    memeImage.alt = 'Meme kép';
+    memeImage.style.display = 'block';
+});
+
+// Page2 generálás
+document.getElementById('generate-button-2').addEventListener('click', () => {
+    const text1 = encodeURIComponent(document.getElementById('description2-1').value);
+    const text2 = encodeURIComponent(document.getElementById('description2-2').value);
+    
+    if (text1.length > 100 || text2.length > 100) {
+        alert('A szövegek nem lehetnek többek, mint 100 karakter.');
+        return;
+    }
+
+    if (!selectedMemeType) {
+        alert('Kérlek válassz egy mém típust!');
+        return;
+    }
+
+    let imageUrl;
+
+    if (selectedMemeType === 'choose') {
+        imageUrl = `https://api.memegen.link/images/ds/${text1}/${text2}`;
+    } else if (selectedMemeType === 'drake') {
+        imageUrl = `https://frenchnoodles.xyz/api/endpoints/drake/?text1=${text1}&text2=${text2}`;
+    } else if (selectedMemeType === 'pooh') {
+        imageUrl = `https://api.popcat.xyz/pooh?text1=${text1}&text2=${text2}`;
+    } else {
+        alert('Érvénytelen mém típus.');
+        return;
+    }
+
+    const memeImage = document.getElementById('meme-image-2');
     memeImage.src = imageUrl;
     memeImage.alt = 'Meme kép';
     memeImage.style.display = 'block';
@@ -66,6 +94,5 @@ document.querySelectorAll('.nav-button').forEach(button => {
     });
 });
 
-// Az első oldal alapértelmezett megjelenítése
 document.getElementById('page1').classList.add('active');
 document.querySelector('.nav-button[data-page="page1"]').classList.add('active');
