@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meme Generátor</title>
+    <title>Meme Maker</title>
     <link rel="stylesheet" href="memeoldal.css">
 </head>
 <body>
@@ -17,11 +17,11 @@
             <div id="meme-grid">
                 <div class="meme-option" data-meme="pikachu">
                     <img src="https://api.popcat.xyz/pikachu?text=text" alt="Pikachu">
-                    <p>Pikachu (Meglepődés)</p>
+                    <p>Pikachu</p>
                 </div>
                 <div class="meme-option" data-meme="oogway">
                     <img src="https://api.popcat.xyz/oogway?text=text" alt="Oogway">
-                    <p>Oogway (Idézet)</p>
+                    <p>Oogway</p>
                 </div>
                 <div class="meme-option" data-meme="fact">
                     <img src="https://api.popcat.xyz/facts?text=text" alt="Fact">
@@ -32,8 +32,8 @@
                     <p>Sadcat</p>
                 </div>
                 <div class="meme-option" data-meme="dipperworthless">
-                    <img src="https://frenchnoodles.xyz/api/endpoints/worthless/?text=text" alt="Dipper Worthless">
-                    <p>Dipper (Értéktelen)</p>
+                    <img src="https://frenchnoodles.xyz/api/endpoints/worthless/?text=text" alt="Dipper">
+                    <p>Dipper</p>
                 </div>
                 <div class="meme-option" data-meme="changemymind">
                     <img src="https://frenchnoodles.xyz/api/endpoints/changemymind/?text=text" alt="Change My Mind">
@@ -41,15 +41,19 @@
                 </div>
                 <div class="meme-option" data-meme="biden">
                     <img src="https://api.popcat.xyz/biden?text=text" alt="Biden">
-                    <p>Biden (Twitter Post)</p>
+                    <p>Biden (Tweet)</p>
+                </div>
+                <div class="meme-option" data-meme="headaches">
+                    <img src="https://api.memegen.link/images/headaches/text" alt="Headaches">
+                    <p>Headaches</p>
                 </div>
             </div>
             <div id="generator">
-                <input type="text" id="description" placeholder="Szöveg (max 100 karakter)" maxlength="100">
-                <button id="generate-button">Generálás</button>
+                <input type="text" id="description" placeholder="Text (max 100 characters)" maxlength="100">
+                <button id="generate-button">Generate</button>
             </div>
             <div id="result">
-                <img id="meme-image" alt="Meme kép">
+                <img id="meme-image" alt="Meme Picture">
             </div>
         </div>
         <div id="page2" class="page">
@@ -78,14 +82,34 @@
                     <img src="https://api.memegen.link/images/dbg/text1/text2" alt="BlackMan">
                     <p>BlackMan</p>
                 </div>
+                <div class="meme-option" data-meme="kermit">
+                    <img src="https://api.memegen.link/images/kermit/text1/text2" alt="Kermit">
+                    <p>Kermit</p>
+                </div>
+                <div class="meme-option" data-meme="slap">
+                    <img src="https://api.memegen.link/images/slap/text1/text2" alt="Slap">
+                    <p>Slap</p>
+                </div>
+                <div class="meme-option" data-meme="khaby-lame">
+                    <img src="https://api.memegen.link/images/khaby-lame/text1/text2" alt="Khaby Lame">
+                    <p>Khaby Lame</p>
+                </div>
+                <div class="meme-option" data-meme="bilbo">
+                    <img src="https://api.memegen.link/images/bilbo/text1/text2" alt="Bilbo">
+                    <p>Bilbo</p>
+                </div>
+                <div class="meme-option" data-meme="jim">
+                    <img src="https://api.memegen.link/images/jim/text1/text2" alt="Jim">
+                    <p>Jim</p>
+                </div>
             </div>
             <div id="generator-2">
-                <input type="text" id="description2-1" placeholder="Szöveg 1 (max 100 karakter)" maxlength="100">
-                <input type="text" id="description2-2" placeholder="Szöveg 2 (max 100 karakter)" maxlength="100">
-                <button id="generate-button-2">Generálás</button>
+                <input type="text" id="description2-1" placeholder="Text 1 (max 100 characters)" maxlength="100">
+                <input type="text" id="description2-2" placeholder="Text 2 (max 100 characters)" maxlength="100">
+                <button id="generate-button-2">Generate</button>
             </div>
             <div id="result-2">
-                <img id="meme-image-2" alt="Meme kép">
+                <img id="meme-image-2" alt="Meme Picture">
             </div>
         </div>
     </div>
