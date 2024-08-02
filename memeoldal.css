@@ -8,14 +8,10 @@ body {
     background: #e0e0e0;
 }
 
-.container {
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+footer {
+    background: rgba(0, 0, 0, 0.5);
     text-align: center;
-    max-width: 900px;
-    width: 100%;
+    padding: 10px;
 }
 
 header {
@@ -28,6 +24,15 @@ h1 {
     margin: 0;
 }
 
+.container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 900px;
+    width: 100%;
+}
 #meme-grid, #meme-grid-2 {
     display: flex;
     flex-wrap: wrap;
@@ -120,10 +125,4 @@ h1 {
 
 .nav-button.active {
     background-color: #ccc;
-}
-
-footer {
-    background: rgba(0, 0, 0, 0.5);
-    text-align: center;
-    padding: 10px;
 }
