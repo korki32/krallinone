@@ -9,8 +9,15 @@
 <body>
     <div class="container">
         <h1>Meme Generátor</h1>
-        <div id="meme-grid">
-            <div class="meme-option" data-meme="pikachu">
+        <div class="nav">
+            <button class="nav-button" data-page="page1">1 Textes</button>
+            <button class="nav-button" data-page="page2">2 Textes</button>
+            <button class="nav-button" data-page="page3">3 Textes</button>
+        </div>
+        <div id="page1" class="page">
+            <!-- Az eredeti tartalom itt -->
+            <div id="meme-grid">
+                <div class="meme-option" data-meme="pikachu">
                 <img src="https://api.popcat.xyz/pikachu?text=text" alt="Pikachu">
                 <p>Pikachu (Meglepődés)</p>
             </div>
@@ -39,12 +46,23 @@
                 <p>Biden (Twitter Post)</p>
             </div>
         </div>
-        <div id="generator">
-            <input type="text" id="description" placeholder="Szöveg (max 100 karakter)" maxlength="100">
-            <button id="generate-button">Generálás</button>
+
+            </div>
+            <div id="generator">
+                <input type="text" id="description" placeholder="Szöveg (max 100 karakter)" maxlength="100">
+                <button id="generate-button">Generálás</button>
+            </div>
+            <div id="result">
+                <img id="meme-image" alt="Meme kép">
+            </div>
         </div>
-        <div id="result">
-            <img id="meme-image" alt="Meme kép">
+        <div id="page2" class="page">
+            <!-- 2 Textes oldal tartalma -->
+            <p>2 Textes oldal tartalma</p>
+        </div>
+        <div id="page3" class="page">
+            <!-- 3 Textes oldal tartalma -->
+            <p>3 Textes oldal tartalma</p>
         </div>
     </div>
     <script src="memeoldal.js"></script>
