@@ -31,8 +31,8 @@ document.getElementById('generate-button').addEventListener('click', () => {
         imageUrl = `https://api.popcat.xyz/facts?text=${text}`;
     } else if (selectedMemeType === 'sadcat') {
         imageUrl = `https://api.popcat.xyz/sadcat?text=${text}`;
-    } else if (selectedMemeType === 'sbburn') {
-        imageUrl = `https://luminabot.xyz/api/image/burn?text=${text}`;
+    } else if (selectedMemeType === 'dipperworthless') {
+        imageUrl = `https://frenchnoodles.xyz/api/endpoints/worthless/?text=${text}`;
     } else if (selectedMemeType === 'changemymind') {
         imageUrl = `https://frenchnoodles.xyz/api/endpoints/changemymind/?text=${text}`;
     } else if (selectedMemeType === 'biden') {
