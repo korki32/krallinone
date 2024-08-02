@@ -47,3 +47,19 @@ document.getElementById('generate-button').addEventListener('click', () => {
     memeImage.alt = 'Meme kép';
     memeImage.style.display = 'block';
 });
+
+// Oldalak közötti váltás
+document.querySelectorAll('.nav-button').forEach(button => {
+    button.addEventListener('click', () => {
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+        
+        const pageId = button.getAttribute('data-page');
+        document.getElementById(pageId).classList.add('active');
+        button.classList.add('active');
+    });
+});
+
+// Az első oldal alapértelmezett megjelenítése
+document.getElementById('page1').classList.add('active');
+document.querySelector('.nav-button[data-page="page1"]').classList.add('active');
