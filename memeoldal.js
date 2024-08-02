@@ -37,6 +37,8 @@ document.getElementById('generate-button').addEventListener('click', () => {
         imageUrl = `https://frenchnoodles.xyz/api/endpoints/changemymind/?text=${text}`;
     } else if (selectedMemeType === 'biden') {
         imageUrl = `https://api.popcat.xyz/biden?text=${text}`;
+    } else if (selectedMemeType === 'headaches') {
+        imageUrl = `https://api.memegen.link/images/headaches/${text}/`;
     } else {
         alert('Érvénytelen mém típus.');
         return;
@@ -77,6 +79,16 @@ document.getElementById('generate-button-2').addEventListener('click', () => {
         imageUrl = `https://api.memegen.link/images/buzz/${text1}/${text2}`;
     } else if (selectedMemeType === 'blackman') {
         imageUrl = `https://api.memegen.link/images/dbg/${text1}/${text2}`;
+    }else if (selectedMemeType === 'kermit') {
+        imageUrl = `https://api.memegen.link/images/kermit/${text1}/${text2}`;
+    }else if (selectedMemeType === 'slap') {
+        imageUrl = `https://api.memegen.link/images/slap/${text1}/${text2}`;
+    }else if (selectedMemeType === 'khaby-lame') {
+        imageUrl = `https://api.memegen.link/images/khaby-lame/${text1}/${text2}`;
+    }else if (selectedMemeType === 'bilbo') {
+        imageUrl = `https://api.memegen.link/images/bilbo/${text1}/${text2}`;
+    }else if (selectedMemeType === 'jim') {
+        imageUrl = `https://api.memegen.link/images/jim/${text1}/${text2}`;
     } else {
         alert('Érvénytelen mém típus.');
         return;
