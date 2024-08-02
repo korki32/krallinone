@@ -104,6 +104,8 @@ h1 {
 
 #result, #result-2 {
     margin-top: 20px;
+    display: flex;
+    justify-content: center;
 }
 
 #meme-image, #meme-image-2 {
