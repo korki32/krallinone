@@ -154,7 +154,7 @@ h1 {
 }
 
 .nav-button:hover {
-    color: #f0094a;
+    color: #09f00d;
     background: transparent;
     box-shadow: none;
 }
@@ -167,7 +167,7 @@ h1 {
     right: 0;
     height: 2px;
     width: 0;
-    background: #f0094a;
+    background: #09f00d;
     box-shadow: -1px -1px 5px 0px #fff, 7px 7px 20px 0px #0003, 4px 4px 5px 0px #0002;
     transition: 400ms ease all;
 }
@@ -186,5 +186,5 @@ h1 {
 }
 
 .nav-button.active {
-    background-color: #ccc;
+    background-color: #9009f0;
 }
