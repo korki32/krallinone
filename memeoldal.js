@@ -41,6 +41,14 @@ document.getElementById('generate-button').addEventListener('click', () => {
         imageUrl = `https://api.memegen.link/images/headaches/${text}/`;
     } else if (selectedMemeType === 'prop') {
         imageUrl = `https://api.memegen.link/images/prop3/${text}/`;
+    } else if (selectedMemeType === 'scroll"') {
+        imageUrl = `https://api.alexflipnote.dev/scroll?text=${text}`;
+    } else if (selectedMemeType === 'lisa') {
+        imageUrl = `https://frenchnoodles.xyz/api/endpoints/lisastage/?text=${text}`;
+    } else if (selectedMemeType === 'awkwardmonkey') {
+        imageUrl = `https://frenchnoodles.xyz/api/endpoints/awkwardmonkey/?text=${text}`;
+    } else if (selectedMemeType === 'spongebobburnpaper') {
+        imageUrl = `https://frenchnoodles.xyz/api/endpoints/spongebobburnpaper/?text=${text}`;
     } else {
         alert('Érvénytelen mém típus.');
         return;
@@ -99,6 +107,8 @@ document.getElementById('generate-button-2').addEventListener('click', () => {
         imageUrl = `https://api.memegen.link/images/woman-cat/${text1}/${text2}`;
     } else if (selectedMemeType === 'worst') {
         imageUrl = `https://api.memegen.link/images/worst/${text1}/${text2}`;
+    } else if (selectedMemeType === 'didumean') {
+        imageUrl = `https://api.alexflipnote.dev/didyoumean?top=${text1}&bottom=${text2}`;
     } else {
         alert('Érvénytelen mém típus.');
         return;
