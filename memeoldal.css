@@ -134,7 +134,7 @@ h1 {
     margin: 20px;
     width: 130px;
     height: 40px;
-    color: #fff;
+    color: #12e362;
     border-radius: 5px;
     padding: 10px 25px;
     font-family: 'Lato', sans-serif;
@@ -186,5 +186,5 @@ h1 {
 }
 
 .nav-button.active {
-    background-color: #9009f0;
+    background-color: #09f00d;
 }
