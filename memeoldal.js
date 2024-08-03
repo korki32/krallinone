@@ -39,6 +39,8 @@ document.getElementById('generate-button').addEventListener('click', () => {
         imageUrl = `https://api.popcat.xyz/biden?text=${text}`;
     } else if (selectedMemeType === 'headaches') {
         imageUrl = `https://api.memegen.link/images/headaches/${text}/`;
+    } else if (selectedMemeType === 'prop') {
+        imageUrl = `https://api.memegen.link/images/prop3/${text}/`;
     } else {
         alert('Érvénytelen mém típus.');
         return;
@@ -79,16 +81,24 @@ document.getElementById('generate-button-2').addEventListener('click', () => {
         imageUrl = `https://api.memegen.link/images/buzz/${text1}/${text2}`;
     } else if (selectedMemeType === 'blackman') {
         imageUrl = `https://api.memegen.link/images/dbg/${text1}/${text2}`;
-    }else if (selectedMemeType === 'kermit') {
+    } else if (selectedMemeType === 'kermit') {
         imageUrl = `https://api.memegen.link/images/kermit/${text1}/${text2}`;
-    }else if (selectedMemeType === 'slap') {
+    } else if (selectedMemeType === 'slap') {
         imageUrl = `https://api.memegen.link/images/slap/${text1}/${text2}`;
-    }else if (selectedMemeType === 'khaby-lame') {
+    } else if (selectedMemeType === 'khaby-lame') {
         imageUrl = `https://api.memegen.link/images/khaby-lame/${text1}/${text2}`;
-    }else if (selectedMemeType === 'bilbo') {
+    } else if (selectedMemeType === 'bilbo') {
         imageUrl = `https://api.memegen.link/images/bilbo/${text1}/${text2}`;
-    }else if (selectedMemeType === 'jim') {
+    } else if (selectedMemeType === 'jim') {
         imageUrl = `https://api.memegen.link/images/jim/${text1}/${text2}`;
+    } else if (selectedMemeType === 'seagull') {
+        imageUrl = `https://api.memegen.link/images/seagull/${text1}/${text2}`;
+    } else if (selectedMemeType === 'touch') {
+        imageUrl = `https://api.memegen.link/images/touch/${text1}/${text2}`;
+    } else if (selectedMemeType === 'woman-cat') {
+        imageUrl = `https://api.memegen.link/images/woman-cat/${text1}/${text2}`;
+    } else if (selectedMemeType === 'worst') {
+        imageUrl = `https://api.memegen.link/images/worst/${text1}/${text2}`;
     } else {
         alert('Érvénytelen mém típus.');
         return;
