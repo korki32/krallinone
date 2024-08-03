@@ -54,7 +54,6 @@ h1 {
 
 .meme-option {
     width: 150px;
-    height: 150px;
     cursor: pointer;
     border: 2px solid transparent;
     transition: border-color 0.3s, transform 0.3s;
@@ -63,6 +62,7 @@ h1 {
 
 .meme-option img {
     width: 100%;
+    height: auto;
     border-radius: 10px;
 }
 
