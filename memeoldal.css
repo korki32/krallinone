@@ -134,7 +134,7 @@ h1 {
     margin: 20px;
     width: 130px;
     height: 40px;
-    color: #12e362;
+    color: #fff;
     border-radius: 5px;
     padding: 10px 25px;
     font-family: 'Lato', sans-serif;
@@ -149,12 +149,12 @@ h1 {
     line-height: 42px;
     padding: 0;
     border: none;
-    background: rgb(255, 27, 0);
-    background: linear-gradient(0deg, rgba(255, 27, 0, 1) 0%, rgba(251, 75, 2, 1) 100%);
+    background: rgb(34, 193, 195);
+    background: linear-gradient(0deg, rgba(34, 193, 195, 1) 0%, rgba(45, 253, 111, 1) 100%);
 }
 
 .nav-button:hover {
-    color: #09f00d;
+    color: #22C1C3;
     background: transparent;
     box-shadow: none;
 }
@@ -167,7 +167,7 @@ h1 {
     right: 0;
     height: 2px;
     width: 0;
-    background: #09f00d;
+    background: #22C1C3;
     box-shadow: -1px -1px 5px 0px #fff, 7px 7px 20px 0px #0003, 4px 4px 5px 0px #0002;
     transition: 400ms ease all;
 }
@@ -186,5 +186,5 @@ h1 {
 }
 
 .nav-button.active {
-    background-color: #09f00d;
+    background-color: #ccc;
 }
