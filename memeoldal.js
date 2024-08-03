@@ -41,7 +41,7 @@ document.getElementById('generate-button').addEventListener('click', () => {
         imageUrl = `https://api.memegen.link/images/headaches/${text}/`;
     } else if (selectedMemeType === 'prop') {
         imageUrl = `https://api.memegen.link/images/prop3/${text}/`;
-    } else if (selectedMemeType === 'scroll"') {
+    } else if (selectedMemeType === 'scroll') {
         imageUrl = `https://api.alexflipnote.dev/scroll?text=${text}`;
     } else if (selectedMemeType === 'lisa') {
         imageUrl = `https://frenchnoodles.xyz/api/endpoints/lisastage/?text=${text}`;
