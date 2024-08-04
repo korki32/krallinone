@@ -109,7 +109,21 @@ document.getElementById('generate-button-2').addEventListener('click', () => {
         imageUrl = `https://api.memegen.link/images/worst/${text1}/${text2}`;
     } else if (selectedMemeType === 'didumean') {
         imageUrl = `https://api.alexflipnote.dev/didyoumean?top=${text1}&bottom=${text2}`;
-    } else {
+    } else if (selectedMemeType === 'spongebob2') {
+        imageUrl = `https://apimeme.com/meme?meme=Dont-You-Squidward&top=${text1}&bottom=${text2}`;
+    } else if (selectedMemeType === 'dadandson') {
+        imageUrl = `https://apimeme.com/meme?meme=Finding-Neverland&top=${text1}&bottom=${text2}`;
+    } else if (selectedMemeType === 'spongebob3') {
+        imageUrl = `https://apimeme.com/meme?meme=Imagination-Spongebob&top=${text1}&bottom=${text2}`;
+    } else if (selectedMemeType === 'spongebob4') {
+        imageUrl = `https://apimeme.com/meme?meme=Ill-Have-You-Know-Spongebob&top=${text1}&bottom=${text2}`;
+    } else if (selectedMemeType === 'morty') {
+        imageUrl = `https://apimeme.com/meme?meme=Morty&top=${text1}&bottom=${text2}`;
+    } else if (selectedMemeType === 'mrkrabs') {
+        imageUrl = `https://apimeme.com/meme?meme=Mr-Krabs-Blur-Meme&top=${text1}&bottom=${text2}`;
+    } else if (selectedMemeType === 'rpgfan') {
+        imageUrl = `https://apimeme.com/meme?meme=RPG-Fan&top=${text1}&bottom=${text2}`;
+    }  else {
         alert('Érvénytelen mém típus.');
         return;
     }
