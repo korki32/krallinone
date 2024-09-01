@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', function () {
         { name: 'Omen', image: 'images/valorant/agent_omen.png' },
         { name: 'Astra', image: 'images/valorant/agent_astra.png' },
         { name: 'Harbor', image: 'images/valorant/agent_harbor.png' },
-        { name: 'Clove', image: 'images/valorant/agent_clove.png' }
+        { name: 'Clove', image: 'images/valorant/agent_clove.png' },
+        { name: 'Vyse', image: 'images/valorant/agent_vyse.png' }
     ];
 
     const canvas = document.getElementById('wheel');
