@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
         { name: 'Killjoy', image: 'images/valorant/agent_killjoy.png' },
         { name: 'Chamber', image: 'images/valorant/agent_chamber.png' },
         { name: 'Deadlock', image: 'images/valorant/agent_deadlock.png' },
+        { name: 'Vyse', image: 'images/valorant/agent_vyse.png' },
         { name: 'Jett', image: 'images/valorant/agent_jett.png' },
         { name: 'Phoenix', image: 'images/valorant/agent_phoenix.png' },
         { name: 'Reyna', image: 'images/valorant/agent_reyna.png' },
@@ -23,8 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
         { name: 'Omen', image: 'images/valorant/agent_omen.png' },
         { name: 'Astra', image: 'images/valorant/agent_astra.png' },
         { name: 'Harbor', image: 'images/valorant/agent_harbor.png' },
-        { name: 'Clove', image: 'images/valorant/agent_clove.png' },
-        { name: 'Vyse', image: 'images/valorant/agent_vyse.png' }
+        { name: 'Clove', image: 'images/valorant/agent_clove.png' }
     ];
 
     const canvas = document.getElementById('wheel');
