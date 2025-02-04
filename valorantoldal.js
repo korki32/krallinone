@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
         { name: 'KAY/O', image: 'images/valorant/agent_kayo.png' },
         { name: 'Fade', image: 'images/valorant/agent_fade.png' },
         { name: 'Gekko', image: 'images/valorant/agent_gekko.png' },
+        { name: 'Tejo', image: 'images/valorant/agent_tejo.png' },
         { name: 'Cypher', image: 'images/valorant/agent_cypher.png' },
         { name: 'Sage', image: 'images/valorant/agent_sage.png' },
         { name: 'Killjoy', image: 'images/valorant/agent_killjoy.png' },
