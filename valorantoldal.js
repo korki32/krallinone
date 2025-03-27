@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
         { name: 'Yoru', image: 'images/valorant/agent_yoru.png' },
         { name: 'Neon', image: 'images/valorant/agent_neon.png' },
         { name: 'Iso', image: 'images/valorant/agent_iso.png' },
+        { name: 'Waylay', image: 'images/valorant/agent_waylay.png' },
         { name: 'Brimstone', image: 'images/valorant/agent_brimstone.png' },
         { name: 'Viper', image: 'images/valorant/agent_viper.png' },
         { name: 'Omen', image: 'images/valorant/agent_omen.png' },
