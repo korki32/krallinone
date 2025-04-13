@@ -1,105 +1,79 @@
-/* Háttér csillagok */
-#stars, #stars2, #stars3 {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    z-index: -1;
-    background: transparent;
-    /* ha volt animáció, azt ide másold be */
+body {
+  margin: 0;
+  font-family: 'Lato', sans-serif;
+  color: white;
+  background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Navigáció */
+.plugin-nav {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px 0;
+  text-align: center;
+}
+
 .plugin-nav ul {
-    display: flex;
-    justify-content: center;
-    list-style: none;
-    padding: 20px;
-    margin: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.plugin-nav ul li {
-    margin: 0 15px;
+.plugin-nav li {
+  display: inline;
+  margin: 0 15px;
 }
 
-.plugin-nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1.1rem;
+.plugin-nav a {
+  color: #66ccff;
+  text-decoration: none;
+  font-weight: bold;
 }
 
-/* Fejléc */
+.plugin-nav a:hover {
+  text-decoration: underline;
+}
+
 header {
-    background: rgba(0, 0, 0, 0.7);
-    padding: 20px 0;
+  text-align: center;
+  padding: 40px 20px 20px 20px;
 }
 
-.header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 20px;
+.post {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 10px;
+  box-shadow: 0 0 10px #000;
 }
 
-.header-content .logo {
-    width: 60px;
-    height: auto;
+.post-content h2 {
+  color: #66ccff;
+  margin-top: 20px;
 }
 
-.header-content h1 {
-    color: white;
-    font-size: 2rem;
-    margin: 0;
-}
-
-.header-content .version {
-    color: #ccc;
-    font-size: 0.9rem;
-}
-
-/* Fő tartalom */
-main.post {
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 12px;
-    color: white;
-}
-
-/* Szövegrészek */
-h2 {
-    margin-top: 30px;
-    color: #ffcc00;
-}
-
-p, ul, ol {
-    line-height: 1.6;
-}
-
-ul, ol {
-    padding-left: 20px;
-}
-
-/* Youtube videó */
 .video-container {
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-    margin-top: 20px;
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
 }
 
 .video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+  opacity: 0.6;
+  margin-top: auto;
 }
