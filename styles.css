@@ -219,3 +219,50 @@ body {
     color: #777;
 }
 
+main.post {
+  max-width: 800px;
+  margin: 50px auto;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+main.post h2 {
+  margin-top: 30px;
+  font-size: 2rem;
+  border-bottom: 2px solid #fff;
+  padding-bottom: 5px;
+}
+
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.back-button {
+  display: inline-block;
+  margin-top: 30px;
+  padding: 10px 20px;
+  background: #ffffff20;
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+.back-button:hover {
+  background: #ffffff40;
+}
