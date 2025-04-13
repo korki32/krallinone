@@ -4,37 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Longjump Plugin - Korki32</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="csoldalak.css">
 </head>
 <body>
     <div id="stars"></div>
     <div id="stars2"></div>
     <div id="stars3"></div>
 
+    <nav class="plugin-nav">
+        <ul>
+            <li><a href="longjump.html">Longjump</a></li>
+            <li><a href="wallclimb.html">WallClimb</a></li>
+            <li><a href="selloursouls.html">Sell Our Souls</a></li>
+            <li><a href="alca.html">Álca</a></li>
+            <li><a href="halloween.html">S1MPLA Halloween Környezet</a></li>
+            <li><a href="cs.html">Vissza a főoldalra</a></li>
+        </ul>
+    </nav>
+
     <header>
-        <h1>Longjump Plugin</h1>
+        <div class="header-content">
+            <img src="cs16-logo.png" alt="CS1.6 Logo" class="cs-logo">
+            <h1>Longjump Plugin</h1>
+            <span class="version">Verzió: 1.2 - Utolsó frissítés: 2024.04.12</span>
+        </div>
     </header>
 
     <main class="post">
-        <h2>Telepítés</h2>
-        <p>1. Tedd a .amxx fájlt az <code>cstrike/addons/amxmodx/plugins</code> mappába.<br>
-           2. Írd be a plugin nevét a <code>plugins.ini</code> fájlba.<br>
-           3. Indítsd újra a szervert vagy írd be: <code>amx_reloadplugins</code>.
-        </p>
+        <section class="post-content">
+            <h2>Leírás</h2>
+            <p><strong>Mi ez?</strong><br>
+            Ez egy egyszerű, de nagyon hasznos plugin CS1.6 szerverekre! 20 HP-ért cserébe a játékosok hosszabb ugrás képességét szerezhetik meg.</p>
+            <p><strong>Funkciók:</strong><br>
+            - 20 HP-ért vásárolható hosszú ugrás<br>
+            - Az ugrás 5 másodpercenként újratölt<br>
+            - Speciális modell jelenik meg ugrás közben</p>
 
-        <h2>Leírás</h2>
-        <p>A Longjump plugin lehetővé teszi a játékosoknak, hogy extra hosszú ugrásokat hajtsanak végre a pályákon, különleges taktikákhoz.</p>
+            <h2>Szükséges modulok</h2>
+            <ul>
+                <li>fakemeta</li>
+                <li>engine</li>
+                <li>hamsandwich</li>
+            </ul>
 
-        <h2>Videó</h2>
-        <div class="video-container">
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/IDE_VIDEÓ_LINK" frameborder="0" allowfullscreen></iframe>
-        </div>
+            <h2>CVAR-ok</h2>
+            <ul>
+                <li><code>longjump_cost</code> - Hány HP-ba kerül a Longjump (default: 20)</li>
+                <li><code>longjump_cooldown</code> - Mennyi időnként használható újra (default: 5 másodperc)</li>
+            </ul>
 
-        <a href="index.html" class="back-button">Vissza a főoldalra</a>
+            <h2>Parancsok</h2>
+            <ul>
+                <li><code>/longjump</code> - Longjump vásárlása</li>
+                <li><code>/lj</code> - Rövidített parancs a vásárláshoz</li>
+            </ul>
+
+            <h2>Videó bemutató</h2>
+            <div class="video-container">
+                <iframe src="https://www.youtube.com/embed/Qmy-XnZ6YPM" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </section>
     </main>
 
     <footer>
-        <p>&copy; 2024 Korki32.</p>
+        <p>&copy; 2024 Korki32. Minden jog fenntartva.</p>
     </footer>
+
+    <script src="csoldalak.js"></script>
 </body>
 </html>
