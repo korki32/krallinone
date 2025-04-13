@@ -23,7 +23,11 @@
     </nav>
 
     <header>
-        <h1>Longjump Plugin</h1>
+        <div class="header-content">
+            <img src="https://store-images.microsoft.com/image/apps.5776.13510798882863495.a272fbc4-ffa3-4878-9602-509559f9eaba.1537a623-da5b-4809-83fe-f50b0ab003f3?mode=scale&amp;q=90&amp;h=300&amp;w=300" style="height:30px; width:30px alt="CS1.6 Logo" class="cs-logo">
+            <h1>Longjump Plugin</h1>
+            <span class="version">Verzió: 1.0 - Utolsó frissítés: 2023.10.11</span>
+        </div>
     </header>
 
     <main class="post">
@@ -38,21 +42,31 @@
 
             <h2>Szükséges modulok</h2>
             <ul>
-                <li>fakemeta</li>
-                <li>engine</li>
-                <li>hamsandwich</li>
+                <li>Fakemeta_util</li>
+                <li>Hamsandwich</li>
+                <li>Engine</li>
+                <li>Fun</li>
             </ul>
 
             <h2>CVAR-ok</h2>
             <ul>
                 <li><code>longjump_cost</code> - Hány HP-ba kerül a Longjump (default: 20)</li>
                 <li><code>longjump_cooldown</code> - Mennyi időnként használható újra (default: 5 másodperc)</li>
+                <li><code>longjump_force</code> - Milyen erősen ugorjon, ha használod a Long Jump képességet? (default: 590)</li>
+                <li><code>longjump_height </code> - Milyen magasra ugorjon, ha használod a Long Jump képességet? (default: 330)</li>
             </ul>
 
             <h2>Parancsok</h2>
             <ul>
                 <li><code>/longjump</code> - Longjump vásárlása</li>
                 <li><code>/lj</code> - Rövidített parancs a vásárláshoz</li>
+            </ul>
+
+             <h2>Telepítés</h2>
+            <ul>
+                <li><code>longjump.sma</code> ---> cstrike/addons/amxmodx/scripting</li>
+                <li><code>longjump.amxx</code> ---> cstrike/addons/amxmodx/plugins</li>
+                <li><code>longjump_s1mpla</code>MAPPA ---> cstrike/models</li>
             </ul>
 
             <h2>Videó bemutató</h2>
