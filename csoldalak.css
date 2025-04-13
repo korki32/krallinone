@@ -1,10 +1,12 @@
-/* Alap stílusok */
+* Alap stílusok */
 body {
     font-family: Arial, sans-serif;
     background-color: #111;
     color: #fff;
     margin: 0;
     padding: 0;
+
+
 }
 
 .plugin-nav ul {
@@ -18,6 +20,7 @@ body {
 .plugin-nav ul li {
     display: inline;
     margin: 0 15px;
+
 }
 
 .plugin-nav ul li a {
@@ -67,22 +70,32 @@ h2 {
 ul {
     list-style-type: none;
     padding-left: 20px;
+
+
+
+
 }
 
 ul li {
     font-size: 18px;
+
 }
 
 /* Videó stílus */
 .video-container {
     text-align: center;
     margin-top: 20px;
+
+
 }
 
 iframe {
     width: 100%;
     height: 500px;
     border: none;
+
+
+
 }
 
 /* Footer */
