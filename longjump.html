@@ -4,69 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Longjump Plugin - Korki32</title>
-    <link rel="stylesheet" href="csoldalak.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="stars"></div>
     <div id="stars2"></div>
     <div id="stars3"></div>
-    
+
     <header>
-        <div class="header-content">
-            <h1>Longjump Plugin</h1>
-        </div>
+        <h1>Longjump Plugin</h1>
     </header>
 
     <main class="post">
-        <section class="post-content">
-            <h2>Leírás</h2>
-            <p><strong>Mi ez?</strong><br>
-            Ez egy egyszerű, de nagyon hasznos plugin CS1.6 szerverekre! 20 HP-ért cserébe a játékosok hosszabb ugrás képességét szerezhetik meg.</p>
-            <p><strong>Funkciók:</strong><br>
-            - 20 HP-ért vásárolható hosszú ugrás<br>
-            - Az ugrás 5 másodpercenként újratölt<br>
-            - Speciális modell jelenik meg ugrás közben</p>
+        <h2>Telepítés</h2>
+        <p>1. Tedd a .amxx fájlt az <code>cstrike/addons/amxmodx/plugins</code> mappába.<br>
+           2. Írd be a plugin nevét a <code>plugins.ini</code> fájlba.<br>
+           3. Indítsd újra a szervert vagy írd be: <code>amx_reloadplugins</code>.
+        </p>
 
-            <h2>Szükséges modulok</h2>
-            <ul>
-                <li>Fakemeta_util</li>
-                <li>Hamsandwich</li>
-                <li>Engine</li>
-                <li>Fun</li>
-            </ul>
+        <h2>Leírás</h2>
+        <p>A Longjump plugin lehetővé teszi a játékosoknak, hogy extra hosszú ugrásokat hajtsanak végre a pályákon, különleges taktikákhoz.</p>
 
-            <h2>CVAR-ok</h2>
-            <ul>
-                <li><code>longjump_cost</code> - Hány HP-ba kerül a Longjump (default: 20)</li>
-                <li><code>longjump_cooldown</code> - Mennyi időnként használható újra (default: 5 másodperc)</li>
-                <li><code>longjump_force</code> - Milyen erősen ugorjon, ha használod a Long Jump képességet? (default: 590)</li>
-                <li><code>longjump_height </code> - Milyen magasra ugorjon, ha használod a Long Jump képességet? (default: 330)</li>
-            </ul>
+        <h2>Videó</h2>
+        <div class="video-container">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/IDE_VIDEÓ_LINK" frameborder="0" allowfullscreen></iframe>
+        </div>
 
-            <h2>Parancsok</h2>
-            <ul>
-                <li><code>/longjump</code> - Longjump vásárlása</li>
-                <li><code>/lj</code> - Rövidített parancs a vásárláshoz</li>
-            </ul>
-
-             <h2>Telepítés</h2>
-            <ul>
-                <li><code>longjump.sma</code> ---> cstrike/addons/amxmodx/scripting</li>
-                <li><code>longjump.amxx</code> ---> cstrike/addons/amxmodx/plugins</li>
-                <li><code>longjump_s1mpla</code>MAPPA ---> cstrike/models</li>
-            </ul>
-
-            <h2>Videó bemutató</h2>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/Qmy-XnZ6YPM" frameborder="0" allowfullscreen></iframe>
-            </div>
-        </section>
+        <a href="index.html" class="back-button">Vissza a főoldalra</a>
     </main>
 
     <footer>
-        <p>&copy; 2024 Korki32. Minden jog fenntartva.</p>
+        <p>&copy; 2024 Korki32.</p>
     </footer>
-
-    <script src="csoldalak.js"></script>
 </body>
 </html>
