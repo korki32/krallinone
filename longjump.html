@@ -28,25 +28,44 @@
 
     <main class="post">
         <section class="post-content">
-            <h2>Mi ez?</h2>
-            <p>A Longjump plugin lehetővé teszi, hogy a játékosok extra hosszú ugrásokat hajtsanak végre egy speciális kombinációval.</p>
+            <h2>Leírás</h2>
+            <p><strong>Mi ez?</strong><br>
+            Ez egy egyszerű, de nagyon hasznos plugin CS1.6 szerverekre! 20 HP-ért cserébe a játékosok hosszabb ugrás képességét szerezhetik meg.</p>
+            <p><strong>Funkciók:</strong><br>
+            - 20 HP-ért vásárolható hosszú ugrás<br>
+            - Az ugrás 5 másodpercenként újratölt<br>
+            - Speciális modell jelenik meg ugrás közben</p>
 
-            <h2>Telepítés</h2>
-            <ol>
-                <li>Másold a .amxx fájlt a `cstrike/addons/amxmodx/plugins` mappába.</li>
-                <li>Írd be a `plugins.ini` fájlba: `longjump.amxx`</li>
-                <li>Indítsd újra a szervert, és kész!</li>
-            </ol>
+            <h2>Szükséges modulok</h2>
+            <ul>
+                <li>fakemeta</li>
+                <li>engine</li>
+                <li>hamsandwich</li>
+            </ul>
 
-            <h2>Videó</h2>
+            <h2>CVAR-ok</h2>
+            <ul>
+                <li><code>longjump_cost</code> - Hány HP-ba kerül a Longjump (default: 20)</li>
+                <li><code>longjump_cooldown</code> - Mennyi időnként használható újra (default: 5 másodperc)</li>
+            </ul>
+
+            <h2>Parancsok</h2>
+            <ul>
+                <li><code>/longjump</code> - Longjump vásárlása</li>
+                <li><code>/lj</code> - Rövidített parancs a vásárláshoz</li>
+            </ul>
+
+            <h2>Videó bemutató</h2>
             <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/VIDEOKOD" frameborder="0" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/Qmy-XnZ6YPM" frameborder="0" allowfullscreen></iframe>
             </div>
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2024 Korki32</p>
+        <p>&copy; 2024 Korki32. Minden jog fenntartva.</p>
     </footer>
+
+    <script src="csoldalak.js"></script>
 </body>
 </html>
