@@ -114,3 +114,22 @@ footer {
     font-size: 14px;
     margin-top: 40px;
 }
+.social-icons {
+    margin-top: 10px;
+}
+
+.social-icons a {
+    display: inline-block;
+    margin: 0 10px;
+    transition: transform 0.2s ease;
+}
+
+.social-icons img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1); /* fehér ikonok */
+}
+
+.social-icons a:hover {
+    transform: scale(1.2);
+}
