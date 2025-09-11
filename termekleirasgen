@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termékleírás Generátor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body class="p-6 md:p-12 flex items-center justify-center min-h-screen">
+    <div class="container mx-auto p-6 bg-gray-800 rounded-2xl shadow-lg border border-purple-500">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-2">Termékleírás Generátor</h1>
+            <p class="text-gray-400 text-sm md:text-base">Adj meg néhány információt a termékedről, és az AI megírja a leírást.</p>
+        </div>
+        
+        <div class="space-y-4">
+            <input id="productNameInput" type="text" class="w-full p-4 bg-gray-700 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 text-white placeholder-gray-400" placeholder="Termék neve, pl. 'Okos ébresztőóra'">
+            
+            <textarea id="keywordsInput" rows="3" class="w-full p-4 bg-gray-700 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 resize-none text-white placeholder-gray-400" placeholder="Kulcsszavak, vesszővel elválasztva, pl. 'fényterápia, wifi, applikáció'"></textarea>
+            
+            <button id="generateDescriptionBtn" class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold rounded-xl shadow-lg hover:from-purple-700 hover:to-pink-600 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                Leírás Generálása
+            </button>
+        </div>
+        
+        <div id="resultContainer" class="mt-8 hidden">
+            <div class="w-full p-4 bg-gray-700 border border-gray-600 rounded-xl">
+                <p id="resultDescription" class="text-white whitespace-pre-wrap"></p>
+            </div>
+            <div class="mt-4 flex justify-end space-x-2">
+                <button id="copyBtn" class="py-2 px-4 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors duration-200">
+                    Másolás
+                </button>
+            </div>
+        </div>
+
+        <div id="errorBox" class="mt-4 p-4 bg-red-800 text-white rounded-lg hidden">
+            <p id="errorMessage"></p>
+        </div>
+
+    </div>
+
+    <script type="module">
+        const productNameInput = document.getElementById('productNameInput');
+        const keywordsInput = document.getElementById('keywordsInput');
+        const generateDescriptionBtn = document.getElementById('generateDescriptionBtn');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultDescription = document.getElementById('resultDescription');
+        const copyBtn = document.getElementById('copyBtn');
+        const errorBox = document.getElementById('errorBox');
+        const errorMessage = document.getElementById('errorMessage');
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`;
+
+        generateDescriptionBtn.addEventListener('click', async () => {
+            const productName = productNameInput.value.trim();
+            const keywords = keywordsInput.value.trim();
+
+            if (!productName || !keywords) {
+                showError('Kérlek, add meg a termék nevét és néhány kulcsszót.');
+                return;
+            }
+
+            resultContainer.classList.add('hidden');
+            generateDescriptionBtn.textContent = 'Generálás...';
+            generateDescriptionBtn.disabled = true;
+            hideError();
+
+            try {
+                const systemPrompt = "Act as a professional copywriter specializing in e-commerce. Write a compelling and SEO-friendly product description based on the provided product name and keywords. Use a friendly, persuasive tone and highlight the key benefits. The description should be a single paragraph. The output must be in the same language as the input text. Do not add any extra commentary or introductory text, just the description.";
+                const userQuery = `Product name: ${productName}. Keywords: ${keywords}.`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API hiba: ${response.status} ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                const description = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (description) {
+                    resultDescription.textContent = description;
+                    resultContainer.classList.remove('hidden');
+                } else {
+                    throw new Error('Hiba: Nem sikerült leírást generálni.');
+                }
+            } catch (error) {
+                console.error('Hiba a leírás generálásakor:', error);
+                showError(`Hiba a leírás generálásakor: ${error.message}.`);
+            } finally {
+                generateDescriptionBtn.textContent = 'Leírás Generálása';
+                generateDescriptionBtn.disabled = false;
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = resultDescription.textContent;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            copyBtn.textContent = 'Másolva!';
+            setTimeout(() => {
+                copyBtn.textContent = 'Másolás';
+            }, 2000);
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorBox.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorBox.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
