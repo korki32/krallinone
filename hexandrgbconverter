@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex-RGB Konvertáló</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937;
+            color: #e5e7eb;
+        }
+        .container {
+            background-color: #374151;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .input-field {
+            background-color: #4b5563;
+            border: 1px solid #6b7280;
+            color: #e5e7eb;
+            transition: all 0.2s ease-in-out;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+        .copy-btn {
+            background-color: #4b5563;
+            border: 1px solid #6b7280;
+            color: #e5e7eb;
+            transition: all 0.2s ease-in-out;
+        }
+        .copy-btn:hover {
+            background-color: #5b6270;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="container w-full max-w-lg mx-auto p-6 md:p-10">
+        <h1 class="text-3xl font-bold text-center mb-2">Hex-RGB Konvertáló</h1>
+        <p class="text-center text-gray-400 mb-8">Könnyű konvertálás a hexadecimális és RGB színek között</p>
+
+        <div class="space-y-6">
+            <!-- Hex to RGB -->
+            <div>
+                <label for="hex-input" class="block text-sm font-medium mb-2">Hex kód:</label>
+                <div class="flex items-center">
+                    <input type="text" id="hex-input" placeholder="#FF5733" class="input-field w-full p-3 rounded-lg text-base">
+                    <button id="hex-copy-btn" class="copy-btn py-3 px-4 rounded-lg ml-2 shadow-md">Másolás</button>
+                </div>
+            </div>
+
+            <div class="text-center text-2xl font-bold">⇌</div>
+
+            <!-- RGB to Hex -->
+            <div>
+                <label for="rgb-input" class="block text-sm font-medium mb-2">RGB érték (pl. 255, 87, 51):</label>
+                <div class="flex items-center">
+                    <input type="text" id="rgb-input" placeholder="255, 87, 51" class="input-field w-full p-3 rounded-lg text-base">
+                    <button id="rgb-copy-btn" class="copy-btn py-3 px-4 rounded-lg ml-2 shadow-md">Másolás</button>
+                </div>
+            </div>
+
+            <!-- Színmegjelenítő -->
+            <div id="color-preview" class="w-full h-24 rounded-lg border border-gray-600 mt-8" style="background-color: #3b82f6;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hexInput = document.getElementById('hex-input');
+            const rgbInput = document.getElementById('rgb-input');
+            const hexCopyBtn = document.getElementById('hex-copy-btn');
+            const rgbCopyBtn = document.getElementById('rgb-copy-btn');
+            const colorPreview = document.getElementById('color-preview');
+
+            // Segédfüggvény: RGB-ből Hex
+            function rgbToHex(r, g, b) {
+                const toHex = (c) => {
+                    const hex = c.toString(16);
+                    return hex.length === 1 ? "0" + hex : hex;
+                };
+                return "#" + toHex(r) + toHex(g) + toHex(b);
+            }
+
+            // Segédfüggvény: Hex-ből RGB
+            function hexToRgb(hex) {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : null;
+            }
+
+            // Hex-ből RGB konvertálás
+            hexInput.addEventListener('input', () => {
+                const hexValue = hexInput.value.trim();
+                const rgb = hexToRgb(hexValue);
+                if (rgb) {
+                    rgbInput.value = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+                    colorPreview.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+                } else {
+                    rgbInput.value = '';
+                }
+            });
+
+            // RGB-ből Hex konvertálás
+            rgbInput.addEventListener('input', () => {
+                const rgbValue = rgbInput.value.trim();
+                const parts = rgbValue.split(',').map(p => parseInt(p.trim()));
+                if (parts.length === 3 && parts.every(p => !isNaN(p) && p >= 0 && p <= 255)) {
+                    const hex = rgbToHex(parts[0], parts[1], parts[2]);
+                    hexInput.value = hex;
+                    colorPreview.style.backgroundColor = `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+                } else {
+                    hexInput.value = '';
+                }
+            });
+
+            // Másolás funkció
+            function copyToClipboard(elementId) {
+                const text = document.getElementById(elementId).value;
+                if (text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        const button = document.getElementById(`${elementId.split('-')[0]}-copy-btn`);
+                        const originalText = button.textContent;
+                        button.textContent = 'Másolva!';
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                        }, 2000);
+                    });
+                }
+            }
+            
+            hexCopyBtn.addEventListener('click', () => copyToClipboard('hex-input'));
+            rgbCopyBtn.addEventListener('click', () => copyToClipboard('rgb-input'));
+        });
+    </script>
+</body>
+</html>
+
