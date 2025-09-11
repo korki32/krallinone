@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recept Generátor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 60rem;
+        }
+        .loading-animation {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: none;
+            position: relative;
+            background: radial-gradient(circle, #f3f4f6 8%, #ffffff 9%, transparent 10%), conic-gradient(from 0deg, #e34e2c, #f7ba2c, #2a9d8f, #264653, #e34e2c);
+            animation: spin 2s linear infinite;
+        }
+        .loading-animation:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .message-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container bg-white p-8 rounded-2xl shadow-xl w-full">
+        <h1 class="text-4xl font-extrabold text-gray-800 text-center mb-6">Recept Generátor</h1>
+        <p class="text-center text-gray-600 mb-8">Írd be azokat az alapanyagokat, amik a hűtődben vannak, és én generálok neked egy receptet!</p>
+        
+        <div class="space-y-4">
+            <div>
+                <label for="ingredientsInput" class="block text-lg font-semibold text-gray-700 mb-2">Alapanyagok (vesszővel elválasztva):</label>
+                <textarea id="ingredientsInput" rows="4" class="w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="pl. csirke, rizs, paprika, hagyma"></textarea>
+            </div>
+            
+            <button id="generateBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
+                <span id="buttonText">Recept generálása</span>
+                <div id="loadingSpinner" class="loading-animation"></div>
+            </button>
+        </div>
+
+        <div id="recipeOutput" class="mt-8 p-6 bg-gray-50 border border-gray-200 rounded-lg shadow-inner hidden">
+            <h2 id="recipeTitle" class="text-3xl font-bold text-gray-800 mb-2"></h2>
+            <p id="servings" class="text-gray-500 text-sm mb-4"></p>
+            
+            <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-2">Hozzávalók:</h3>
+            <ul id="ingredientsList" class="list-disc list-inside text-gray-600 leading-relaxed space-y-1"></ul>
+            
+            <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-2">Elkészítés:</h3>
+            <div id="instructions" class="text-gray-600 leading-relaxed whitespace-pre-wrap"></div>
+        </div>
+    </div>
+    
+    <!-- Message Box -->
+    <div id="messageBox" class="message-box">
+        <p id="messageText" class="text-lg font-medium text-gray-800 mb-4"></p>
+        <button id="closeMessageBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">OK</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ingredientsInput = document.getElementById('ingredientsInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const buttonText = document.getElementById('buttonText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const recipeOutput = document.getElementById('recipeOutput');
+            const recipeTitle = document.getElementById('recipeTitle');
+            const servingsEl = document.getElementById('servings');
+            const ingredientsList = document.getElementById('ingredientsList');
+            const instructions = document.getElementById('instructions');
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            const closeMessageBtn = document.getElementById('closeMessageBtn');
+
+            const showMessageBox = (message) => {
+                messageText.textContent = message;
+                messageBox.style.display = 'block';
+            };
+
+            const hideMessageBox = () => {
+                messageBox.style.display = 'none';
+            };
+
+            closeMessageBtn.addEventListener('click', hideMessageBox);
+
+            // Fetch function with exponential backoff
+            async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const response = await fetch(url, options);
+                        if (!response.ok) {
+                            if (response.status === 429 && i < retries - 1) { // 429 Too Many Requests
+                                console.warn(`Too Many Requests, retrying in ${delay}ms...`);
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                delay *= 2; // Exponential backoff
+                                continue;
+                            }
+                        }
+                        return response;
+                    } catch (error) {
+                        if (i < retries - 1) {
+                            console.warn(`Fetch error: ${error.message}. Retrying in ${delay}ms...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                        throw error;
+                    }
+                }
+                throw new Error("Failed to fetch after multiple retries.");
+            }
+
+            const generateRecipe = async () => {
+                const ingredients = ingredientsInput.value.trim();
+                if (ingredients === '') {
+                    showMessageBox("Kérlek, adj meg legalább egy alapanyagot.");
+                    return;
+                }
+
+                generateBtn.disabled = true;
+                buttonText.textContent = 'Generálás...';
+                loadingSpinner.style.display = 'block';
+                recipeOutput.classList.add('hidden');
+
+                const systemPrompt = "Te egy világhírű séf vagy. Generálj egyetlen, részletes receptet az alábbi alapanyagokból. A recept legyen életszerű és ne igényeljen speciális konyhai eszközöket. A recept tartalmazza a címet, a személyek számát, a hozzávalók pontos listáját mennyiségekkel és mértékegységekkel (pl. gramm, csésze), és az elkészítés lépésről lépésre történő, jól tagolt leírását. A hozzávalókat listaként sorold fel, minden elemet egy új sorba. Csak a receptet generáld.";
+                const userQuery = `Recept generálása az alábbi alapanyagokból: ${ingredients}`;
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                };
+
+                try {
+                    const response = await fetchWithRetry(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error: ${response.status} - ${errorData.error.message}`);
+                    }
+
+                    const result = await response.json();
+                    const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (generatedText) {
+                        const lines = generatedText.split('\n');
+                        let title = 'Recept címe:';
+                        let servings = '';
+                        let ingredientsText = '';
+                        let instructionsText = '';
+                        let currentSection = '';
+
+                        lines.forEach(line => {
+                            if (line.includes('Recept címe:')) {
+                                title = line.replace('Recept címe:', '').trim();
+                                currentSection = 'title';
+                            } else if (line.includes('Személyek száma:')) {
+                                servings = line.replace('Személyek száma:', '').trim();
+                                currentSection = 'servings';
+                            } else if (line.includes('Hozzávalók:')) {
+                                currentSection = 'ingredients';
+                            } else if (line.includes('Elkészítés:')) {
+                                currentSection = 'instructions';
+                            } else {
+                                if (currentSection === 'ingredients') {
+                                    ingredientsText += line + '\n';
+                                } else if (currentSection === 'instructions') {
+                                    instructionsText += line + '\n';
+                                }
+                            }
+                        });
+
+                        recipeTitle.textContent = title || 'Ismeretlen Recept';
+                        servingsEl.textContent = servings || 'Adatok hiányoznak';
+
+                        ingredientsList.innerHTML = '';
+                        const ingredientsArray = ingredientsText.split('\n').filter(line => line.trim() !== '');
+                        ingredientsArray.forEach(item => {
+                            const li = document.createElement('li');
+                            li.textContent = item.replace(/^- /, '').replace(/^\* /, '').trim();
+                            ingredientsList.appendChild(li);
+                        });
+                        instructions.textContent = instructionsText.trim() || 'Az elkészítés leírása hiányzik.';
+
+                        recipeOutput.classList.remove('hidden');
+                    } else {
+                        showMessageBox("A generálás sikertelen. Kérlek, próbáld újra.");
+                    }
+
+                } catch (error) {
+                    console.error('Hiba a recept generálásakor:', error);
+                    showMessageBox(`Hiba a recept generálásakor: ${error.message}. Kérlek, próbáld újra.`);
+                } finally {
+                    generateBtn.disabled = false;
+                    buttonText.textContent = 'Recept generálása';
+                    loadingSpinner.style.display = 'none';
+                }
+            };
+
+            generateBtn.addEventListener('click', generateRecipe);
+        });
+    </script>
+</body>
+</html>
+
