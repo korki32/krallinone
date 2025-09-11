@@ -48,11 +48,6 @@
 </head>
 <body class="flex flex-col items-center justify-start min-h-screen p-4 pt-12 transition-colors duration-500">
     <canvas id="futuristic-canvas"></canvas>
-   <!-- Dark mód váltó gomb -->
-    <button id="theme-toggle" class="fixed top-4 right-4 p-3 rounded-full shadow-lg bg-slate-800 text-white">
-        🌙 / ☀️
-    </button>
-
     <div class="container bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto relative overflow-hidden">
         
         <div class="absolute top-4 right-4">
@@ -667,28 +662,6 @@
             updateUI();
             updateCounts();
         });
-        // Dark mód váltás
-            const toggleBtn = document.getElementById("theme-toggle");
-            const html = document.documentElement;
-            function applyTheme(theme) {
-                if (theme === "dark") {
-                    html.classList.add("bg-slate-950", "text-white");
-                    html.classList.remove("bg-white", "text-black");
-                } else {
-                    html.classList.add("bg-white", "text-black");
-                    html.classList.remove("bg-slate-950", "text-white");
-                }
-            }
-            // Betöltéskor
-            const savedTheme = localStorage.getItem("theme") || "dark";
-            applyTheme(savedTheme);
-
-            toggleBtn.addEventListener("click", () => {
-                const current = localStorage.getItem("theme") === "dark" ? "light" : "dark";
-                localStorage.setItem("theme", current);
-                applyTheme(current);
-            });
-        };
     </script>
 </body>
 </html>
