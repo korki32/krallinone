@@ -32,9 +32,19 @@
             background-color: #2563eb;
             transform: scale(1.05);
         }
+         /* Canvas stílus a háttéranimációhoz */
+        #futuristic-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
     </style>
 </head>
-<body class="bg-pattern text-white min-h-screen flex items-center justify-center p-4">
+<body class="flex flex-col items-center justify-start min-h-screen p-4 pt-12 transition-colors duration-500">
+
     <div class="container bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto relative overflow-hidden">
         
         <div class="absolute top-4 right-4">
@@ -107,6 +117,49 @@
     </div>
     
     <script>
+        window.onload = function() {
+            // Háttér animáció
+            const canvas = document.getElementById('futuristic-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+@@ -182,15 +125,12 @@ <h2 class="text-2xl font-bold mb-2 glow-text">Új projekt neve</h2>
+                    this.radius = Math.random() * 1.5;
+                    this.color = `rgba(44, 192, 235, ${Math.random() * 0.5 + 0.1})`;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+@@ -208,18 +148,12 @@ <h2 class="text-2xl font-bold mb-2 glow-text">Új projekt neve</h2>
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => { p.update(); p.draw(); });
+
+
+
+
+
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+@@ -238,22 +172,39 @@ <h2 class="text-2xl font-bold mb-2 glow-text">Új projekt neve</h2>
+            window.addEventListener('resize', resizeCanvas);
+            animate();
         document.addEventListener('DOMContentLoaded', () => {
             const messageInput = document.getElementById('message-input');
             const cipherSelect = document.getElementById('cipher-select');
