@@ -117,12 +117,25 @@
     </div>
     
     <script>
-        window.onload = function() {
-            // Háttér animáció
+       window.onload = function() {
+            // Háttéranimáció
             const canvas = document.getElementById('futuristic-canvas');
             const ctx = canvas.getContext('2d');
             let width, height;
-@@ -182,15 +125,12 @@ <h2 class="text-2xl font-bold mb-2 glow-text">Új projekt neve</h2>
+            let particles = [];
+            const particleCount = 200;
+
+            function resizeCanvas() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = (Math.random() - 0.5) * 0.2;
                     this.radius = Math.random() * 1.5;
                     this.color = `rgba(44, 192, 235, ${Math.random() * 0.5 + 0.1})`;
                 }
@@ -138,15 +151,25 @@
                 draw() {
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-@@ -208,18 +148,12 @@ <h2 class="text-2xl font-bold mb-2 glow-text">Új projekt neve</h2>
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
 
             function animate() {
                 ctx.clearRect(0, 0, width, height);
-                particles.forEach(p => { p.update(); p.draw(); });
 
-
-
-
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
 
                 for (let i = 0; i < particles.length; i++) {
                     for (let j = i + 1; j < particles.length; j++) {
@@ -157,9 +180,21 @@
                         if (distance < 100) {
                             ctx.beginPath();
                             ctx.moveTo(particles[i].x, particles[i].y);
-@@ -238,22 +172,39 @@ <h2 class="text-2xl font-bold mb-2 glow-text">Új projekt neve</h2>
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(44, 192, 235, ${1 - distance / 100})`;
+                            ctx.lineWidth = 0.2;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+
+            resizeCanvas();
+            initParticles();
             window.addEventListener('resize', resizeCanvas);
             animate();
+
         document.addEventListener('DOMContentLoaded', () => {
             const messageInput = document.getElementById('message-input');
             const cipherSelect = document.getElementById('cipher-select');
