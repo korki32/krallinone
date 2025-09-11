@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-kód Generátor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl mx-auto text-center">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-6">QR-kód Generátor</h1>
+        <p class="text-gray-600 mb-8">Készíts QR-kódot bármilyen szövegből vagy URL-ből!</p>
+
+        <div class="space-y-6">
+            <div>
+                <label for="qrInput" class="block text-lg font-semibold text-gray-700 mb-2">Tartalom:</label>
+                <input type="text" id="qrInput" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors text-center" placeholder="Írj be egy szöveget vagy URL-t...">
+            </div>
+
+            <div id="qrCodeContainer" class="flex justify-center mt-8 p-4 bg-gray-50 rounded-lg hidden">
+                <div id="qrcode"></div>
+            </div>
+            
+            <button id="downloadBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors mt-4 hidden">
+                Letöltés
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const qrInput = document.getElementById('qrInput');
+            const qrCodeContainer = document.getElementById('qrCodeContainer');
+            const qrcodeDiv = document.getElementById('qrcode');
+            const downloadBtn = document.getElementById('downloadBtn');
+            let qrcode = null;
+
+            const generateQRCode = (text) => {
+                if (text === '') {
+                    qrCodeContainer.classList.add('hidden');
+                    downloadBtn.classList.add('hidden');
+                    return;
+                }
+
+                if (qrcode) {
+                    qrcode.clear();
+                    qrcode.makeCode(text);
+                } else {
+                    qrcode = new QRCode(qrcodeDiv, {
+                        text: text,
+                        width: 256,
+                        height: 256,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+                qrCodeContainer.classList.remove('hidden');
+                downloadBtn.classList.remove('hidden');
+            };
+
+            const downloadQRCode = () => {
+                const qrImage = qrcodeDiv.querySelector('img');
+                if (qrImage) {
+                    const link = document.createElement('a');
+                    link.href = qrImage.src;
+                    link.download = 'qrcode.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    // Fallback for browsers that don't support the 'img' element on QR code
+                    const canvas = qrcodeDiv.querySelector('canvas');
+                    if (canvas) {
+                        const link = document.createElement('a');
+                        link.href = canvas.toDataURL("image/png");
+                        link.download = 'qrcode.png';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                }
+            };
+
+            qrInput.addEventListener('input', (e) => {
+                generateQRCode(e.target.value.trim());
+            });
+
+            downloadBtn.addEventListener('click', downloadQRCode);
+        });
+    </script>
+</body>
+</html>
+
