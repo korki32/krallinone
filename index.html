@@ -1,906 +1,238 @@
 <!DOCTYPE html>
-<html lang="hu" class="transition-colors duration-300">
+<html lang="hu" class="bg-slate-950 text-white">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Műszak és Fizetés Kalkulátor</title>
+    <title>korkiLAB</title>
+    <!-- Inter betűtípus -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 2rem 1rem;
         }
-        .container {
-            background-color: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            width: 100%;
-            max-width: 60rem;
-            padding: 2rem;
-            display: grid;
-            gap: 2rem;
-            grid-template-areas: "header" "main" "results";
+        .futuristic-card {
+            transition: all 0.3s ease-in-out;
+            background: rgba(4, 15, 33, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(44, 192, 235, 0.2);
+            position: relative;
+            overflow: hidden;
         }
-        @media (min-width: 1024px) {
-            .container {
-                grid-template-areas: "header header" "main main" "results results";
-            }
+        .futuristic-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 0 15px rgba(44, 192, 235, 0.5), 0 0 30px rgba(44, 192, 235, 0.3);
+            border-color: rgba(44, 192, 235, 0.5);
         }
-        /* Dark Mode Styles */
-        html.dark {
-            background-color: #1f2937;
-        }
-        html.dark .container {
-            background-color: #374151;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-        }
-        html.dark .text-gray-800 {
-            color: #f9fafb;
-        }
-        html.dark .text-gray-700 {
-            color: #d1d5db;
-        }
-        html.dark .text-gray-500 {
-            color: #9ca3af;
-        }
-        html.dark .day.selected {
-            background-color: #1e3a8a;
-        }
-        html.dark input, html.dark select {
-            background-color: #4b5563;
-            border-color: #6b7280;
-            color: #d1d5db;
-        }
-        html.dark .bg-gray-50 {
-            background-color: #4b5563;
-        }
-        html.dark hr {
-            border-color: #4b5563;
-        }
-        html.dark .modal-content {
-            background-color: #374151;
-        }
-        html.dark .message-box {
-            background-color: #374151;
-        }
-        .header {
-            grid-area: header;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .main-content {
-            grid-area: main;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        @media (min-width: 1024px) {
-            .main-content {
-                flex-direction: row;
-            }
-        }
-        .calendar-container {
-            flex: 1;
-        }
-        .controls-container {
-            flex: 1;
-        }
-        .results-container {
-            grid-area: results;
-        }
-        .day {
-            min-height: 3.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-            font-size: 0.875rem;
-        }
-        .day.selected {
-            background-color: #d1e5f0;
-            font-weight: 600;
-        }
-        .day.current-month {
-            color: #1f2937;
-        }
-        .day:hover:not(.empty-day) {
-            transform: scale(1.05);
-        }
-        .day span.hours {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-top: 0.25rem;
-        }
-        .day.selected .hours {
-            color: #1d4ed8;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
+        .futuristic-card::before {
+            content: '';
+            position: absolute;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(5px);
-            align-items: center;
-            justify-content: center;
+            background: linear-gradient(135deg, rgba(44, 192, 235, 0.1) 0%, rgba(20, 110, 150, 0.1) 100%);
+            z-index: -1;
+            transform: scale(1.1);
         }
-        .modal-content {
-            background-color: #fff;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            width: 90%;
-            max-width: 24rem;
+        .glow-text {
+            text-shadow: 0 0 5px rgba(44, 192, 235, 0.5), 0 0 10px rgba(44, 192, 235, 0.3);
         }
-        .message-box {
-            display: none;
+        .search-bar {
+            background: rgba(4, 15, 33, 0.6);
+            border: 1px solid rgba(44, 192, 235, 0.3);
+            box-shadow: 0 0 10px rgba(44, 192, 235, 0.2);
+        }
+        .search-bar:focus-within {
+            box-shadow: 0 0 15px rgba(44, 192, 235, 0.5);
+            border-color: rgba(44, 192, 235, 0.5);
+        }
+        /* Canvas stílus a háttéranimációhoz */
+        #futuristic-canvas {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 110;
-            background-color: #fff;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            text-align: center;
-        }
-        .info-icon {
-            cursor: help;
-            color: #4a5568;
-            margin-left: 0.5rem;
-            font-size: 1rem;
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-        input:checked + .slider:before {
-            transform: translateX(26px);
+            width: 100%;
+            height: 100%;
+            z-index: -2;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <!-- Header with dark mode toggle -->
-        <div class="header">
-            <h1 class="text-3xl font-bold text-gray-800">Fizetéskalkulátor</h1>
-            <label class="switch">
-                <input type="checkbox" id="darkModeToggle">
-                <span class="slider"></span>
-            </label>
-        </div>
-        
-        <!-- Main content: Calendar and Controls side-by-side -->
-        <div class="main-content">
-            <!-- Calendar Container -->
-            <div class="calendar-container">
-                <div class="flex items-center justify-between mb-4">
-                    <button id="prevBtn" class="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
-                    <h2 id="currentMonth" class="text-2xl font-bold text-gray-800"></h2>
-                    <button id="nextBtn" class="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
-                </div>
-        
-                <div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-500 text-sm">
-                    <div class="p-2">Hétfő</div>
-                    <div class="p-2">Kedd</div>
-                    <div class="p-2">Szerda</div>
-                    <div class="p-2">Csütörtök</div>
-                    <div class="p-2">Péntek</div>
-                    <div class="p-2">Szombat</div>
-                    <div class="p-2">Vasárnap</div>
-                </div>
-        
-                <div id="calendarDays" class="grid grid-cols-7 gap-1 text-center mt-2">
-                </div>
-            </div>
+<body class="bg-slate-950 text-white flex flex-col items-center justify-start min-h-screen p-4 pt-12">
+    <canvas id="futuristic-canvas"></canvas>
 
-            <!-- Controls Container -->
-            <div class="controls-container">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Beállítások</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label for="hourlyRate" class="block text-gray-700 font-medium mb-1">Alap órabér (Ft)</label>
-                        <input type="number" id="hourlyRate" value="1500" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-1">Éjszakai pótlék (%)</label>
-                        <input type="number" id="nightRate" value="25" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <p class="text-sm text-gray-500 mt-1">Éjszakai órabér emelés százalékban.</p>
-                    </div>
-                    <div>
-                        <label for="nightStart" class="block text-gray-700 font-medium mb-1">Éjszakai pótlék (kezdő óra)</label>
-                        <input type="number" id="nightStart" value="22" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label for="nightEnd" class="block text-gray-700 font-medium mb-1">Éjszakai pótlék (befejező óra)</label>
-                        <input type="number" id="nightEnd" value="6" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-1">Délutáni pótlék (%)</label>
-                        <input type="number" id="eveningRate" value="15" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <p class="text-sm text-gray-500 mt-1">Délutáni órabér emelés százalékban.</p>
-                    </div>
-                    <div>
-                        <label for="eveningStart" class="block text-gray-700 font-medium mb-1">Délutáni pótlék (kezdő óra)</label>
-                        <input type="number" id="eveningStart" value="18" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label for="eveningEnd" class="block text-gray-700 font-medium mb-1">Délutáni pótlék (befejező óra)</label>
-                        <input type="number" id="eveningEnd" value="22" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-1">Hétvégi pótlék (%)</label>
-                        <input type="number" id="weekendRate" value="50" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <p class="text-sm text-gray-500 mt-1">Hétvégi órabér emelés százalékban.</p>
-                    </div>
-                    <div>
-                        <label for="weekendOption" class="block text-gray-700 font-medium mb-1">Hétvégi pótlék napjai</label>
-                        <select id="weekendOption" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">Szombat és Vasárnap</option>
-                            <option value="saturday">Szombat</option>
-                            <option value="sunday">Vasárnap</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-1">Túlóra pótlék (%)</label>
-                        <input type="number" id="overtimeRate" value="50" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <p class="text-sm text-gray-500 mt-1">Túlórára vonatkozó órabér emelés százalékban.</p>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-1">Bónusz1 (Ft)</label>
-                        <input type="number" id="bonus1" value="0" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-1">Bónusz2 (Ft)</label>
-                        <input type="number" id="bonus2" value="0" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <hr class="my-4">
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">Adó- és Járulékkedvezmények</h3>
-                    <div class="space-y-2">
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="ekho" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>EKHO adózás</span>
-                            </label>
-                            <button class="info-icon" data-info="ekho">i</button>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="under25" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>25 év alatti adómentesség</span>
-                            </label>
-                            <button class="info-icon" data-info="under25">i</button>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="under30mother" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>30 év alatti anyuka</span>
-                            </label>
-                            <button class="info-icon" data-info="under30mother">i</button>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="married" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>Friss házasok</span>
-                            </label>
-                            <button class="info-icon" data-info="married">i</button>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="personalDeduction" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>Személyi kedvezmény</span>
-                            </label>
-                            <button class="info-icon" data-info="personalDeduction">i</button>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="retiredEmployee" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>Nyugdíjas munkavállaló</span>
-                            </label>
-                            <button class="info-icon" data-info="retiredEmployee">i</button>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="mother4plus" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>4 vagy több gyermeket nevelő anyák</span>
-                            </label>
-                            <button class="info-icon" data-info="mother4plus">i</button>
-                        </div>
-                    </div>
-                    <button id="calculateBtn" class="w-full bg-green-500 text-white font-bold p-3 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                        Számítás indítása
-                    </button>
-                </div>
+    <!-- Fő konténer -->
+    <main class="w-full max-w-7xl mx-auto z-10">
+        <!-- Cím és Kereső -->
+        <header class="text-center mb-16">
+            <h1 class="text-6xl md:text-8xl font-bold mb-6 glow-text">korkiLAB</h1>
+            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto mb-8">
+                Kisebb, minimalista eszközök gyűjteménye. Fedezd fel a lehetőségeket!
+            </p>
+            <div class="relative w-full max-w-xl mx-auto">
+                <input id="searchInput" type="text" placeholder="Keresés..." class="w-full p-4 pl-12 rounded-full search-bar text-lg text-slate-200 placeholder-slate-400 focus:outline-none transition-all duration-300">
+                <!-- Kereső ikon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
             </div>
-        </div>
+        </header>
 
-        <!-- Results Container -->
-        <div class="results-container">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Összesítés</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-gray-700 font-medium">Összes munkaóra:</p>
-                    <p id="totalHours" class="text-xl font-bold text-gray-800 mt-1">0 óra</p>
+        <!-- Kártyák dinamikus elrendezése -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="card-container">
+            <!-- Encode/Decode -->
+            <a href="#" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between lg:col-span-2 project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">Endecode</h2>
+                    <p class="text-slate-400">Titkosítási és dekódolási feladatokhoz.</p>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-gray-700 font-medium">Alap bruttó:</p>
-                    <p id="baseBrutto" class="text-xl font-bold text-gray-800 mt-1">0 Ft</p>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-gray-700 font-medium">Éjszakai pótlék:</p>
-                    <p id="nightBreakdown" class="text-xl font-bold text-gray-800 mt-1">0 óra (0 Ft)</p>
+            </a>
+            <!-- Valorant Random Wheel -->
+            <a href="#" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between lg:col-span-2 project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">Valorant Random Wheel</h2>
+                    <p class="text-slate-400">Sorsolj véletlenszerű ügynököket és kihívásokat a Valorantban.</p>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-gray-700 font-medium">Délutáni pótlék:</p>
-                    <p id="eveningBreakdown" class="text-xl font-bold text-gray-800 mt-1">0 óra (0 Ft)</p>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-gray-700 font-medium">Hétvégi pótlék:</p>
-                    <p id="weekendBreakdown" class="text-xl font-bold text-gray-800 mt-1">0 óra (0 Ft)</p>
+            </a>
+            <!-- Meme Maker -->
+            <a href="#" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">Meme Maker</h2>
+                    <p class="text-slate-400">Készíts saját mémeket pillanatok alatt.</p>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-gray-700 font-medium">Túlóra pótlék:</p>
-                    <p id="overtimeBreakdown" class="text-xl font-bold text-gray-800 mt-1">0 óra (0 Ft)</p>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-gray-700 font-medium">Összes bónusz:</p>
-                    <p id="totalBonus" class="text-xl font-bold text-gray-800 mt-1">0 Ft</p>
+            </a>
+            <!-- AI Képfelismerő -->
+            <a href="#" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">AI Képfelismerő</h2>
+                    <p class="text-slate-400">Tölts fel egy képet és az AI leírja, mit lát.</p>
                 </div>
-                <div class="bg-blue-500 text-white p-4 rounded-lg col-span-1 md:col-span-2 lg:col-span-3 text-center">
-                    <p class="font-medium">Várható Nettó Fizetés:</p>
-                    <p id="nettoOutput" class="text-3xl font-bold mt-1">0 Ft</p>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
                 </div>
-            </div>
-            
-            <div id="savings-breakdown-container" class="mt-8 bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">Megtakarítási részletező</h3>
-                <div id="savings-list" class="space-y-2">
-                    <p class="text-gray-500" id="savings-placeholder">Jelölj be kedvezményeket a részletekhez.</p>
+            </a>
+            <!-- AI Receptgenerátor -->
+            <a href="#" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">AI Receptgenerátor</h2>
+                    <p class="text-slate-400">Mondd meg, mi van otthon, és az AI generál neked egy receptet.</p>
                 </div>
-                <div class="mt-4 border-t pt-4">
-                    <p class="font-medium text-gray-700">Teljes megtakarítás:</p>
-                    <p id="totalSavings" class="text-2xl font-bold text-green-600 mt-1">0 Ft</p>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
                 </div>
-            </div>
-        </div>
-    </div>
+            </a>
+        </section>
+    </main>
 
-    <!-- Modal for shift input -->
-    <div id="shiftModal" class="modal">
-        <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Munkaidő megadása</h3>
-            <div class="mb-4">
-                <label for="startTime" class="block text-gray-700 font-medium mb-1">Kezdő óra</label>
-                <input type="time" id="startTime" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="mb-4">
-                <label for="endTime" class="block text-gray-700 font-medium mb-1">Befejező óra</label>
-                <input type="time" id="endTime" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="mb-4 flex items-center">
-                <input type="checkbox" id="overtimeCheckbox" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                <label for="overtimeCheckbox" class="text-gray-700 font-medium">Túlóra</label>
-            </div>
-            <div class="flex justify-between space-x-2">
-                <button id="saveShiftBtn" class="w-full bg-green-500 text-white font-bold p-3 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                    Mentés
-                </button>
-                <button id="cancelShiftBtn" class="w-full bg-red-500 text-white font-bold p-3 rounded-lg hover:bg-red-600 transition-colors duration-200">
-                    Törlés
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Message Box -->
-    <div id="messageBox" class="message-box">
-        <p id="messageText" class="text-lg font-medium text-gray-800 mb-4"></p>
-        <button id="closeMessageBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200">OK</button>
-    </div>
-
+    <!-- JavaScript a háttéranimációhoz és a keresőhöz -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const calendarDaysEl = document.getElementById('calendarDays');
-            const currentMonthEl = document.getElementById('currentMonth');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const hourlyRateInput = document.getElementById('hourlyRate');
-            const nightRateInput = document.getElementById('nightRate');
-            const nightStartInput = document.getElementById('nightStart');
-            const nightEndInput = document.getElementById('nightEnd');
-            const eveningRateInput = document.getElementById('eveningRate');
-            const eveningStartInput = document.getElementById('eveningStart');
-            const eveningEndInput = document.getElementById('eveningEnd');
-            const weekendRateInput = document.getElementById('weekendRate');
-            const weekendOptionSelect = document.getElementById('weekendOption');
-            const overtimeRateInput = document.getElementById('overtimeRate');
-            const bonus1Input = document.getElementById('bonus1');
-            const bonus2Input = document.getElementById('bonus2');
-            const ekhoCheckbox = document.getElementById('ekho');
-            const under25Checkbox = document.getElementById('under25');
-            const under30motherCheckbox = document.getElementById('under30mother');
-            const marriedCheckbox = document.getElementById('married');
-            const personalDeductionCheckbox = document.getElementById('personalDeduction');
-            const retiredEmployeeCheckbox = document.getElementById('retiredEmployee');
-            const mother4plusCheckbox = document.getElementById('mother4plus');
-            const calculateBtn = document.getElementById('calculateBtn');
-            const totalHoursEl = document.getElementById('totalHours');
-            const baseBruttoEl = document.getElementById('baseBrutto');
-            const nightBreakdownEl = document.getElementById('nightBreakdown');
-            const eveningBreakdownEl = document.getElementById('eveningBreakdown');
-            const weekendBreakdownEl = document.getElementById('weekendBreakdown');
-            const overtimeBreakdownEl = document.getElementById('overtimeBreakdown');
-            const totalBonusEl = document.getElementById('totalBonus');
-            const nettoOutputEl = document.getElementById('nettoOutput');
-            const totalSavingsEl = document.getElementById('totalSavings');
-            const savingsListEl = document.getElementById('savings-list');
-            const savingsPlaceholderEl = document.getElementById('savings-placeholder');
-            const shiftModal = document.getElementById('shiftModal');
-            const startTimeInput = document.getElementById('startTime');
-            const endTimeInput = document.getElementById('endTime');
-            const overtimeCheckbox = document.getElementById('overtimeCheckbox');
-            const saveShiftBtn = document.getElementById('saveShiftBtn');
-            const cancelShiftBtn = document.getElementById('cancelShiftBtn');
-            const messageBox = document.getElementById('messageBox');
-            const messageText = document.getElementById('messageText');
-            const closeMessageBtn = document.getElementById('closeMessageBtn');
-            const infoButtons = document.querySelectorAll('.info-icon');
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            
-            let currentDate = new Date();
-            let selectedDays = {};
-            let activeDate = null;
+        window.onload = function() {
+            // Háttéranimáció
+            const canvas = document.getElementById('futuristic-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const particleCount = 200;
 
-            // Dark Mode
-            const isDarkMode = localStorage.getItem('darkMode') === 'true';
-            if (isDarkMode) {
-                document.documentElement.classList.add('dark');
-                darkModeToggle.checked = true;
+            function resizeCanvas() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
             }
 
-            darkModeToggle.addEventListener('change', () => {
-                if (darkModeToggle.checked) {
-                    document.documentElement.classList.add('dark');
-                    localStorage.setItem('darkMode', 'true');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.setItem('darkMode', 'false');
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = (Math.random() - 0.5) * 0.2;
+                    this.radius = Math.random() * 1.5;
+                    this.color = `rgba(44, 192, 235, ${Math.random() * 0.5 + 0.1})`;
                 }
-            });
 
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
 
-            const formatCurrency = (amount) => {
-                return `${Math.round(amount).toLocaleString('hu-HU')} Ft`;
-            };
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                }
 
-            const showMessageBox = (message) => {
-                messageText.textContent = message;
-                messageBox.style.display = 'block';
-            };
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
 
-            const hideMessageBox = () => {
-                messageBox.style.display = 'none';
-            };
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
 
-            closeMessageBtn.addEventListener('click', hideMessageBox);
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
 
-            infoButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const infoType = e.target.dataset.info;
-                    let message = "";
-                    switch(infoType) {
-                        case 'ekho':
-                            message = "Az Egyszerűsített Közteherviselési Hozzájárulás (EKHO) egy adózási mód, amely helyettesíti a normál SZJA-t és a legtöbb járulékot. Külön szabályok vonatkoznak rá.";
-                            break;
-                        case 'under25':
-                            message = "A 25 év alattiak mentesülnek a személyi jövedelemadó (SZJA) fizetése alól a bruttó átlagkereset mértékéig.";
-                            break;
-                        case 'under30mother':
-                            message = "A 30 év alatti, gyermeket vállaló anyák adómentességet kapnak a fizetésükre a bruttó átlagkereset mértékéig.";
-                            break;
-                        case 'married':
-                            message = "A friss házasok havonta adóalap-kedvezményt vehetnek igénybe a házasságkötést követő 24 hónapon keresztül.";
-                            break;
-                        case 'personalDeduction':
-                            message = "A személyi kedvezményre jogosító betegségekkel élők (pl. cukorbetegség, laktóz- vagy gluténérzékenység) adóalap-kedvezményt vehetnek igénybe.";
-                            break;
-                        case 'retiredEmployee':
-                            message = "A nyugdíjas munkavállalók mentesülnek a 18.5%-os TB-járulék fizetése alól, csak a 15%-os SZJA-t kell fizetniük.";
-                            break;
-                        case 'mother4plus':
-                            message = "A 4 vagy több gyermeket nevelő anyák teljes mértékben mentesülnek a személyi jövedelemadó (SZJA) fizetése alól.";
-                            break;
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(44, 192, 235, ${1 - distance / 100})`;
+                            ctx.lineWidth = 0.2;
+                            ctx.stroke();
+                        }
                     }
-                    showMessageBox(message);
+                }
+                requestAnimationFrame(animate);
+            }
+
+            resizeCanvas();
+            initParticles();
+            window.addEventListener('resize', resizeCanvas);
+            animate();
+
+            // Kereső funkció
+            const searchInput = document.getElementById('searchInput');
+            const cards = document.querySelectorAll('.project-card');
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                cards.forEach(card => {
+                    const title = card.querySelector('h2').textContent.toLowerCase();
+                    const description = card.querySelector('p').textContent.toLowerCase();
+                    if (title.includes(query) || description.includes(query)) {
+                        card.style.display = ''; // Megjelenítés
+                    } else {
+                        card.style.display = 'none'; // Elrejtés
+                    }
                 });
             });
-
-            const renderCalendar = () => {
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth();
-                
-                const firstDayOfMonth = new Date(year, month, 1).getDay();
-                const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-                
-                const monthNames = [
-                    "Január", "Február", "Március", "Április", "Május", "Június",
-                    "Július", "Augusztus", "Szeptember", "Október", "November", "December"
-                ];
-                
-                currentMonthEl.textContent = `${monthNames[month]} ${year}`;
-                calendarDaysEl.innerHTML = '';
-
-                const startDay = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
-
-                for (let i = 0; i < startDay; i++) {
-                    const dayEl = document.createElement('div');
-                    dayEl.className = 'p-2 day text-gray-400 empty-day';
-                    calendarDaysEl.appendChild(dayEl);
-                }
-
-                for (let i = 1; i <= lastDayOfMonth; i++) {
-                    const dayEl = document.createElement('div');
-                    dayEl.textContent = i;
-                    dayEl.className = `p-2 rounded-lg cursor-pointer day text-gray-700 hover:bg-blue-100 transition-colors duration-200`;
-                    const dateString = `${year}-${month + 1}-${i}`;
-                    dayEl.dataset.date = dateString;
-
-                    if (selectedDays[dateString]) {
-                        dayEl.classList.add('selected');
-                        const hours = selectedDays[dateString].hours;
-                        const hoursSpan = document.createElement('span');
-                        hoursSpan.className = 'hours';
-                        hoursSpan.textContent = `${hours} óra`;
-                        dayEl.appendChild(hoursSpan);
-                    }
-
-                    dayEl.addEventListener('click', () => {
-                        activeDate = dateString;
-                        if (selectedDays[activeDate]) {
-                            startTimeInput.value = selectedDays[activeDate].startTime;
-                            endTimeInput.value = selectedDays[activeDate].endTime;
-                            overtimeCheckbox.checked = selectedDays[activeDate].isOvertime;
-                        } else {
-                            startTimeInput.value = '08:00';
-                            endTimeInput.value = '16:00';
-                            overtimeCheckbox.checked = false;
-                        }
-                        shiftModal.style.display = 'flex';
-                    });
-                    calendarDaysEl.appendChild(dayEl);
-                }
-            };
-            
-            const getShiftHoursInInterval = (startHour, endHour, otStart, otEnd) => {
-                let hours = 0;
-                let current = startHour;
-                
-                while (current !== endHour) {
-                    let next = (current + 1) % 24;
-                    
-                    if (otEnd > otStart) { // Normal interval (e.g., 18:00 - 22:00)
-                        if (current >= otStart && current < otEnd) {
-                            hours += 1;
-                        }
-                    } else { // Overnight interval (e.g., 22:00 - 06:00)
-                        if (current >= otStart || current < otEnd) {
-                            hours += 1;
-                        }
-                    }
-                    current = next;
-                }
-                return hours;
-            };
-
-            const updateSavingsDisplay = (savingsBreakdown) => {
-                savingsListEl.innerHTML = '';
-                let hasSavings = false;
-                for (const key in savingsBreakdown) {
-                    if (savingsBreakdown[key] > 0) {
-                        hasSavings = true;
-                        const p = document.createElement('p');
-                        p.className = 'text-gray-700';
-                        p.innerHTML = `<span class="font-bold">${key}</span>: ${formatCurrency(savingsBreakdown[key])}`;
-                        savingsListEl.appendChild(p);
-                    }
-                }
-                savingsPlaceholderEl.style.display = hasSavings ? 'none' : 'block';
-            };
-
-            const calculate = () => {
-                let totalHours = 0;
-                let totalBasePay = 0;
-                let totalNightHours = 0;
-                let totalEveningHours = 0;
-                let totalWeekendHours = 0;
-                let totalOvertimeHours = 0;
-
-                const hourlyRate = parseFloat(hourlyRateInput.value) || 0;
-                const nightRate = parseFloat(nightRateInput.value) / 100;
-                const nightStart = parseFloat(nightStartInput.value);
-                const nightEnd = parseFloat(nightEndInput.value);
-                const eveningRate = parseFloat(eveningRateInput.value) / 100;
-                const eveningStart = parseFloat(eveningStartInput.value);
-                const eveningEnd = parseFloat(eveningEndInput.value);
-                const weekendRate = parseFloat(weekendRateInput.value) / 100;
-                const weekendOption = weekendOptionSelect.value;
-                const overtimeRate = parseFloat(overtimeRateInput.value) / 100;
-                const bonus1 = parseFloat(bonus1Input.value) || 0;
-                const bonus2 = parseFloat(bonus2Input.value) || 0;
-                const isEkho = ekhoCheckbox.checked;
-
-                // Disable/enable checkboxes based on EKHO selection
-                const otherCheckboxes = [under25Checkbox, under30motherCheckbox, marriedCheckbox, personalDeductionCheckbox, retiredEmployeeCheckbox, mother4plusCheckbox];
-                if (isEkho) {
-                    otherCheckboxes.forEach(cb => cb.checked = false);
-                    otherCheckboxes.forEach(cb => cb.disabled = true);
-                } else {
-                    otherCheckboxes.forEach(cb => cb.disabled = false);
-                }
-
-                for (const date in selectedDays) {
-                    const { startTime, endTime, hours, isOvertime } = selectedDays[date];
-                    const startHour = parseInt(startTime.split(':')[0]);
-                    const endHour = parseInt(endTime.split(':')[0]);
-                    const totalDailyHours = parseFloat(hours);
-
-                    const nightHours = getShiftHoursInInterval(startHour, endHour, nightStart, nightEnd);
-                    const eveningHours = getShiftHoursInInterval(startHour, endHour, eveningStart, eveningEnd);
-
-                    const dayOfWeek = new Date(date).getDay();
-                    const isSaturday = dayOfWeek === 6;
-                    const isSunday = dayOfWeek === 0;
-
-                    let isWeekend = false;
-                    if (weekendOption === 'all' && (isSaturday || isSunday)) {
-                        isWeekend = true;
-                    } else if (weekendOption === 'saturday' && isSaturday) {
-                        isWeekend = true;
-                    } else if (weekendOption === 'sunday' && isSunday) {
-                        isWeekend = true;
-                    }
-
-                    totalBasePay += totalDailyHours * hourlyRate;
-                    totalNightHours += nightHours;
-                    totalEveningHours += eveningHours;
-                    totalHours += totalDailyHours;
-                    
-                    if (isWeekend) {
-                        totalWeekendHours += totalDailyHours;
-                    }
-                    if (isOvertime) {
-                        totalOvertimeHours += totalDailyHours;
-                    }
-                }
-                
-                const totalNightPay = totalNightHours * hourlyRate * nightRate;
-                const totalEveningPay = totalEveningHours * hourlyRate * eveningRate;
-                const totalWeekendPay = totalWeekendHours * hourlyRate * weekendRate;
-                const totalOvertimePay = totalOvertimeHours * hourlyRate * overtimeRate;
-                const totalBonus = bonus1 + bonus2;
-
-                const totalBrutto = totalBasePay + totalNightPay + totalEveningPay + totalWeekendPay + totalOvertimePay + totalBonus;
-                
-                let netto = 0;
-                let totalSavings = 0;
-                let savingsBreakdown = {};
-
-                if (isEkho) {
-                    // EKHO adózás
-                    const ekhoRate = 0.095;
-                    const szjaRate = 0.15;
-                    const ekhoPay = totalBrutto * ekhoRate;
-                    const szjaPay = totalBrutto * szjaRate;
-                    netto = totalBrutto - ekhoPay - szjaPay;
-                } else {
-                    // Normál adózás
-                    let szjaRate = 0.15;
-                    let tbRate = 0.185;
-
-                    // Teljes fizetendő adó kedvezmények nélkül
-                    let szjaWithoutDeductions = totalBrutto * szjaRate;
-                    let tbWithoutDeductions = totalBrutto * tbRate;
-
-                    // Kezdeti adóalap és levonások
-                    let szjaBaseWithDeductions = totalBrutto;
-                    let tbDeductions = 0;
-                    
-                    // Kedvezmények alkalmazása és megtakarítások számítása
-                    const under25MaxBrutto = 576601; // Példa érték
-                    const marriedDeduction = 5000;
-                    const personalDeduction = 66700;
-
-                    if (under25Checkbox.checked) {
-                        let savings = Math.min(totalBrutto, under25MaxBrutto) * szjaRate;
-                        savingsBreakdown['25 év alatti adómentesség'] = savings;
-                        szjaBaseWithDeductions -= savings / szjaRate;
-                    }
-                    if (under30motherCheckbox.checked) {
-                        let savings = Math.min(totalBrutto, under25MaxBrutto) * szjaRate;
-                        savingsBreakdown['30 év alatti anyuka'] = savings;
-                        szjaBaseWithDeductions -= savings / szjaRate;
-                    }
-                    if (marriedCheckbox.checked) {
-                        let savings = marriedDeduction * szjaRate;
-                        savingsBreakdown['Friss házasok'] = savings;
-                        szjaBaseWithDeductions -= marriedDeduction;
-                    }
-                    if (personalDeductionCheckbox.checked) {
-                        let savings = personalDeduction * szjaRate;
-                        savingsBreakdown['Személyi kedvezmény'] = savings;
-                        szjaBaseWithDeductions -= personalDeduction;
-                    }
-                    if (mother4plusCheckbox.checked) {
-                        let savings = szjaWithoutDeductions;
-                        savingsBreakdown['4+ gyermekes anyák SZJA mentessége'] = savings;
-                        szjaBaseWithDeductions = 0;
-                    }
-                    if (retiredEmployeeCheckbox.checked) {
-                        let savings = tbWithoutDeductions;
-                        savingsBreakdown['Nyugdíjas munkavállaló (TB mentesség)'] = savings;
-                        tbDeductions = tbWithoutDeductions;
-                    }
-
-                    // Végső adó és járulék kiszámítása a kedvezményekkel
-                    let szjaWithDeductions = Math.max(0, szjaBaseWithDeductions) * szjaRate;
-                    let tbWithDeductions = totalBrutto * tbRate - tbDeductions;
-                    
-                    netto = totalBrutto - szjaWithDeductions - tbWithDeductions;
-                    totalSavings = Object.values(savingsBreakdown).reduce((sum, val) => sum + val, 0);
-                }
-                
-                totalHoursEl.textContent = `${totalHours.toFixed(1)} óra`;
-                baseBruttoEl.textContent = formatCurrency(totalBasePay);
-                nightBreakdownEl.textContent = `${totalNightHours.toFixed(1)} óra (${formatCurrency(totalNightPay)})`;
-                eveningBreakdownEl.textContent = `${totalEveningHours.toFixed(1)} óra (${formatCurrency(totalEveningPay)})`;
-                weekendBreakdownEl.textContent = `${totalWeekendHours.toFixed(1)} óra (${formatCurrency(totalWeekendPay)})`;
-                overtimeBreakdownEl.textContent = `${totalOvertimeHours.toFixed(1)} óra (${formatCurrency(totalOvertimePay)})`;
-                totalBonusEl.textContent = formatCurrency(totalBonus);
-                nettoOutputEl.textContent = formatCurrency(netto);
-                totalSavingsEl.textContent = formatCurrency(totalSavings);
-
-                updateSavingsDisplay(savingsBreakdown);
-            };
-
-            prevBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                renderCalendar();
-            });
-
-            nextBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                renderCalendar();
-            });
-
-            saveShiftBtn.addEventListener('click', () => {
-                if (!activeDate) {
-                    showMessageBox("Nincs kiválasztott nap!");
-                    return;
-                }
-
-                const start = startTimeInput.value;
-                const end = endTimeInput.value;
-
-                if (!start || !end) {
-                    showMessageBox("Kérlek, add meg a kezdő és befejező időt!");
-                    return;
-                }
-                
-                const startHour = parseInt(start.split(':')[0]);
-                const startMinute = parseInt(start.split(':')[1]);
-                const endHour = parseInt(end.split(':')[0]);
-                const endMinute = parseInt(end.split(':')[1]);
-
-                let hours = (endHour - startHour) + (endMinute - startMinute) / 60;
-                if (hours < 0) {
-                    hours += 24;
-                }
-                
-                if (hours > 0) {
-                    selectedDays[activeDate] = {
-                        time: `${start}-${end}`,
-                        hours: hours.toFixed(1),
-                        startTime: start,
-                        endTime: end,
-                        isOvertime: overtimeCheckbox.checked
-                    };
-                } else {
-                    delete selectedDays[activeDate];
-                }
-                
-                shiftModal.style.display = 'none';
-                renderCalendar();
-                calculate();
-            });
-
-            cancelShiftBtn.addEventListener('click', () => {
-                if (activeDate && selectedDays[activeDate]) {
-                    delete selectedDays[activeDate];
-                }
-                shiftModal.style.display = 'none';
-                renderCalendar();
-                calculate();
-            });
-
-            calculateBtn.addEventListener('click', calculate);
-            hourlyRateInput.addEventListener('input', calculate);
-            nightStartInput.addEventListener('input', calculate);
-            nightEndInput.addEventListener('input', calculate);
-            nightRateInput.addEventListener('input', calculate);
-            eveningStartInput.addEventListener('input', calculate);
-            eveningEndInput.addEventListener('input', calculate);
-            eveningRateInput.addEventListener('input', calculate);
-            weekendRateInput.addEventListener('input', calculate);
-            weekendOptionSelect.addEventListener('change', calculate);
-            overtimeRateInput.addEventListener('input', calculate);
-            bonus1Input.addEventListener('input', calculate);
-            bonus2Input.addEventListener('input', calculate);
-            ekhoCheckbox.addEventListener('change', calculate);
-            under25Checkbox.addEventListener('change', calculate);
-            under30motherCheckbox.addEventListener('change', calculate);
-            marriedCheckbox.addEventListener('change', calculate);
-            personalDeductionCheckbox.addEventListener('change', calculate);
-            retiredEmployeeCheckbox.addEventListener('change', calculate);
-            mother4plusCheckbox.addEventListener('change', calculate);
-
-            renderCalendar();
-            calculate();
-        });
+        };
     </script>
 </body>
 </html>
