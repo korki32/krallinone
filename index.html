@@ -97,6 +97,70 @@
                     <span class="hover:underline">Megnyitás &rarr;</span>
                 </div>
             </a>
+             <!-- Valorant Random Wheel -->
+            <a href="valorant.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between lg:col-span-2 project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">Valorant Random Wheel</h2>
+                    <p class="text-slate-400">Sorsolj véletlenszerű ügynököket és kihívásokat a Valorantban.</p>
+                </div>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
+                </div>
+            </a>
+            <!-- Meme Maker -->
+            <a href="mememaker.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">Meme Maker</h2>
+                    <p class="text-slate-400">Készíts saját mémeket pillanatok alatt.</p>
+                </div>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
+                </div>
+            </a>
+            <!-- AI Képfelismerő -->
+            <a href="#" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">AI Képfelismerő</h2>
+                    <p class="text-slate-400">Tölts fel egy képet és az AI leírja, mit lát.</p>
+                </div>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
+                </div>
+            </a>
+            <!-- AI Receptgenerátor -->
+            <a href="receptgen.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">AI Receptgenerátor</h2>
+                    <p class="text-slate-400">Mondd meg, mi van otthon, és az AI generál neked egy receptet.</p>
+                </div>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
+                </div>
+            </a>
+            <!-- Fizetés Kalkulátor -->
+            <a href=fizukalk.html class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">Fizetés kalkulátor</h2>
+                    <p class="text-slate-400">Ha szeretnéd megtudni, hogy mennyi pénzt fogsz keresni a hónapban.</p>
+                </div>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
+                </div>
+            </a>
+            <!-- ÚJ PROJEKT SABLON -->
+            <!-- Másold át ezt a kártyát, hogy új projektet adj hozzá! -->
+            <a href="IDE_AZ_OLDAL_NEVE.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 glow-text">Új projekt neve</h2>
+                    <p class="text-slate-400">Rövid leírás a projektről.</p>
+                </div>
+                <div class="mt-4 text-sm text-right text-cyan-400">
+                    <span class="hover:underline">Megnyitás &rarr;</span>
+                </div>
+            </a>
+        </section>
+    </main>
+
             <!-- Ide jönnek a többi kártyáid... -->
         </section>
     </main>
@@ -187,12 +251,12 @@
             // Dark mód váltás
             const toggleBtn = document.getElementById("theme-toggle");
             const html = document.documentElement;
-            function applyTheme(theme) {
-                if (theme === "dark") {
+           function applyTheme(theme) {
+            if (theme === "dark") {
                     html.classList.add("bg-slate-950", "text-white");
-                    html.classList.remove("bg-white", "text-black");
+                    html.classList.remove("bg-slate-100", "text-slate-800");
                 } else {
-                    html.classList.add("bg-white", "text-black");
+                    html.classList.add("bg-slate-100", "text-slate-800");
                     html.classList.remove("bg-slate-950", "text-white");
                 }
             }
