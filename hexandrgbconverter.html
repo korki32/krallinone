@@ -125,6 +125,25 @@
             const hexCopyBtn = document.getElementById('hex-copy-btn');
             const rgbCopyBtn = document.getElementById('rgb-copy-btn');
             const colorPreview = document.getElementById('color-preview');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+
+             // Dark Mode
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                darkModeToggle.checked = true;
+            }
+
+            darkModeToggle.addEventListener('change', () => {
+                if (darkModeToggle.checked) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('darkMode', 'true');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('darkMode', 'false');
+                }
+            });
+
 
             // Segédfüggvény: RGB-ből Hex
             function rgbToHex(r, g, b) {
