@@ -1,12 +1,9 @@
+<!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Endecode - Üzenet Kódoló és Fordító</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -35,24 +32,9 @@
             background-color: #2563eb;
             transform: scale(1.05);
         }
-         /* Canvas stílus a háttéranimációhoz */
-        #futuristic-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-start min-h-screen p-4 pt-12 transition-colors duration-500">
-    <canvas id="futuristic-canvas"></canvas>
-     <!-- Dark mód váltó gomb -->
-    <button id="theme-toggle" class="fixed top-4 right-4 p-3 rounded-full shadow-lg bg-slate-800 text-white">
-        🌙 / ☀️
-    </button>
-
+<body class="bg-pattern text-white min-h-screen flex items-center justify-center p-4">
     <div class="container bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto relative overflow-hidden">
         
         <div class="absolute top-4 right-4">
@@ -125,84 +107,6 @@
     </div>
     
     <script>
-       window.onload = function() {
-            // Háttéranimáció
-            const canvas = document.getElementById('futuristic-canvas');
-            const ctx = canvas.getContext('2d');
-            let width, height;
-            let particles = [];
-            const particleCount = 200;
-
-            function resizeCanvas() {
-                width = canvas.width = window.innerWidth;
-                height = canvas.height = window.innerHeight;
-            }
-
-            class Particle {
-                constructor() {
-                    this.x = Math.random() * width;
-                    this.y = Math.random() * height;
-                    this.vx = (Math.random() - 0.5) * 0.2;
-                    this.vy = (Math.random() - 0.5) * 0.2;
-                    this.radius = Math.random() * 1.5;
-                    this.color = `rgba(44, 192, 235, ${Math.random() * 0.5 + 0.1})`;
-                }
-
-                update() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-
-                    if (this.x < 0 || this.x > width) this.vx *= -1;
-                    if (this.y < 0 || this.y > height) this.vy *= -1;
-                }
-
-                draw() {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = this.color;
-                    ctx.fill();
-                }
-            }
-
-            function initParticles() {
-                particles = [];
-                for (let i = 0; i < particleCount; i++) {
-                    particles.push(new Particle());
-                }
-            }
-
-            function animate() {
-                ctx.clearRect(0, 0, width, height);
-
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-
-                for (let i = 0; i < particles.length; i++) {
-                    for (let j = i + 1; j < particles.length; j++) {
-                        const dx = particles[i].x - particles[j].x;
-                        const dy = particles[i].y - particles[j].y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-
-                        if (distance < 100) {
-                            ctx.beginPath();
-                            ctx.moveTo(particles[i].x, particles[i].y);
-                            ctx.lineTo(particles[j].x, particles[j].y);
-                            ctx.strokeStyle = `rgba(44, 192, 235, ${1 - distance / 100})`;
-                            ctx.lineWidth = 0.2;
-                            ctx.stroke();
-                        }
-                    }
-                }
-                requestAnimationFrame(animate);
-            }
-
-            resizeCanvas();
-            initParticles();
-            window.addEventListener('resize', resizeCanvas);
-            animate();
-
         document.addEventListener('DOMContentLoaded', () => {
             const messageInput = document.getElementById('message-input');
             const cipherSelect = document.getElementById('cipher-select');
@@ -667,28 +571,6 @@
             updateUI();
             updateCounts();
         });
-           // Dark mód váltás
-            const toggleBtn = document.getElementById("theme-toggle");
-            const html = document.documentElement;
-            function applyTheme(theme) {
-                if (theme === "dark") {
-                    html.classList.add("bg-slate-950", "text-white");
-                    html.classList.remove("bg-white", "text-black");
-                } else {
-                    html.classList.add("bg-white", "text-black");
-                    html.classList.remove("bg-slate-950", "text-white");
-                }
-            }
-            // Betöltéskor
-            const savedTheme = localStorage.getItem("theme") || "dark";
-            applyTheme(savedTheme);
-
-            toggleBtn.addEventListener("click", () => {
-                const current = localStorage.getItem("theme") === "dark" ? "light" : "dark";
-                localStorage.setItem("theme", current);
-                applyTheme(current);
-            });
-        };
     </script>
 </body>
 </html>
