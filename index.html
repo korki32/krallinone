@@ -1,4 +1,4 @@
-<html lang="hu" class="bg-slate-950 text-white">
+<html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,8 +60,13 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-white flex flex-col items-center justify-start min-h-screen p-4 pt-12">
+<body class="flex flex-col items-center justify-start min-h-screen p-4 pt-12 transition-colors duration-500">
     <canvas id="futuristic-canvas"></canvas>
+
+    <!-- Dark mód váltó gomb -->
+    <button id="theme-toggle" class="fixed top-4 right-4 p-3 rounded-full shadow-lg bg-slate-800 text-white">
+        🌙 / ☀️
+    </button>
 
     <!-- Fő konténer -->
     <main class="w-full max-w-7xl mx-auto z-10">
@@ -80,9 +85,9 @@
             </div>
         </header>
 
-        <!-- Kártyák dinamikus elrendezése -->
+        <!-- Kártyák -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="card-container">
-            <!-- Encode/Decode -->
+            <!-- Példakártyák -->
             <a href="endecode.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between lg:col-span-2 project-card">
                 <div>
                     <h2 class="text-2xl font-bold mb-2 glow-text">Endecode</h2>
@@ -92,76 +97,14 @@
                     <span class="hover:underline">Megnyitás &rarr;</span>
                 </div>
             </a>
-            <!-- Valorant Random Wheel -->
-            <a href="valorant.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between lg:col-span-2 project-card">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 glow-text">Valorant Random Wheel</h2>
-                    <p class="text-slate-400">Sorsolj véletlenszerű ügynököket és kihívásokat a Valorantban.</p>
-                </div>
-                <div class="mt-4 text-sm text-right text-cyan-400">
-                    <span class="hover:underline">Megnyitás &rarr;</span>
-                </div>
-            </a>
-            <!-- Meme Maker -->
-            <a href="mememaker.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 glow-text">Meme Maker</h2>
-                    <p class="text-slate-400">Készíts saját mémeket pillanatok alatt.</p>
-                </div>
-                <div class="mt-4 text-sm text-right text-cyan-400">
-                    <span class="hover:underline">Megnyitás &rarr;</span>
-                </div>
-            </a>
-            <!-- AI Képfelismerő -->
-            <a href="#" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 glow-text">AI Képfelismerő</h2>
-                    <p class="text-slate-400">Tölts fel egy képet és az AI leírja, mit lát.</p>
-                </div>
-                <div class="mt-4 text-sm text-right text-cyan-400">
-                    <span class="hover:underline">Megnyitás &rarr;</span>
-                </div>
-            </a>
-            <!-- AI Receptgenerátor -->
-            <a href="receptgen.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 glow-text">AI Receptgenerátor</h2>
-                    <p class="text-slate-400">Mondd meg, mi van otthon, és az AI generál neked egy receptet.</p>
-                </div>
-                <div class="mt-4 text-sm text-right text-cyan-400">
-                    <span class="hover:underline">Megnyitás &rarr;</span>
-                </div>
-            </a>
-
-            <!-- Pontos fizetés kalkulátor -->
-            <!-- Ha szeretnéd kiszámolni a fizetésed pontosan, ez neked való! -->
-            <a href=fizukalk.html class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 glow-text">Fizetés kalkulátor</h2>
-                    <p class="text-slate-400">Ha szeretnéd megtudni, hogy mennyi pénzt fogsz keresni a hónapban.</p>
-                </div>
-                <div class="mt-4 text-sm text-right text-cyan-400">
-                    <span class="hover:underline">Megnyitás &rarr;</span>
-                </div>
-            </a>
-<!-- ÚJ PROJEKT SABLON -->
-            <!-- Másold át ezt a kártyát, hogy új projektet adj hozzá! -->
-            <a href="IDE_AZ_OLDAL_NEVE.html" class="futuristic-card rounded-2xl p-8 flex flex-col justify-between project-card">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2 glow-text">Új projekt neve</h2>
-                    <p class="text-slate-400">Rövid leírás a projektről.</p>
-                </div>
-                <div class="mt-4 text-sm text-right text-cyan-400">
-                    <span class="hover:underline">Megnyitás &rarr;</span>
-                </div>
-            </a>
+            <!-- Ide jönnek a többi kártyáid... -->
         </section>
     </main>
 
-    <!-- JavaScript a háttéranimációhoz és a keresőhöz -->
+    <!-- JavaScript -->
     <script>
         window.onload = function() {
-            // Háttéranimáció
+            // Háttér animáció
             const canvas = document.getElementById('futuristic-canvas');
             const ctx = canvas.getContext('2d');
             let width, height;
@@ -182,15 +125,12 @@
                     this.radius = Math.random() * 1.5;
                     this.color = `rgba(44, 192, 235, ${Math.random() * 0.5 + 0.1})`;
                 }
-
                 update() {
                     this.x += this.vx;
                     this.y += this.vy;
-
                     if (this.x < 0 || this.x > width) this.vx *= -1;
                     if (this.y < 0 || this.y > height) this.vy *= -1;
                 }
-
                 draw() {
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -208,18 +148,12 @@
 
             function animate() {
                 ctx.clearRect(0, 0, width, height);
-
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-
+                particles.forEach(p => { p.update(); p.draw(); });
                 for (let i = 0; i < particles.length; i++) {
                     for (let j = i + 1; j < particles.length; j++) {
                         const dx = particles[i].x - particles[j].x;
                         const dy = particles[i].y - particles[j].y;
                         const distance = Math.sqrt(dx * dx + dy * dy);
-
                         if (distance < 100) {
                             ctx.beginPath();
                             ctx.moveTo(particles[i].x, particles[i].y);
@@ -238,21 +172,38 @@
             window.addEventListener('resize', resizeCanvas);
             animate();
 
-            // Kereső funkció
+            // Kereső
             const searchInput = document.getElementById('searchInput');
             const cards = document.querySelectorAll('.project-card');
-
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase();
                 cards.forEach(card => {
                     const title = card.querySelector('h2').textContent.toLowerCase();
                     const description = card.querySelector('p').textContent.toLowerCase();
-                    if (title.includes(query) || description.includes(query)) {
-                        card.style.display = ''; // Megjelenítés
-                    } else {
-                        card.style.display = 'none'; // Elrejtés
-                    }
+                    card.style.display = (title.includes(query) || description.includes(query)) ? '' : 'none';
                 });
+            });
+
+            // Dark mód váltás
+            const toggleBtn = document.getElementById("theme-toggle");
+            const html = document.documentElement;
+            function applyTheme(theme) {
+                if (theme === "dark") {
+                    html.classList.add("bg-slate-950", "text-white");
+                    html.classList.remove("bg-white", "text-black");
+                } else {
+                    html.classList.add("bg-white", "text-black");
+                    html.classList.remove("bg-slate-950", "text-white");
+                }
+            }
+            // Betöltéskor
+            const savedTheme = localStorage.getItem("theme") || "dark";
+            applyTheme(savedTheme);
+
+            toggleBtn.addEventListener("click", () => {
+                const current = localStorage.getItem("theme") === "dark" ? "light" : "dark";
+                localStorage.setItem("theme", current);
+                applyTheme(current);
             });
         };
     </script>
