@@ -16,10 +16,6 @@
             background-image: radial-gradient(circle at 100% 150%, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0));
         }
 
-        .switch-container {
-            position: relative;
-        }
-
         .switch-mode-btn {
             background-color: #3b82f6;
             color: white;
@@ -28,23 +24,20 @@
             border-radius: 9999px;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: absolute;
-            top: -20px;
-            right: 0;
-            transform: translateX(50%);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 10;
         }
 
         .switch-mode-btn:hover {
             background-color: #2563eb;
-            transform: translateX(50%) scale(1.05);
+            transform: scale(1.05);
         }
     </style>
 </head>
 <body class="bg-pattern text-white min-h-screen flex items-center justify-center p-4">
     <div class="container bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto relative overflow-hidden">
-        <div class="switch-container">
+        
+        <div class="absolute top-4 right-4">
             <button id="switch-mode-btn" class="switch-mode-btn">Dekódolásra váltás</button>
         </div>
         
@@ -95,12 +88,6 @@
                 </select>
             </div>
 
-            <div class="flex items-center justify-center pt-4">
-                <button id="process-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors transform hover:scale-105">
-                    Kódolás
-                </button>
-            </div>
-
             <div class="pt-4">
                 <label class="block text-lg font-semibold text-gray-300 mb-2">Eredmény:</label>
                 <div class="flex items-center space-x-2">
@@ -123,7 +110,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const messageInput = document.getElementById('message-input');
             const cipherSelect = document.getElementById('cipher-select');
-            const processBtn = document.getElementById('process-btn');
             const resultDiv = document.getElementById('result');
             const switchModeBtn = document.getElementById('switch-mode-btn');
             const vigenereKeyGroup = document.getElementById('vigenere-key-group');
@@ -250,7 +236,7 @@
 
             // Base85 implementation (Ascii85)
             const ascii85 = {
-                alphabet: '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~',
+                alphabet: '!"#$%&\'()*+,-./0123456785:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~',
                 encode: function(str) {
                     let result = '<~';
                     let bytes = new TextEncoder().encode(str);
@@ -435,7 +421,7 @@
                                 String.fromCharCode(char.charCodeAt(0) + (char.toLowerCase() <= 'm' ? 13 : -13))
                             );
                         case "rot47":
-                             return rot47(text);
+                            return rot47(text);
                         case "atbash":
                             return text.replace(/[a-zA-Z]/g, char => {
                                 const start = char <= 'Z' ? 65 : 97;
@@ -483,11 +469,9 @@
             const updateUI = () => {
                 if (currentMode === 'encode') {
                     messageInput.placeholder = "Írd be az üzenetet a kódoláshoz...";
-                    processBtn.textContent = "Kódolás";
                     switchModeBtn.textContent = "Dekódolásra váltás";
                 } else {
                     messageInput.placeholder = "Írd be az üzenetet a dekódoláshoz...";
-                    processBtn.textContent = "Dekódolás";
                     switchModeBtn.textContent = "Kódolásra váltás";
                 }
             };
@@ -567,7 +551,6 @@
                 tempTextArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(tempTextArea);
-                // Custom alert message for the user, as real alert() is not working.
                 const copyMessage = document.createElement('div');
                 copyMessage.textContent = 'Sikeresen másolva a vágólapra!';
                 copyMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000;';
@@ -582,7 +565,8 @@
                 processMessage();
             });
             vigenereKeyInput.addEventListener('input', processMessage);
-            processBtn.addEventListener('click', processMessage);
+
+            // Removed processBtn.addEventListener('click', processMessage) to make it automatic.
             
             updateUI();
             updateCounts();
@@ -590,4 +574,3 @@
     </script>
 </body>
 </html>
-
