@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vonalkód Generátor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #E0E0E0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 500px;
+        }
+        .input-field {
+            background-color: #1E1E1E;
+            border: 1px solid #333;
+            color: #E0E0E0;
+        }
+        .btn {
+            background-color: #BB86FC;
+            color: #121212;
+            transition: transform 0.1s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        #barcode-container {
+            border: 1px solid #333;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div class="container mx-auto p-6 rounded-xl shadow-lg border border-gray-700 bg-gray-800">
+        <h1 class="text-3xl font-bold text-center mb-6">Vonalkód Generátor</h1>
+        
+        <p class="text-center text-sm mb-6 text-gray-400">
+            Írj be egy szöveget vagy számot, és az app azonnal generál neked egy vonalkódot.
+        </p>
+
+        <div class="mb-4">
+            <label for="inputData" class="block text-sm font-medium mb-1">Adatok:</label>
+            <input type="text" id="inputData" class="input-field w-full p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Pl. Hello Világ vagy 1234567890">
+        </div>
+
+        <div class="flex justify-center mb-6">
+            <button id="generateBtn" class="btn font-semibold py-2 px-6 rounded-full shadow-md">
+                Generálás
+            </button>
+        </div>
+
+        <div id="barcode-container" class="rounded-md overflow-hidden mb-4">
+            <svg id="barcode"></svg>
+        </div>
+
+        <div class="flex justify-center">
+            <button id="downloadBtn" class="btn font-semibold py-2 px-6 rounded-full shadow-md hidden">
+                Letöltés
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        const inputData = document.getElementById('inputData');
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const barcodeSvg = document.getElementById('barcode');
+
+        generateBtn.addEventListener('click', () => {
+            const data = inputData.value.trim();
+            if (data) {
+                try {
+                    JsBarcode("#barcode", data, {
+                        format: "CODE128",
+                        displayValue: true
+                    });
+                    downloadBtn.classList.remove('hidden');
+                } catch (error) {
+                    barcodeSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#E0E0E0">Hiba: Érvénytelen adat. Kérlek, próbálj meg mást!</text>`;
+                    downloadBtn.classList.add('hidden');
+                }
+            } else {
+                downloadBtn.classList.add('hidden');
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const svgData = new XMLSerializer().serializeToString(barcodeSvg);
+            const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            const link = document.createElement('a');
+            link.href = svgUrl;
+            link.download = `barcode_${inputData.value.trim()}.svg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(svgUrl);
+        });
+
+        // Generáljon egy kezdeti vonalkódot, amikor az oldal betöltődik.
+        window.onload = () => {
+            inputData.value = "123456789";
+            generateBtn.click();
+        };
+
+    </script>
+</body>
+</html>
