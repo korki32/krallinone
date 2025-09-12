@@ -4,65 +4,182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR-kód Generátor</title>
+    <!-- Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Canvas háttér */
+        #futuristic-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            display: block;
+            background: linear-gradient(180deg, #071025 0%, #071025 100%);
+        }
+        /* Fő doboz stílusa */
+        .glass-panel {
+            background-color: rgba(24, 30, 41, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        /* Gombok */
+        .action-btn {
+            background-color: #22c55e; /* Zöldes szín */
+            color: white;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: transform .18s ease, background-color .18s ease;
+            box-shadow: 0 6px 18px rgba(34,197,94,0.12);
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            background-color: #16a34a;
+        }
+        /* QR kód konténer */
+        #qrCodeContainer {
+            background-color: #ffffff;
+            display: inline-flex; /* Megfelelő méretezés a tartalomhoz */
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            min-height: 288px; /* 256px + padding */
+            min-width: 288px; /* 256px + padding */
+            border-radius: 0.5rem;
+        }
+        #qrcode img {
+            border-radius: 0.25rem;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-    <div class="container bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl mx-auto text-center">
-        <h1 class="text-4xl font-extrabold text-gray-800 mb-6">QR-kód Generátor</h1>
-        <p class="text-gray-600 mb-8">Készíts QR-kódot bármilyen szövegből vagy URL-ből!</p>
+<body class="min-h-screen transition-colors duration-300">
 
-        <div class="space-y-6">
-            <div>
-                <label for="qrInput" class="block text-lg font-semibold text-gray-700 mb-2">Tartalom:</label>
-                <input type="text" id="qrInput" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors text-center" placeholder="Írj be egy szöveget vagy URL-t...">
-            </div>
+    <!-- Canvas a háttérhez -->
+    <canvas id="futuristic-canvas"></canvas>
 
-            <div id="qrCodeContainer" class="flex justify-center mt-8 p-4 bg-gray-50 rounded-lg hidden">
-                <div id="qrcode"></div>
+    <!-- Fő tartalom -->
+    <main class="relative z-10 flex items-center justify-center min-h-screen p-6">
+        <div class="glass-panel rounded-3xl shadow-2xl w-full max-w-lg p-8 relative overflow-hidden text-center">
+            <h1 class="text-4xl font-extrabold text-white text-center mb-3">QR-kód Generátor</h1>
+            <p class="text-center text-gray-300 mb-8">Készíts QR-kódot bármilyen szövegből vagy URL-ből!</p>
+
+            <div class="space-y-6">
+                <div>
+                    <label for="qrInput" class="block text-lg font-semibold text-gray-300 mb-2">Tartalom:</label>
+                    <input type="text" id="qrInput" class="w-full p-3 border border-gray-600 rounded-lg bg-transparent text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center" placeholder="Írj be egy szöveget vagy URL-t...">
+                </div>
+
+                <div id="qrCodeContainer" class="mx-auto hidden">
+                    <div id="qrcode"></div>
+                </div>
+                
+                <!-- A "Letöltés" gomb a QR-kód konténer alatt helyezkedik el -->
+                <button id="downloadBtn" class="action-btn font-semibold hidden mx-auto">
+                    Letöltés
+                </button>
             </div>
             
-            <button id="downloadBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors mt-4 hidden">
-                Letöltés
-            </button>
+            <footer class="text-center text-gray-400 mt-8 text-sm">
+                <p>&copy; 2024 Korki32</p>
+            </footer>
         </div>
-    </div>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            /* ---------- elemek ---------- */
+            const canvas = document.getElementById('futuristic-canvas');
+            const ctx = canvas.getContext?.('2d');
             const qrInput = document.getElementById('qrInput');
             const qrCodeContainer = document.getElementById('qrCodeContainer');
             const qrcodeDiv = document.getElementById('qrcode');
             const downloadBtn = document.getElementById('downloadBtn');
             let qrcode = null;
 
+            /* ---------- háttér animáció (canvas) ---------- */
+            if (canvas && ctx) {
+                const matrixCharacters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%^&*()_+{}|:<>?-=[]\\;\'",./`~';
+                let streams = [];
+                const fontSize = 16;
+                let animationFrameId;
+
+                function initializeCanvas() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    const columns = Math.floor(canvas.width / fontSize);
+                    streams = [];
+                    for (let i = 0; i < columns; i++) {
+                        streams.push({
+                            x: i * fontSize,
+                            y: Math.random() * canvas.height,
+                            speed: Math.random() * 5 + 1
+                        });
+                    }
+                }
+
+                function draw() {
+                    ctx.fillStyle = 'rgba(7, 16, 37, 0.05)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#22c55e';
+                    ctx.font = `${fontSize}px monospace`;
+                    streams.forEach(stream => {
+                        const char = matrixCharacters.charAt(Math.floor(Math.random() * matrixCharacters.length));
+                        ctx.fillText(char, stream.x, stream.y);
+                        if (stream.y > canvas.height + 50) {
+                            stream.y = 0;
+                        } else {
+                            stream.y += stream.speed;
+                        }
+                    });
+                }
+                
+                function animate() {
+                    draw();
+                    animationFrameId = requestAnimationFrame(animate);
+                }
+
+                initializeCanvas();
+                animate();
+                
+                window.addEventListener('resize', () => {
+                    cancelAnimationFrame(animationFrameId);
+                    initializeCanvas();
+                    animate();
+                });
+            }
+
+            /* ---------- QR-kód logika ---------- */
             const generateQRCode = (text) => {
+                qrcodeDiv.innerHTML = ''; // Előző törlése
                 if (text === '') {
                     qrCodeContainer.classList.add('hidden');
                     downloadBtn.classList.add('hidden');
                     return;
                 }
 
-                if (qrcode) {
-                    qrcode.clear();
-                    qrcode.makeCode(text);
-                } else {
-                    qrcode = new QRCode(qrcodeDiv, {
-                        text: text,
-                        width: 256,
-                        height: 256,
-                        colorDark: "#000000",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.H
-                    });
-                }
+                // A qrcode objektumot minden alkalommal újra létrehozzuk, ez a legbiztosabb
+                qrcode = new QRCode(qrcodeDiv, {
+                    text: text,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
                 qrCodeContainer.classList.remove('hidden');
                 downloadBtn.classList.remove('hidden');
             };
@@ -72,21 +189,10 @@
                 if (qrImage) {
                     const link = document.createElement('a');
                     link.href = qrImage.src;
-                    link.download = 'qrcode.png';
+                    link.download = `qrcode_${qrInput.value.trim() || 'generated'}.png`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                } else {
-                    // Fallback for browsers that don't support the 'img' element on QR code
-                    const canvas = qrcodeDiv.querySelector('canvas');
-                    if (canvas) {
-                        const link = document.createElement('a');
-                        link.href = canvas.toDataURL("image/png");
-                        link.download = 'qrcode.png';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }
                 }
             };
 
@@ -95,8 +201,11 @@
             });
 
             downloadBtn.addEventListener('click', downloadQRCode);
+
+            // Kezdeti állapot
+            qrInput.value = "https://github.com/Korki32";
+            generateQRCode(qrInput.value);
         });
     </script>
 </body>
 </html>
-
