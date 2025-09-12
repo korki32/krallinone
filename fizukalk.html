@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Műszak és Fizetés Kalkulátor</title>
-     <!-- Inter betűtípus -->
+    <!-- Inter betűtípus -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             background: #0d1117;
+            color: #f0f6fc;
         }
         .glass-panel {
             background-color: rgba(24, 30, 41, 0.85);
@@ -24,7 +24,6 @@
             position: relative;
             z-index: 10;
         }
-        /* Canvas style for background animation */
         #futuristic-canvas {
             position: fixed;
             top: 0;
@@ -34,13 +33,12 @@
             z-index: -2;
         }
         .header {
-            grid-area: header;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 1rem;
         }
         .main-content {
-            grid-area: main;
             display: flex;
             flex-direction: column;
             gap: 2rem;
@@ -50,14 +48,8 @@
                 flex-direction: row;
             }
         }
-        .calendar-container {
+        .calendar-container, .controls-container {
             flex: 1;
-        }
-        .controls-container {
-            flex: 1;
-        }
-        .results-container {
-            grid-area: results;
         }
         .day {
             min-height: 3.5rem;
@@ -68,25 +60,29 @@
             padding: 0.5rem;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-            font-size: 0.875rem;
+            border-radius: 0.5rem;
+            background-color: rgba(255,255,255,0.05);
         }
         .day.selected {
-            background-color: #d1e5f0;
+            background-color: #1d4ed8;
+            color: white;
             font-weight: 600;
         }
         .day.current-month {
-            color: #1f2937;
+            color: #cbd5e1;
         }
         .day:hover:not(.empty-day) {
             transform: scale(1.05);
+            background-color: rgba(29, 78, 216, 0.7);
+            color: white;
         }
         .day span.hours {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #9ca3af;
             margin-top: 0.25rem;
         }
         .day.selected .hours {
-            color: #1d4ed8;
+            color: #fcd34d;
         }
         .modal {
             display: none;
@@ -97,13 +93,14 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(5px);
             align-items: center;
             justify-content: center;
         }
         .modal-content {
-            background-color: #fff;
+            background-color: #1e293b;
+            color: #f0f6fc;
             padding: 2rem;
             border-radius: 1rem;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
@@ -117,7 +114,8 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 110;
-            background-color: #fff;
+            background-color: #1e293b;
+            color: #f0f6fc;
             padding: 1.5rem;
             border-radius: 0.75rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
@@ -125,57 +123,25 @@
         }
         .info-icon {
             cursor: help;
-            color: #4a5568;
+            color: #60a5fa;
             margin-left: 0.5rem;
             font-size: 1rem;
         }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
+        input, select {
+            background-color: #0f172a;
+            color: #f0f6fc;
+            border: 1px solid #334155;
         }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+        input:focus, select:focus {
+            border-color: #3b82f6;
+            ring-color: #3b82f6;
         }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
+        .results-container .bg-gray-50 {
+            background-color: #1e293b;
+            color: #f0f6fc;
         }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-         /* Canvas stílus a háttéranimációhoz */
-        #futuristic-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
+        .results-container .bg-blue-500 {
+            background-color: #1d4ed8;
         }
     </style>
 </head>
