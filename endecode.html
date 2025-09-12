@@ -68,9 +68,6 @@
   <!-- Canvas a háttérhez -->
   <canvas id="futuristic-canvas"></canvas>
 
-  <!-- Theme toggle (jobb felső) -->
-  <button id="theme-toggle" class="fixed top-4 right-4 p-3 rounded-full shadow-lg bg-slate-800 text-white">🌙 / ☀️</button>
-
   <!-- Fő tartalom -->
   <main class="relative z-10 flex items-start justify-center p-6 pt-16">
     <div class="glass-panel rounded-3xl shadow-2xl w-full max-w-2xl p-8 relative overflow-hidden">
@@ -536,29 +533,6 @@
       // inicializálás
       updateUI(); updateCounts();
 
-      /* ---------- Theme (dark/light soft) ---------- */
-      const htmlEl = document.documentElement;
-      function applyTheme(theme) {
-        if (theme === 'dark') {
-          htmlEl.classList.remove('light'); // default dark visuals
-          // set dark-friendly body background & text
-          document.body.style.background = ''; // canvas handles bg
-          // text colors: keep current, glass-panel is dark by default
-        } else {
-          // light mode: add class for CSS adjustments
-          htmlEl.classList.add('light');
-          // override body background to soft light
-          document.body.style.background = 'var(--soft-bg)';
-          // change panel text to soft dark
-        }
-      }
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      applyTheme(savedTheme);
-      themeToggle.addEventListener('click', () => {
-        const cur = localStorage.getItem('theme') === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('theme', cur);
-        applyTheme(cur);
-      });
     }); // DOMContentLoaded end
   </script>
 </body>
