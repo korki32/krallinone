@@ -4,121 +4,212 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vonalkód Generátor</title>
+    <!-- Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #121212;
-            color: #E0E0E0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .container {
-            max-width: 500px;
+        /* Canvas háttér */
+        #futuristic-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            display: block;
+            background: linear-gradient(180deg, #071025 0%, #071025 100%);
         }
-        .input-field {
-            background-color: #1E1E1E;
-            border: 1px solid #333;
-            color: #E0E0E0;
+        /* Fő doboz stílusa */
+        .glass-panel {
+            background-color: rgba(24, 30, 41, 0.85);
+            backdrop-filter: blur(12px);
         }
-        .btn {
-            background-color: #BB86FC;
-            color: #121212;
-            transition: transform 0.1s ease;
+        /* Gombok */
+        .action-btn {
+            background-color: #22c55e; /* Zöldes szín */
+            color: white;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: transform .18s ease, background-color .18s ease;
+            box-shadow: 0 6px 18px rgba(34,197,94,0.12);
         }
-        .btn:hover {
+        .action-btn:hover {
             transform: translateY(-2px);
+            background-color: #16a34a;
         }
         #barcode-container {
-            border: 1px solid #333;
             background-color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 1rem;
+            min-height: 120px;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="min-h-screen transition-colors duration-300">
 
-    <div class="container mx-auto p-6 rounded-xl shadow-lg border border-gray-700 bg-gray-800">
-        <h1 class="text-3xl font-bold text-center mb-6">Vonalkód Generátor</h1>
-        
-        <p class="text-center text-sm mb-6 text-gray-400">
-            Írj be egy szöveget vagy számot, és az app azonnal generál neked egy vonalkódot.
-        </p>
+    <!-- Canvas a háttérhez -->
+    <canvas id="futuristic-canvas"></canvas>
 
-        <div class="mb-4">
-            <label for="inputData" class="block text-sm font-medium mb-1">Adatok:</label>
-            <input type="text" id="inputData" class="input-field w-full p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Pl. Hello Világ vagy 1234567890">
+    <!-- Fő tartalom -->
+    <main class="relative z-10 flex items-center justify-center min-h-screen p-6">
+        <div class="glass-panel rounded-3xl shadow-2xl w-full max-w-lg p-8 relative overflow-hidden">
+            <h1 class="text-4xl font-extrabold text-white text-center mb-3">Vonalkód Generátor</h1>
+            <p class="text-center text-gray-300 mb-8">
+                Írj be egy szöveget vagy számot, és az app azonnal generál neked egy vonalkódot.
+            </p>
+
+            <div class="space-y-6">
+                <div>
+                    <label for="inputData" class="block text-lg font-semibold text-gray-300 mb-2">Adatok:</label>
+                    <input type="text" id="inputData" class="w-full p-3 border border-gray-600 rounded-lg bg-transparent text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Pl. Hello Világ vagy 1234567890">
+                </div>
+
+                <div class="flex justify-center">
+                    <button id="generateBtn" class="action-btn font-semibold">
+                        Generálás
+                    </button>
+                </div>
+
+                <div id="barcode-container" class="rounded-md overflow-hidden">
+                    <svg id="barcode"></svg>
+                </div>
+
+                <div class="flex justify-center">
+                    <button id="downloadBtn" class="action-btn font-semibold hidden">
+                        Letöltés
+                    </button>
+                </div>
+            </div>
+            
+            <footer class="text-center text-gray-400 mt-8 text-sm">
+                <p>&copy; 2024 Korki32</p>
+            </footer>
         </div>
-
-        <div class="flex justify-center mb-6">
-            <button id="generateBtn" class="btn font-semibold py-2 px-6 rounded-full shadow-md">
-                Generálás
-            </button>
-        </div>
-
-        <div id="barcode-container" class="rounded-md overflow-hidden mb-4">
-            <svg id="barcode"></svg>
-        </div>
-
-        <div class="flex justify-center">
-            <button id="downloadBtn" class="btn font-semibold py-2 px-6 rounded-full shadow-md hidden">
-                Letöltés
-            </button>
-        </div>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script>
-        const inputData = document.getElementById('inputData');
-        const generateBtn = document.getElementById('generateBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const barcodeSvg = document.getElementById('barcode');
+        document.addEventListener('DOMContentLoaded', () => {
+            /* ---------- elemek ---------- */
+            const canvas = document.getElementById('futuristic-canvas');
+            const ctx = canvas.getContext?.('2d');
+            const inputData = document.getElementById('inputData');
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const barcodeSvg = document.getElementById('barcode');
+            const barcodeContainer = document.getElementById('barcode-container');
 
-        generateBtn.addEventListener('click', () => {
-            const data = inputData.value.trim();
-            if (data) {
-                try {
-                    JsBarcode("#barcode", data, {
-                        format: "CODE128",
-                        displayValue: true
+            /* ---------- háttér animáció (canvas) ---------- */
+            if (canvas && ctx) {
+                const matrixCharacters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%^&*()_+{}|:<>?-=[]\\;\'",./`~';
+                let streams = [];
+                const fontSize = 16;
+                let animationFrameId;
+
+                function initializeCanvas() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    const columns = Math.floor(canvas.width / fontSize);
+                    streams = [];
+                    for (let i = 0; i < columns; i++) {
+                        streams.push({
+                            x: i * fontSize,
+                            y: Math.random() * canvas.height,
+                            speed: Math.random() * 5 + 1
+                        });
+                    }
+                }
+
+                function draw() {
+                    ctx.fillStyle = 'rgba(7, 16, 37, 0.05)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#22c55e';
+                    ctx.font = `${fontSize}px monospace`;
+                    streams.forEach(stream => {
+                        const char = matrixCharacters.charAt(Math.floor(Math.random() * matrixCharacters.length));
+                        ctx.fillText(char, stream.x, stream.y);
+                        if (stream.y > canvas.height + 50) {
+                            stream.y = 0;
+                        } else {
+                            stream.y += stream.speed;
+                        }
                     });
-                    downloadBtn.classList.remove('hidden');
-                } catch (error) {
-                    barcodeSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#E0E0E0">Hiba: Érvénytelen adat. Kérlek, próbálj meg mást!</text>`;
+                }
+                
+                function animate() {
+                    draw();
+                    animationFrameId = requestAnimationFrame(animate);
+                }
+
+                initializeCanvas();
+                animate();
+                
+                window.addEventListener('resize', () => {
+                    cancelAnimationFrame(animationFrameId);
+                    initializeCanvas();
+                    animate();
+                });
+            }
+            
+            /* ---------- Vonalkód logika ---------- */
+            function generateBarcode() {
+                const data = inputData.value.trim();
+                if (data) {
+                    try {
+                        JsBarcode("#barcode", data, {
+                            format: "CODE128",
+                            displayValue: true,
+                            background: "#ffffff",
+                            lineColor: "#000000",
+                            margin: 10
+                        });
+                        barcodeContainer.querySelector('text').style.fill = "#000000"; // Hibaüzenet eltávolítása
+                        downloadBtn.classList.remove('hidden');
+                    } catch (error) {
+                        barcodeSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-size="14" fill="#d9534f">Érvénytelen adat</text>`;
+                        downloadBtn.classList.add('hidden');
+                    }
+                } else {
+                    barcodeSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-size="14" fill="#6b7280">A vonalkód itt fog megjelenni</text>`;
                     downloadBtn.classList.add('hidden');
                 }
-            } else {
-                downloadBtn.classList.add('hidden');
             }
-        });
-
-        downloadBtn.addEventListener('click', () => {
-            const svgData = new XMLSerializer().serializeToString(barcodeSvg);
-            const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-            const svgUrl = URL.createObjectURL(svgBlob);
             
-            const link = document.createElement('a');
-            link.href = svgUrl;
-            link.download = `barcode_${inputData.value.trim()}.svg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(svgUrl);
+            generateBtn.addEventListener('click', generateBarcode);
+
+            downloadBtn.addEventListener('click', () => {
+                const svgData = new XMLSerializer().serializeToString(barcodeSvg);
+                const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+                const svgUrl = URL.createObjectURL(svgBlob);
+                
+                const link = document.createElement('a');
+                link.href = svgUrl;
+                link.download = `barcode_${inputData.value.trim() || 'generated'}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(svgUrl);
+            });
+
+            // Kezdeti állapot
+            window.onload = () => {
+                inputData.value = "KORKI32";
+                generateBarcode();
+            };
         });
-
-        // Generáljon egy kezdeti vonalkódot, amikor az oldal betöltődik.
-        window.onload = () => {
-            inputData.value = "123456789";
-            generateBtn.click();
-        };
-
     </script>
 </body>
 </html>
