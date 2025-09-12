@@ -240,57 +240,53 @@
                         <label class="block text-gray-700 font-medium mb-1">Bónusz2 (Ft)</label>
                         <input type="number" id="bonus2" value="0" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
+                    
                     <hr class="my-4">
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">Adó- és Járulékkedvezmények</h3>
-                    <div class="space-y-2">
+                    <!-- Adó és Járulékkedvezmények -->
+                    <hr class="my-4 border-slate-600">
+                    <h3 class="text-xl font-bold text-white mb-2">Adó- és Járulékkedvezmények</h3>
+                     <div class="space-y-2 text-slate-200">
                         <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="ekho" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>EKHO adózás</span>
-                            </label>
-                            <button class="info-icon" data-info="ekho">i</button>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="under25" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>25 év alatti adómentesség</span>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="under25" class="tax-checkbox rounded text-blue-500 focus:ring-blue-500 mr-2">
+                                <span>25 év alattiak</span>
                             </label>
                             <button class="info-icon" data-info="under25">i</button>
                         </div>
                         <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="under30mother" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>30 év alatti anyuka</span>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="under30mother" class="tax-checkbox rounded text-blue-500 focus:ring-blue-500 mr-2">
+                                <span>30 év alatti anyák</span>
                             </label>
                             <button class="info-icon" data-info="under30mother">i</button>
                         </div>
                         <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="married" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="married" class="tax-checkbox rounded text-blue-500 focus:ring-blue-500 mr-2">
                                 <span>Friss házasok</span>
                             </label>
-                            <button class="info-icon" data-info="married">i</button>
+                             <button class="info-icon" data-info="married">i</button>
                         </div>
                         <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="personalDeduction" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="personalDeduction" class="tax-checkbox rounded text-blue-500 focus:ring-blue-500 mr-2">
                                 <span>Személyi kedvezmény</span>
                             </label>
-                            <button class="info-icon" data-info="personalDeduction">i</button>
+                             <button class="info-icon" data-info="personalDeduction">i</button>
                         </div>
                         <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="retiredEmployee" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="mother4plus" class="tax-checkbox rounded text-blue-500 focus:ring-blue-500 mr-2">
+                                <span>Négy- vagy többgyermekes anyák</span>
+                            </label>
+                             <button class="info-icon" data-info="mother4plus">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="retiredEmployee" class="tax-checkbox rounded text-blue-500 focus:ring-blue-500 mr-2">
                                 <span>Nyugdíjas munkavállaló</span>
                             </label>
-                            <button class="info-icon" data-info="retiredEmployee">i</button>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="mother4plus" class="rounded text-blue-500 focus:ring-blue-500 mr-2">
-                                <span>4 vagy több gyermeket nevelő anyák</span>
-                            </label>
-                            <button class="info-icon" data-info="mother4plus">i</button>
+                             <button class="info-icon" data-info="retiredEmployee">i</button>
                         </div>
                     </div>
                 </div>
