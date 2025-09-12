@@ -482,10 +482,7 @@
           'Kérlek, add meg a Vigenère kulcsot!', 
           'Érvénytelen bevitel a kiválasztott dekódoláshoz.'
         ];
-        // A gomb inaktív, ha a szöveg üres, vagy ha a szöveg szerepel az érvénytelen eredmények listájában.
-        copyBtn.disabled = !resultDiv.textContent.trim() || invalidResults.includes(resultDiv.textContent);
-      }
-
+        
       function updateCounts() {
         const t = messageInput.value || '';
         charCountSpan.textContent = `${t.length} karakter`;
