@@ -82,18 +82,17 @@
                     <input type="text" id="qrInput" class="w-full p-3 border border-gray-600 rounded-lg bg-transparent text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center" placeholder="Írj be egy szöveget vagy URL-t...">
                 </div>
 
-                <div id="qrCodeContainer" class="mx-auto hidden">
-                    <div id="qrcode"></div>
-                </div>
-                
-                <!-- A "Letöltés" gomb a QR-kód konténer alatt helyezkedik el -->
-                <button id="downloadBtn" class="action-btn font-semibold hidden mx-auto">
-                    Letöltés
-                </button>
-            </div>
+<div class="flex flex-col items-center space-y-4">
+    <div id="qrCodeContainer" class="hidden bg-white p-4 rounded-lg">
+        <div id="qrcode"></div>
+    </div>
+    <button id="downloadBtn" class="action-btn font-semibold hidden">
+        Letöltés
+    </button>
+</div>
             
             <footer class="text-center text-gray-400 mt-8 text-sm">
-                <p>&copy; 2024 Korki32</p>
+                <p>&copy; 2025 Korki32</p>
             </footer>
         </div>
     </main>
