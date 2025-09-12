@@ -14,65 +14,24 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 2rem 1rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: #0d1117;
         }
-        .container {
-            background-color: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        .glass-panel {
+            background-color: rgba(24, 30, 41, 0.85);
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 10;
+        }
+        /* Canvas style for background animation */
+        #futuristic-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 60rem;
-            padding: 2rem;
-            display: grid;
-            gap: 2rem;
-            grid-template-areas: "header" "main" "results";
-        }
-        @media (min-width: 1024px) {
-            .container {
-                grid-template-areas: "header header" "main main" "results results";
-            }
-        }
-        /* Dark Mode Styles */
-        html.dark {
-            background-color: #1f2937;
-        }
-        html.dark .container {
-            background-color: #374151;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-        }
-        html.dark .text-gray-800 {
-            color: #f9fafb;
-        }
-        html.dark .text-gray-700 {
-            color: #d1d5db;
-        }
-        html.dark .text-gray-500 {
-            color: #9ca3af;
-        }
-        html.dark .day.selected {
-            background-color: #1e3a8a;
-        }
-        html.dark input, html.dark select {
-            background-color: #4b5563;
-            border-color: #6b7280;
-            color: #d1d5db;
-        }
-        html.dark .bg-gray-50 {
-            background-color: #4b5563;
-        }
-        html.dark hr {
-            border-color: #4b5563;
-        }
-        html.dark .modal-content {
-            background-color: #374151;
-        }
-        html.dark .message-box {
-            background-color: #374151;
+            height: 100%;
+            z-index: -2;
         }
         .header {
             grid-area: header;
@@ -226,10 +185,6 @@
         <!-- Header with dark mode toggle -->
         <div class="header">
             <h1 class="text-3xl font-bold text-gray-800">Fizetéskalkulátor</h1>
-            <label class="switch">
-                <input type="checkbox" id="darkModeToggle">
-                <span class="slider"></span>
-            </label>
         </div>
         
         <!-- Main content: Calendar and Controls side-by-side -->
@@ -584,29 +539,10 @@
             const messageText = document.getElementById('messageText');
             const closeMessageBtn = document.getElementById('closeMessageBtn');
             const infoButtons = document.querySelectorAll('.info-icon');
-            const darkModeToggle = document.getElementById('darkModeToggle');
             
             let currentDate = new Date();
             let selectedDays = {};
             let activeDate = null;
-
-            // Dark Mode
-            const isDarkMode = localStorage.getItem('darkMode') === 'true';
-            if (isDarkMode) {
-                document.documentElement.classList.add('dark');
-                darkModeToggle.checked = true;
-            }
-
-            darkModeToggle.addEventListener('change', () => {
-                if (darkModeToggle.checked) {
-                    document.documentElement.classList.add('dark');
-                    localStorage.setItem('darkMode', 'true');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.setItem('darkMode', 'false');
-                }
-            });
-
 
             const formatCurrency = (amount) => {
                 return `${Math.round(amount).toLocaleString('hu-HU')} Ft`;
