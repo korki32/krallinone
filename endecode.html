@@ -511,22 +511,28 @@
         processMessage();
       });
 
-      copyBtn.addEventListener('click', () => {
-                const textToCopy = resultDiv.textContent;
-                const tempTextArea = document.createElement('textarea');
-                tempTextArea.value = textToCopy;
-                document.body.appendChild(tempTextArea);
-                tempTextArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempTextArea);
-                const copyMessage = document.createElement('div');
-                copyMessage.textContent = 'Sikeresen másolva a vágólapra!';
-                copyMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000;';
-                document.body.appendChild(copyMessage);
-                setTimeout(() => {
-                    document.body.removeChild(copyMessage);
-                }, 3000);
-            });
+     // Eredmény frissítésekor mutasd a gombot
+function updateResult(text) {
+  resultDiv.textContent = text;
+  if (text.trim()) {
+    copyBtn.classList.remove('hidden');
+  } else {
+    copyBtn.classList.add('hidden');
+  }
+}
+
+// Másolás funkció
+copyBtn.addEventListener('click', () => {
+  const text = resultDiv.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    copyBtn.textContent = "✔️ Kimásolva!";
+    setTimeout(() => {
+      copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" ...>...</svg>`;
+    }, 1500);
+  }).catch(err => {
+    console.error("Másolás sikertelen:", err);
+  });
+});
 
       messageInput.addEventListener('input', () => { updateCounts(); processMessage(); });
       vigenereKeyInput.addEventListener('input', processMessage);
@@ -534,7 +540,6 @@
       // inicializálás
       updateUI();
       updateCounts();
-      copyBtn.disabled = true; // Kezdetben inaktív
     }); // DOMContentLoaded end
   </script>
 </body>
