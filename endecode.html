@@ -28,38 +28,44 @@
       background: linear-gradient(180deg,#071025 0%, #071025 100%);
     }
 
-    /* Konténer stílus (lágy light módhoz is) */
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.78); /* sötét alap */
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(148,163,184,0.06);
-    }
-
-    /* light mód változtatásnál ez kerül rá a .glass-panel-re */
-    .light .glass-panel {
-      background: rgba(255,255,255,0.86);
-      border-color: rgba(15,23,42,0.06);
-    }
-
     /* Gombok */
     .switch-mode-btn {
-      background-color: #3b82f6;
+      background-color: #22c55e; /* Zöldes szín */
       color: white;
       padding: 10px 16px;
       border: none;
       border-radius: 9999px;
       cursor: pointer;
       transition: transform .18s ease, background-color .18s ease;
-      box-shadow: 0 6px 18px rgba(59,130,246,0.12);
+      box-shadow: 0 6px 18px rgba(34,197,94,0.12);
     }
-    .switch-mode-btn:hover { transform: translateY(-2px); background-color:#2563eb; }
+    .switch-mode-btn:hover { transform: translateY(-2px); background-color:#16a34a; }
 
-    /* theme toggle gomb */
-    #theme-toggle { z-index: 40; }
-
-    /* kisebb responsive javítások */
+    /* Kisebb responsive javítások */
     @media (max-width:640px) {
       #theme-toggle { right: .5rem; top: .5rem; }
+    }
+
+    /* Fő doboz stílusa */
+    .glass-panel {
+      background-color: rgba(24, 30, 41, 0.85);
+      backdrop-filter: blur(12px);
+    }
+    
+    /* Lenyíló menü javítás */
+    select, select option {
+        background-color: #1e293b;
+        color: white;
+    }
+    
+    /* Másolás gomb stílus */
+    #copy-btn {
+      transition: opacity .2s ease, background-color .2s ease;
+    }
+    #copy-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: #4b5563; /* Sötétszürke az inaktív állapothoz */
     }
   </style>
 </head>
@@ -125,9 +131,8 @@
 
         <div class="pt-4">
           <label class="block text-lg font-semibold text-gray-300 mb-2">Eredmény:</label>
-          <div class="flex items-center space-x-2">
-            <div id="result" class="min-h-[128px] w-full p-4 border border-gray-600 rounded-lg bg-transparent text-white shadow-sm break-words whitespace-pre-wrap overflow-x-auto"></div>
-            <button id="copy-btn" class="bg-gray-600 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition-colors hidden" title="Másolás">
+          <div id="result" class="relative min-h-[128px] w-full p-4 border border-gray-600 rounded-lg bg-transparent text-white shadow-sm break-words whitespace-pre-wrap overflow-x-auto">
+            <button id="copy-btn" class="absolute bottom-4 right-4 bg-gray-600 text-white p-2 w-12 h-12 rounded-lg shadow-md hover:bg-gray-700 transition-colors flex items-center justify-center" title="Másolás">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v2M8 5h6" />
               </svg>
@@ -166,67 +171,46 @@
 
       /* ---------- háttér animáció (canvas) ---------- */
       if (canvas && ctx) {
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-        let particles = [];
-        const particleCount = 180;
+        const matrixCharacters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%^&*()_+{}|:<>?-=[]\\;\'",./`~';
+        let streams = [];
+        const fontSize = 16;
+        const columns = Math.floor(canvas.width / fontSize);
 
-        function resizeCanvas() {
-          width = canvas.width = window.innerWidth;
-          height = canvas.height = window.innerHeight;
-        }
-
-        class Particle {
-          constructor() {
-            this.x = Math.random() * width;
-            this.y = Math.random() * height;
-            this.vx = (Math.random() - 0.5) * 0.4;
-            this.vy = (Math.random() - 0.5) * 0.4;
-            this.radius = Math.random() * 1.6 + 0.2;
-            this.color = `rgba(44,192,235,${Math.random() * 0.5 + 0.08})`;
-          }
-          update() {
-            this.x += this.vx; this.y += this.vy;
-            if (this.x < 0 || this.x > width) this.vx *= -1;
-            if (this.y < 0 || this.y > height) this.vy *= -1;
-          }
-          draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-          }
-        }
-
-        function initParticles() {
-          particles = [];
-          for (let i = 0; i < particleCount; i++) particles.push(new Particle());
-        }
-
-        function animate() {
-          ctx.clearRect(0, 0, width, height);
-          particles.forEach(p => { p.update(); p.draw(); });
-          for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-              const dx = particles[i].x - particles[j].x;
-              const dy = particles[i].y - particles[j].y;
-              const dist = Math.sqrt(dx*dx + dy*dy);
-              if (dist < 110) {
-                ctx.beginPath();
-                ctx.moveTo(particles[i].x, particles[i].y);
-                ctx.lineTo(particles[j].x, particles[j].y);
-                ctx.strokeStyle = `rgba(44,192,235,${1 - dist/110})`;
-                ctx.lineWidth = 0.18;
-                ctx.stroke();
-              }
+        function initializeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const newColumns = Math.floor(canvas.width / fontSize);
+            streams = [];
+            for (let i = 0; i < newColumns; i++) {
+                streams.push({
+                    x: i * fontSize,
+                    y: Math.random() * canvas.height,
+                    speed: Math.random() * 5 + 1
+                });
             }
-          }
-          requestAnimationFrame(animate);
         }
 
-        initParticles();
-        window.addEventListener('resize', resizeCanvas);
-        animate();
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = `${fontSize}px 'Roboto Mono'`;
+
+            streams.forEach(stream => {
+                const char = matrixCharacters.charAt(Math.floor(Math.random() * matrixCharacters.length));
+                ctx.fillText(char, stream.x, stream.y);
+
+                if (stream.y > canvas.height + 50) {
+                    stream.y = 0;
+                } else {
+                    stream.y += stream.speed;
+                }
+            });
+        }
+
+        initializeCanvas();
+        setInterval(draw, 30);
+        window.addEventListener('resize', initializeCanvas);
       }
 
       /* ---------- segédfüggvények és kódolók ---------- */
@@ -476,20 +460,30 @@
         const msg = messageInput.value;
         const key = vigenereKeyInput.value.trim();
         const cipher = cipherSelect.value;
+        let resultText = '';
 
-        if (!msg) { resultDiv.textContent = 'Kérlek, írj be egy üzenetet!'; copyBtn.classList.add('hidden'); return; }
-        if (cipher === 'vigenere' && key === '') { resultDiv.textContent = 'Kérlek, add meg a Vigenère kulcsot!'; copyBtn.classList.add('hidden'); return; }
-
-        // try/catch a vigenere hibák miatt
-        try {
-          resultDiv.textContent = (currentMode === 'encode') ? encode(msg, cipher, key) : decode(msg, cipher, key);
-        } catch (e) {
-          resultDiv.textContent = 'Hiba: ' + (e.message || 'ismeretlen hiba');
+        if (!msg) {
+          resultText = 'Kérlek, írj be egy üzenetet!';
+        } else if (cipher === 'vigenere' && key === '') {
+          resultText = 'Kérlek, add meg a Vigenère kulcsot!';
+        } else {
+          try {
+            resultText = (currentMode === 'encode') ? encode(msg, cipher, key) : decode(msg, cipher, key);
+          } catch (e) {
+            resultText = 'Hiba: ' + (e.message || 'ismeretlen hiba');
+          }
         }
+        
+        resultDiv.textContent = resultText;
 
-        if (resultDiv.textContent && !['Kérlek, írj be egy üzenetet!','Érvénytelen bevitel a kiválasztott dekódoláshoz.'].includes(resultDiv.textContent)) {
-          copyBtn.classList.remove('hidden');
-        } else copyBtn.classList.add('hidden');
+        // Új, robusztusabb logika a másolás gomb állapotához
+        const invalidResults = [
+          'Kérlek, írj be egy üzenetet!', 
+          'Kérlek, add meg a Vigenère kulcsot!', 
+          'Érvénytelen bevitel a kiválasztott dekódoláshoz.'
+        ];
+        // A gomb inaktív, ha a szöveg üres, vagy ha a szöveg szerepel az érvénytelen eredmények listájában.
+        copyBtn.disabled = !resultDiv.textContent.trim() || invalidResults.includes(resultDiv.textContent);
       }
 
       function updateCounts() {
@@ -502,7 +496,8 @@
       // események
       switchModeBtn.addEventListener('click', () => {
         currentMode = (currentMode === 'encode') ? 'decode' : 'encode';
-        messageInput.value = ''; vigenereKeyInput.value = ''; resultDiv.textContent = ''; updateUI(); updateCounts(); copyBtn.classList.add('hidden');
+        messageInput.value = ''; vigenereKeyInput.value = ''; resultDiv.textContent = ''; updateUI(); updateCounts();
+        copyBtn.disabled = true; // Kezdetben inaktív
       });
 
       cipherSelect.addEventListener('change', () => {
@@ -518,7 +513,7 @@
 
       copyBtn.addEventListener('click', () => {
         const textToCopy = resultDiv.textContent || '';
-        if (!textToCopy) return;
+        if (copyBtn.disabled || !textToCopy) return;
         navigator.clipboard?.writeText ? navigator.clipboard.writeText(textToCopy) : (function(){ const ta=document.createElement('textarea'); ta.value=textToCopy; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); })();
         const copyMessage = document.createElement('div');
         copyMessage.textContent = 'Sikeresen másolva a vágólapra!';
@@ -531,8 +526,9 @@
       vigenereKeyInput.addEventListener('input', processMessage);
 
       // inicializálás
-      updateUI(); updateCounts();
-
+      updateUI();
+      updateCounts();
+      copyBtn.disabled = true; // Kezdetben inaktív
     }); // DOMContentLoaded end
   </script>
 </body>
