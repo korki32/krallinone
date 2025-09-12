@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egység Konverter</title>
+    <!-- Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: #0d1117;
+        }
+        .glass-panel {
+            background-color: rgba(24, 30, 41, 0.85);
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 10;
+        }
+        /* Canvas style for background animation */
+        #futuristic-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-6">
+    <canvas id="futuristic-canvas"></canvas>
+
+    <div class="glass-panel rounded-2xl shadow-2xl w-full max-w-lg p-8 relative border border-gray-700">
+        <h1 class="text-4xl font-extrabold text-white text-center mb-3">Egység Konverter</h1>
+        <p class="text-center text-gray-400 mb-8">Válts át mértékegységeket azonnal</p>
+        
+        <div class="space-y-6">
+            <!-- Unit Type Selector -->
+            <div>
+                <label for="unitType" class="block text-gray-400 text-sm font-semibold mb-2">Konvertálási típus:</label>
+                <select id="unitType" class="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors">
+                    <option value="length">Hossz</option>
+                    <option value="weight">Súly</option>
+                    <option value="temperature">Hőmérséklet</option>
+                    <option value="volume">Térfogat</option>
+                    <option value="time">Idő</option>
+                </select>
+            </div>
+
+            <!-- From Unit and Input -->
+            <div class="flex items-end space-x-4">
+                <div class="flex-1">
+                    <label for="fromUnit" class="block text-gray-400 text-sm font-semibold mb-2">Ebből:</label>
+                    <select id="fromUnit" class="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"></select>
+                </div>
+                <div class="flex-1">
+                    <label for="inputValue" class="block text-gray-400 text-sm font-semibold mb-2">Érték:</label>
+                    <input type="number" id="inputValue" value="1" class="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- To Unit and Output -->
+            <div class="flex items-end space-x-4">
+                <div class="flex-1">
+                    <label for="toUnit" class="block text-gray-400 text-sm font-semibold mb-2">Ebbe:</label>
+                    <select id="toUnit" class="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"></select>
+                </div>
+                <div class="flex-1">
+                    <label for="outputValue" class="block text-gray-400 text-sm font-semibold mb-2">Eredmény:</label>
+                    <input type="text" id="outputValue" readonly class="w-full p-3 rounded-lg bg-gray-800 text-purple-300 border border-gray-700 focus:outline-none cursor-not-allowed">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-8 pt-4 border-t border-gray-700 text-center text-xs text-gray-500">
+            <p>&copy; 2024 Egység Konverter. Minden jog fenntartva.</p>
+        </div>
+    </div>
+    <script>
+        window.onload = function() {
+            const unitTypeSelect = document.getElementById('unitType');
+            const fromUnitSelect = document.getElementById('fromUnit');
+            const toUnitSelect = document.getElementById('toUnit');
+            const inputValue = document.getElementById('inputValue');
+            const outputValue = document.getElementById('outputValue');
+
+            // Háttér animáció
+            const canvas = document.getElementById('futuristic-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const particleCount = 200;
+
+            function resizeCanvas() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = (Math.random() - 0.5) * 0.2;
+                    this.radius = Math.random() * 1.5;
+                    this.color = `rgba(44, 192, 235, ${Math.random() * 0.5 + 0.1})`;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(44, 192, 235, ${1 - distance / 100})`;
+                            ctx.lineWidth = 0.2;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+
+            resizeCanvas();
+            initParticles();
+            window.addEventListener('resize', resizeCanvas);
+            animate();
+
+            // A konverter logikája
+            const conversions = {
+                length: {
+                    options: [
+                        { value: 'mm', text: 'Milliméter' },
+                        { value: 'cm', text: 'Centiméter' },
+                        { value: 'dm', text: 'Deciméter' },
+                        { value: 'm', text: 'Méters' },
+                        { value: 'dam', text: 'Dekaméter' },
+                        { value: 'hm', text: 'Hektométer' },
+                        { value: 'km', text: 'Kilométer' },
+                        { value: 'inch', text: 'Hüvelyk' },
+                        { value: 'foot', text: 'Láb' },
+                        { value: 'mile', text: 'Mérföld' }
+                    ],
+                    factors: {
+                        mm: 0.1,
+                        cm: 1,
+                        dm: 10,
+                        m: 100,
+                        dam: 1000,
+                        hm: 10000,
+                        km: 100000,
+                        inch: 2.54,
+                        foot: 30.48,
+                        mile: 160934.4
+                    }
+                },
+                weight: {
+                    options: [
+                        { value: 'mg', text: 'Milligramm' },
+                        { value: 'g', text: 'Gramm' },
+                        { value: 'dkg', text: 'Dekagramm' },
+                        { value: 'kg', text: 'Kilogramm' },
+                        { value: 't', text: 'Tonna' },
+                        { value: 'lb', text: 'Font' },
+                        { value: 'oz', text: 'Uncia' }
+                    ],
+                    factors: {
+                        mg: 0.001,
+                        g: 1,
+                        dkg: 10,
+                        kg: 1000,
+                        t: 1000000,
+                        lb: 453.592,
+                        oz: 28.3495
+                    }
+                },
+                temperature: {
+                    options: [
+                        { value: 'celsius', text: 'Celsius' },
+                        { value: 'fahrenheit', text: 'Fahrenheit' },
+                        { value: 'kelvin', text: 'Kelvin' }
+                    ],
+                    // Special conversion logic for temperature
+                    convert: (from, to, value) => {
+                        let baseValue = 0;
+                        if (from === 'celsius') baseValue = parseFloat(value);
+                        else if (from === 'fahrenheit') baseValue = (parseFloat(value) - 32) * 5 / 9;
+                        else if (from === 'kelvin') baseValue = parseFloat(value) - 273.15;
+
+                        if (to === 'celsius') return baseValue;
+                        if (to === 'fahrenheit') return (baseValue * 9 / 5) + 32;
+                        if (to === 'kelvin') return baseValue + 273.15;
+                        return NaN;
+                    }
+                },
+                volume: {
+                    options: [
+                        { value: 'ml', text: 'Milliliter' },
+                        { value: 'l', text: 'Liter' },
+                        { value: 'cup', text: 'Pohár' },
+                        { value: 'gallon', text: 'Gallon' },
+                    ],
+                    factors: {
+                        ml: 1,
+                        l: 1000,
+                        cup: 236.588,
+                        gallon: 3785.41
+                    }
+                },
+                time: {
+                    options: [
+                        { value: 'sec', text: 'Másodperc' },
+                        { value: 'min', text: 'Perc' },
+                        { value: 'hour', text: 'Óra' },
+                        { value: 'day', text: 'Nap' },
+                        { value: 'week', text: 'Hét' },
+                        { value: 'year', text: 'Év' }
+                    ],
+                    factors: {
+                        sec: 1,
+                        min: 60,
+                        hour: 3600,
+                        day: 86400,
+                        week: 604800,
+                        year: 31536000
+                    }
+                }
+            };
+
+            // Populate select dropdowns based on unit type
+            function populateUnits(unitType) {
+                const config = conversions[unitType];
+                fromUnitSelect.innerHTML = '';
+                toUnitSelect.innerHTML = '';
+                config.options.forEach(option => {
+                    const fromOption = document.createElement('option');
+                    fromOption.value = option.value;
+                    fromOption.textContent = option.text;
+                    fromUnitSelect.appendChild(fromOption);
+
+                    const toOption = document.createElement('option');
+                    toOption.value = option.value;
+                    toOption.textContent = option.text;
+                    toUnitSelect.appendChild(toOption);
+                });
+                // Set default values
+                fromUnitSelect.value = config.options[0].value;
+                toUnitSelect.value = config.options[1].value;
+            }
+
+            // Perform the conversion
+            function convert() {
+                const type = unitTypeSelect.value;
+                const fromUnit = fromUnitSelect.value;
+                const toUnit = toUnitSelect.value;
+                const value = parseFloat(inputValue.value);
+
+                if (isNaN(value)) {
+                    outputValue.value = 'Érvénytelen érték';
+                    return;
+                }
+
+                let result;
+                if (type === 'temperature') {
+                    result = conversions.temperature.convert(fromUnit, toUnit, value);
+                } else {
+                    const factors = conversions[type].factors;
+                    const baseValue = value * factors[fromUnit];
+                    result = baseValue / factors[toUnit];
+                }
+
+                if (isNaN(result)) {
+                    outputValue.value = 'Hiba';
+                } else {
+                    outputValue.value = result.toFixed(3);
+                }
+            }
+
+            // Event listeners
+            unitTypeSelect.addEventListener('change', () => {
+                populateUnits(unitTypeSelect.value);
+                convert();
+            });
+
+            fromUnitSelect.addEventListener('change', convert);
+            toUnitSelect.addEventListener('change', convert);
+            inputValue.addEventListener('input', convert);
+
+            // Initial setup
+            populateUnits(unitTypeSelect.value);
+            convert();
+        };
+    </script>
+</body>
+</html>
