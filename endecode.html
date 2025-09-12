@@ -131,10 +131,11 @@
 
         <div class="pt-4">
           <label class="block text-lg font-semibold text-gray-300 mb-2">Eredmény:</label>
-          <div id="result" class="relative min-h-[128px] w-full p-4 border border-gray-600 rounded-lg bg-transparent text-white shadow-sm break-words whitespace-pre-wrap overflow-x-auto">
-            <button id="copy-btn" class="bg-gray-600 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition-colors hidden" title="Másolás">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v2M8 5h6" />
+          <div class="flex items-start space-x-2">
+            <div id="result" class="flex-grow min-h-[112px] w-full p-4 border border-gray-600 rounded-lg bg-transparent text-white shadow-sm break-words whitespace-pre-wrap overflow-x-auto"></div>
+            <button id="copy-btn" class="shrink-0 bg-gray-600 text-white p-1.5 rounded-lg shadow-md hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Másolás" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v2M8 5h6"></path>
               </svg>
             </button>
           </div>
@@ -152,7 +153,6 @@
       /* ---------- elemek ---------- */
       const canvas = document.getElementById('futuristic-canvas');
       const ctx = canvas.getContext?.('2d');
-      const themeToggle = document.getElementById('theme-toggle');
       const messageInput = document.getElementById('message-input');
       const cipherSelect = document.getElementById('cipher-select');
       const resultDiv = document.getElementById('result');
@@ -168,20 +168,21 @@
 
       /* ---------- állapot ---------- */
       let currentMode = 'encode'; // vagy 'decode'
+      const copyBtnIconHTML = copyBtn.innerHTML; // Eredeti SVG ikon mentése
 
       /* ---------- háttér animáció (canvas) ---------- */
       if (canvas && ctx) {
         const matrixCharacters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%^&*()_+{}|:<>?-=[]\\;\'",./`~';
         let streams = [];
         const fontSize = 16;
-        const columns = Math.floor(canvas.width / fontSize);
+        let animationFrameId;
 
         function initializeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            const newColumns = Math.floor(canvas.width / fontSize);
+            const columns = Math.floor(canvas.width / fontSize);
             streams = [];
-            for (let i = 0; i < newColumns; i++) {
+            for (let i = 0; i < columns; i++) {
                 streams.push({
                     x: i * fontSize,
                     y: Math.random() * canvas.height,
@@ -191,10 +192,10 @@
         }
 
         function draw() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillStyle = 'rgba(7, 16, 37, 0.05)'; // Enyhén sötétít a háttérszínnel
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0F0';
-            ctx.font = `${fontSize}px 'Roboto Mono'`;
+            ctx.fillStyle = '#22c55e'; // Zöldes szín
+            ctx.font = `${fontSize}px monospace`;
 
             streams.forEach(stream => {
                 const char = matrixCharacters.charAt(Math.floor(Math.random() * matrixCharacters.length));
@@ -207,194 +208,64 @@
                 }
             });
         }
+        
+        function animate() {
+            draw();
+            animationFrameId = requestAnimationFrame(animate);
+        }
 
         initializeCanvas();
-        setInterval(draw, 30);
-        window.addEventListener('resize', initializeCanvas);
+        animate(); // Animáció indítása
+        
+        window.addEventListener('resize', () => {
+            cancelAnimationFrame(animationFrameId);
+            initializeCanvas();
+            animate();
+        });
       }
 
       /* ---------- segédfüggvények és kódolók ---------- */
 
       // Morse
-      const morseCodeMap = {
-        'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.',
-        'H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.',
-        'O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-',
-        'V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..','0':'-----','1':'.----',
-        '2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',' ':'/'
-      };
+      const morseCodeMap = { 'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..','0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',' ':'/' };
       const reverseMorseCodeMap = Object.fromEntries(Object.entries(morseCodeMap).map(([k,v])=>[v,k]));
 
       // Leet
       const leetSpeakMap = {'A':'4','B':'8','E':'3','G':'9','I':'1','O':'0','S':'5','T':'7'};
       const reverseLeetSpeakMap = Object.fromEntries(Object.entries(leetSpeakMap).map(([k,v])=>[v,k]));
 
-      // Emoji map (egyszerű)
+      // Emoji
       const emojiMap = {'A':'🍏','B':'🍌','C':'🥒','D':'🍩','E':'🍆','F':'🍟','G':'🍇','H':'🍯','I':'🍦','J':'🌵','K':'🍪','L':'🍋','M':'🍈','N':'🍉','O':'🍊','P':'🍍','Q':'🍑','R':'🍒','S':'🍓','T':'🍅','U':'🥨','V':'🧇','W':'🍭','X':'🍄','Y':'🧊','Z':'🍎','Á':'🥑','É':'🥥','Í':'🥝','Ó':'🧀','Ö':'🍔','Ő':'🥧','Ú':'🍥','Ü':'🍕','Ű':'🌭','1':'🥜','2':'🍣','3':'🥐','4':'🍖','5':'🍗','6':'🥩','7':'🥚','8':'🥠','9':'🍿','.':'🧁','!':'🍰','?':'🍫','-':'🍬',' ':'🥛'};
       const reverseEmojiMap = Object.fromEntries(Object.entries(emojiMap).map(([k,v])=>[v,k]));
 
-      // Base32 (simple)
+      // Base32
       const alphabet32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-      const encodeBase32 = (str) => {
-        let binary = '';
-        for (let i=0;i<str.length;i++) binary += str.charCodeAt(i).toString(2).padStart(8,'0');
-        let out='';
-        for (let i=0;i<binary.length;i+=5) {
-          const chunk = binary.substring(i,i+5).padEnd(5,'0');
-          out += alphabet32[parseInt(chunk,2)];
-        }
-        while (out.length % 8 !== 0) out += '=';
-        return out;
-      };
-      const decodeBase32 = (s) => {
-        s = s.replace(/=+$/,'');
-        let binary = '';
-        for (let ch of s) {
-          const idx = alphabet32.indexOf(ch.toUpperCase());
-          if (idx === -1) throw new Error('Invalid Base32');
-          binary += idx.toString(2).padStart(5,'0');
-        }
-        let out=''; for (let i=0;i<binary.length;i+=8) { const byte = binary.substring(i,i+8); if (byte.length<8) break; out += String.fromCharCode(parseInt(byte,2)); } 
-        return out;
-      };
+      const encodeBase32 = (str) => { let binary = ''; for (let i=0;i<str.length;i++) binary += str.charCodeAt(i).toString(2).padStart(8,'0'); let out=''; for (let i=0;i<binary.length;i+=5) { const chunk = binary.substring(i,i+5).padEnd(5,'0'); out += alphabet32[parseInt(chunk,2)]; } while (out.length % 8 !== 0) out += '='; return out; };
+      const decodeBase32 = (s) => { s = s.replace(/=+$/,''); let binary = ''; for (let ch of s) { const idx = alphabet32.indexOf(ch.toUpperCase()); if (idx === -1) throw new Error('Invalid Base32'); binary += idx.toString(2).padStart(5,'0'); } let out=''; for (let i=0;i<binary.length;i+=8) { const byte = binary.substring(i,i+8); if (byte.length<8) break; out += String.fromCharCode(parseInt(byte,2)); } return out; };
 
-      // Base58 (works for text -> simplistic)
+      // Base58
       const alphabet58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-      const encodeBase58 = (str) => {
-        // convert to BigInt
-        let hex = '';
-        for (let i=0;i<str.length;i++) hex += str.charCodeAt(i).toString(16).padStart(2,'0');
-        let num = BigInt('0x' + (hex || '0'));
-        if (num === 0n) return '1';
-        let out = '';
-        while (num > 0n) { const r = num % 58n; out = alphabet58[Number(r)] + out; num = num / 58n; }
-        return out;
-      };
-      const decodeBase58 = (s) => {
-        let num = 0n;
-        for (let ch of s) {
-          const idx = alphabet58.indexOf(ch);
-          if (idx === -1) throw new Error('Invalid Base58');
-          num = num * 58n + BigInt(idx);
-        }
-        let hex = num.toString(16);
-        if (hex.length % 2) hex = '0' + hex;
-        let out = '';
-        for (let i=0;i<hex.length;i+=2) out += String.fromCharCode(parseInt(hex.substring(i,i+2),16));
-        return out;
-      };
+      const encodeBase58 = (str) => { let hex = ''; for (let i=0;i<str.length;i++) hex += str.charCodeAt(i).toString(16).padStart(2,'0'); let num = BigInt('0x' + (hex || '0')); if (num === 0n) return '1'; let out = ''; while (num > 0n) { const r = num % 58n; out = alphabet58[Number(r)] + out; num = num / 58n; } return out; };
+      const decodeBase58 = (s) => { let num = 0n; for (let ch of s) { const idx = alphabet58.indexOf(ch); if (idx === -1) throw new Error('Invalid Base58'); num = num * 58n + BigInt(idx); } let hex = num.toString(16); if (hex.length % 2) hex = '0' + hex; let out = ''; for (let i=0;i<hex.length;i+=2) out += String.fromCharCode(parseInt(hex.substring(i,i+2),16)); return out; };
 
-      // Base85 (Ascii85) - create alphabet programmatically (chars 33..117, length 85)
-      const ascii85 = {
-        alphabet: Array.from({length:85}, (_,i)=>String.fromCharCode(33 + i)).join(''),
-        encode: function(str) {
-          // simple Ascii85 encode implementation (not fully padded-edge perfect but functional)
-          const bytes = new TextEncoder().encode(str);
-          let out = '<~';
-          for (let i = 0; i < bytes.length; i += 4) {
-            const chunk = bytes.slice(i, i + 4);
-            let val = 0;
-            for (let b = 0; b < 4; b++) { val = (val << 8) + (chunk[b] || 0); }
-            if (chunk.length === 4 && val === 0) { out += 'z'; continue; }
-            let chars = [];
-            for (let j = 0; j < 5; j++) { chars.unshift(this.alphabet[val % 85]); val = Math.floor(val / 85); }
-            out += chars.slice(0, chunk.length + 1).join('');
-          }
-          out += '~>';
-          return out;
-        },
-        decode: function(str) {
-          if (str.startsWith('<~') && str.endsWith('~>')) str = str.slice(2,-2).replace(/\s/g,'');
-          else throw new Error('Invalid Ascii85');
-          // handle 'z' => 4 zero bytes
-          let bytes = [];
-          for (let i=0;i<str.length;i++) {
-            if (str[i] === 'z') { bytes.push(0,0,0,0); continue; }
-            // gather 5 chars (or less at end)
-            const chunk = str.slice(i, i+5);
-            if (chunk.length < 5) {
-              // pad with '!' (value 0) for calculation but will reduce later
-              let padded = chunk.padEnd(5, '!');
-              let val = 0;
-              for (let ch of padded) val = val * 85 + this.alphabet.indexOf(ch);
-              // produce 4 bytes then slice
-              let temp = [];
-              for (let k=3;k>=0;k--) { temp.unshift((val >> (8*k)) & 0xFF); }
-              // push only needed bytes
-              const needed = chunk.length - 1;
-              for (let n = 0; n < needed; n++) bytes.push(temp[n]);
-              break;
-            } else {
-              let val = 0;
-              for (let ch of chunk) val = val * 85 + this.alphabet.indexOf(ch);
-              for (let k=3;k>=0;k--) bytes.push((val >> (8*k)) & 0xFF);
-              i += 4; // will be incremented by loop too (so net +5)
-            }
-          }
-          return new TextDecoder().decode(new Uint8Array(bytes));
-        }
-      };
+      // Base85 (Ascii85)
+      const ascii85 = { alphabet: Array.from({length:85}, (_,i)=>String.fromCharCode(33 + i)).join(''), encode: function(str) { const bytes = new TextEncoder().encode(str); let out = '<~'; for (let i = 0; i < bytes.length; i += 4) { const chunk = bytes.slice(i, i + 4); let val = 0; for (let b = 0; b < 4; b++) { val = (val << 8) + (chunk[b] || 0); } if (chunk.length === 4 && val === 0) { out += 'z'; continue; } let chars = []; for (let j = 0; j < 5; j++) { chars.unshift(this.alphabet[val % 85]); val = Math.floor(val / 85); } out += chars.slice(0, chunk.length + 1).join(''); } out += '~>'; return out; }, decode: function(str) { if (str.startsWith('<~') && str.endsWith('~>')) str = str.slice(2,-2).replace(/\s/g,''); else throw new Error('Invalid Ascii85'); let bytes = []; for (let i=0;i<str.length;i++) { if (str[i] === 'z') { bytes.push(0,0,0,0); continue; } const chunk = str.slice(i, i+5); if (chunk.length < 5) { let padded = chunk.padEnd(5, '!'); let val = 0; for (let ch of padded) val = val * 85 + this.alphabet.indexOf(ch); let temp = []; for (let k=3;k>=0;k--) { temp.unshift((val >> (8*k)) & 0xFF); } const needed = chunk.length - 1; for (let n = 0; n < needed; n++) bytes.push(temp[n]); break; } else { let val = 0; for (let ch of chunk) val = val * 85 + this.alphabet.indexOf(ch); for (let k=3;k>=0;k--) bytes.push((val >> (8*k)) & 0xFF); i += 4; } } return new TextDecoder().decode(new Uint8Array(bytes)); } };
 
-      // Vigenere (safe: ha kulcs üres -> hibaszöveg)
-      const vigenereEncode = (text, key) => {
-        key = (key || '').toUpperCase().replace(/[^A-Z]/g,'');
-        if (!key) throw new Error('Üres Vigenère kulcs');
-        let res=''; let ki=0;
-        for (let ch of text) {
-          const isUpper = ch >= 'A' && ch <= 'Z';
-          const isLower = ch >= 'a' && ch <= 'z';
-          if (isUpper || isLower) {
-            const base = isUpper ? 65 : 97;
-            const shift = key.charCodeAt(ki % key.length) - 65;
-            res += String.fromCharCode(base + (ch.charCodeAt(0) - base + shift + 26) % 26);
-            ki++;
-          } else res += ch;
-        }
-        return res;
-      };
-      const vigenereDecode = (text, key) => {
-        key = (key || '').toUpperCase().replace(/[^A-Z]/g,'');
-        if (!key) throw new Error('Üres Vigenère kulcs');
-        let res=''; let ki=0;
-        for (let ch of text) {
-          const isUpper = ch >= 'A' && ch <= 'Z';
-          const isLower = ch >= 'a' && ch <= 'z';
-          if (isUpper || isLower) {
-            const base = isUpper ? 65 : 97;
-            const shift = key.charCodeAt(ki % key.length) - 65;
-            res += String.fromCharCode(base + (ch.charCodeAt(0) - base - shift + 26) % 26);
-            ki++;
-          } else res += ch;
-        }
-        return res;
-      };
+      // Vigenere
+      const vigenereCipher = (text, key, mode) => { key = (key || '').toUpperCase().replace(/[^A-Z]/g,''); if (!key) throw new Error('Üres Vigenère kulcs'); let res=''; let ki=0; for (let ch of text) { const isUpper = ch >= 'A' && ch <= 'Z'; const isLower = ch >= 'a' && ch <= 'z'; if (isUpper || isLower) { const base = isUpper ? 65 : 97; const shift = key.charCodeAt(ki % key.length) - 65; const direction = mode === 'encode' ? 1 : -1; res += String.fromCharCode(base + (ch.charCodeAt(0) - base + (shift * direction) + 26) % 26); ki++; } else res += ch; } return res; };
 
       // Caesar
-      const caesarCipher = (str, shift) => str.replace(/[a-zA-Z]/g, ch => {
-        const base = (ch <= 'Z') ? 65 : 97;
-        return String.fromCharCode(base + (ch.charCodeAt(0) - base + shift + 26) % 26);
-      });
+      const caesarCipher = (str, shift) => str.replace(/[a-zA-Z]/g, ch => { const base = (ch <= 'Z') ? 65 : 97; return String.fromCharCode(base + (ch.charCodeAt(0) - base + shift + 26) % 26); });
 
-      // ROT47 (FIXED formula)
-      const rot47 = (s) => {
-        let out = '';
-        for (let i=0;i<s.length;i++) {
-          const c = s.charCodeAt(i);
-          if (c >= 33 && c <= 126) out += String.fromCharCode(33 + ((c - 33 + 47) % 94));
-          else out += s[i];
-        }
-        return out;
-      };
+      // ROT47
+      const rot47 = (s) => { let out = ''; for (let i=0;i<s.length;i++) { const c = s.charCodeAt(i); if (c >= 33 && c <= 126) out += String.fromCharCode(33 + ((c - 33 + 47) % 94)); else out += s[i]; } return out; };
 
       /* ---------- encode / decode központi függvények ---------- */
       const encode = (text, cipher, key) => {
         switch (cipher) {
           case 'rot13': return text.replace(/[a-z]/gi, ch => String.fromCharCode(ch.charCodeAt(0) + (ch.toLowerCase() <= 'm' ? 13 : -13)));
           case 'rot47': return rot47(text);
-          case 'atbash': return text.replace(/[a-zA-Z]/g, ch => {
-            const start = ch <= 'Z' ? 65 : 97;
-            return String.fromCharCode(start + 25 - (ch.charCodeAt(0) - start));
-          });
+          case 'atbash': return text.replace(/[a-zA-Z]/g, ch => { const start = ch <= 'Z' ? 65 : 97; return String.fromCharCode(start + 25 - (ch.charCodeAt(0) - start)); });
           case 'binary': return text.split('').map(c => c.charCodeAt(0).toString(2).padStart(8,'0')).join(' ');
           case 'base64': return btoa(unescape(encodeURIComponent(text)));
           case 'base85': return ascii85.encode(text);
@@ -403,7 +274,7 @@
           case 'hex': return text.split('').map(c => c.charCodeAt(0).toString(16).padStart(2,'0')).join(' ');
           case 'url': return encodeURIComponent(text);
           case 'caesar': return caesarCipher(text, parseInt(caesarShiftInput.value));
-          case 'vigenere': return vigenereEncode(text, key);
+          case 'vigenere': return vigenereCipher(text, key, 'encode');
           case 'morse': return text.toUpperCase().split('').map(c => morseCodeMap[c] || c).join(' ');
           case 'html-entities': return text.replace(/[\u00A0-\u9999<>&]/gim, i => '&#' + i.charCodeAt(0) + ';');
           case 'utf8': return unescape(encodeURIComponent(text));
@@ -418,23 +289,18 @@
           switch (cipher) {
             case 'rot13': return text.replace(/[a-z]/gi, ch => String.fromCharCode(ch.charCodeAt(0) + (ch.toLowerCase() <= 'm' ? 13 : -13)));
             case 'rot47': return rot47(text);
-            case 'atbash': return text.replace(/[a-zA-Z]/g, ch => {
-              const start = ch <= 'Z' ? 65 : 97;
-              return String.fromCharCode(start + 25 - (ch.charCodeAt(0) - start));
-            });
+            case 'atbash': return text.replace(/[a-zA-Z]/g, ch => { const start = ch <= 'Z' ? 65 : 97; return String.fromCharCode(start + 25 - (ch.charCodeAt(0) - start)); });
             case 'binary': return text.split(' ').map(b => String.fromCharCode(parseInt(b,2))).join('');
             case 'base64': return decodeURIComponent(escape(atob(text)));
             case 'base85': return ascii85.decode(text);
             case 'base32': return decodeBase32(text);
             case 'base58': return decodeBase58(text);
-            case 'hex': return text.split(' ').map(h => String.fromCharCode(parseInt(h,16))).join('');
+            case 'hex': return text.split(/ +/).map(h => String.fromCharCode(parseInt(h,16))).join('');
             case 'url': return decodeURIComponent(text);
             case 'caesar': return caesarCipher(text, -parseInt(caesarShiftInput.value));
-            case 'vigenere': return vigenereDecode(text, key);
-            case 'morse': return text.split(' ').map(code => reverseMorseCodeMap[code] || code).join('');
-            case 'html-entities': {
-              const ta = document.createElement('textarea'); ta.innerHTML = text; return ta.value;
-            }
+            case 'vigenere': return vigenereCipher(text, key, 'decode');
+            case 'morse': return text.split(' ').map(code => reverseMorseCodeMap[code] || '').join('');
+            case 'html-entities': { const ta = document.createElement('textarea'); ta.innerHTML = text; return ta.value; }
             case 'utf8': return decodeURIComponent(escape(text));
             case 'leet': return text.split('').map(c => reverseLeetSpeakMap[c] || c).join('');
             case 'emoji': return Array.from(text).map(c => reverseEmojiMap[c] || c).join('');
@@ -456,6 +322,13 @@
         }
       }
 
+      function updateCounts() {
+        const t = messageInput.value || '';
+        charCountSpan.textContent = `${t.length} karakter`;
+        const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+        wordCountSpan.textContent = `${words} szó`;
+      }
+
       function processMessage() {
         const msg = messageInput.value;
         const key = vigenereKeyInput.value.trim();
@@ -463,9 +336,9 @@
         let resultText = '';
 
         if (!msg) {
-          resultText = 'Kérlek, írj be egy üzenetet!';
+          resultText = ''; // Ne jelenítsen meg hibát, ha üres
         } else if (cipher === 'vigenere' && key === '') {
-          resultText = 'Kérlek, add meg a Vigenère kulcsot!';
+          resultText = 'Hiba: Kérlek, add meg a Vigenère kulcsot!';
         } else {
           try {
             resultText = (currentMode === 'encode') ? encode(msg, cipher, key) : decode(msg, cipher, key);
@@ -474,32 +347,28 @@
           }
         }
         
+        // Eredmény div frissítése.
         resultDiv.textContent = resultText;
 
-        // Új, robusztusabb logika a másolás gomb állapotához
-        const invalidResults = [
-          'Kérlek, írj be egy üzenetet!', 
-          'Kérlek, add meg a Vigenère kulcsot!', 
-          'Érvénytelen bevitel a kiválasztott dekódoláshoz.'
-        ];
-        
-      function updateCounts() {
-        const t = messageInput.value || '';
-        charCountSpan.textContent = `${t.length} karakter`;
-        const words = t.trim().split(/\s+/).filter(w=>w.length>0).length;
-        wordCountSpan.textContent = `${words} szó`;
+
+        // Másolás gomb állapotának kezelése
+        const isErrorOrEmpty = !resultText || resultText.startsWith('Hiba:');
+        copyBtn.disabled = isErrorOrEmpty;
       }
 
       // események
       switchModeBtn.addEventListener('click', () => {
         currentMode = (currentMode === 'encode') ? 'decode' : 'encode';
-        messageInput.value = ''; vigenereKeyInput.value = ''; resultDiv.textContent = ''; updateUI(); updateCounts();
-        copyBtn.disabled = true; // Kezdetben inaktív
+        messageInput.value = ''; 
+        vigenereKeyInput.value = ''; 
+        processMessage(); // Eredmény törlése és UI frissítés
+        updateUI(); 
+        updateCounts();
       });
 
       cipherSelect.addEventListener('change', () => {
-        if (cipherSelect.value === 'vigenere') vigenereKeyGroup.classList.remove('hidden'); else vigenereKeyGroup.classList.add('hidden');
-        if (cipherSelect.value === 'caesar') caesarShiftGroup.classList.remove('hidden'); else caesarShiftGroup.classList.add('hidden');
+        vigenereKeyGroup.classList.toggle('hidden', cipherSelect.value !== 'vigenere');
+        caesarShiftGroup.classList.toggle('hidden', cipherSelect.value !== 'caesar');
         processMessage();
       });
 
@@ -508,36 +377,45 @@
         processMessage();
       });
 
-     // Eredmény frissítésekor mutasd a gombot
-function updateResult(text) {
-  resultDiv.textContent = text;
-  if (text.trim()) {
-    copyBtn.classList.remove('hidden');
-  } else {
-    copyBtn.classList.add('hidden');
-  }
-}
+      messageInput.addEventListener('input', () => { 
+        updateCounts(); 
+        processMessage(); 
+      });
 
-// Másolás funkció
-copyBtn.addEventListener('click', () => {
-  const text = resultDiv.textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    copyBtn.textContent = "✔️ Kimásolva!";
-    setTimeout(() => {
-      copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" ...>...</svg>`;
-    }, 1500);
-  }).catch(err => {
-    console.error("Másolás sikertelen:", err);
-  });
-});
-
-      messageInput.addEventListener('input', () => { updateCounts(); processMessage(); });
       vigenereKeyInput.addEventListener('input', processMessage);
+
+      copyBtn.addEventListener('click', () => {
+        const textToCopy = resultDiv.textContent;
+        if (!textToCopy) return;
+
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = textToCopy;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        tempTextArea.setSelectionRange(0, 99999); // Mobil eszközökhöz
+
+        try {
+            document.execCommand('copy');
+            copyBtn.innerHTML = "✔️";
+            copyBtn.classList.add('bg-green-500');
+            setTimeout(() => {
+                copyBtn.innerHTML = copyBtnIconHTML;
+                copyBtn.classList.remove('bg-green-500');
+            }, 2000);
+        } catch (err) {
+            console.error('Hiba a másolás során:', err);
+            // Vizuális visszajelzés a felhasználónak
+        } finally {
+            document.body.removeChild(tempTextArea);
+        }
+      });
 
       // inicializálás
       updateUI();
       updateCounts();
-    }); // DOMContentLoaded end
+      // Az eredmény div-be beleteszünk egy üres text node-ot, hogy a másolás gomb ne ugorjon
+    });
   </script>
 </body>
 </html>
+
