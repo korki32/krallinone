@@ -213,10 +213,28 @@
             </div>
             
             <button id="restart-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300">Újra játszom</button>
+            <button id="view-leaderboard-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4">Ranglista megtekintése</button>
         </div>
 
         <div id="leaderboard-screen" class="hidden animate-fade-in mt-6">
-            <h3 class="text-2xl font-extrabold text-teal-400 mb-4 text-center">Ranglista 🏆</h3>
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+                <h3 class="text-2xl font-extrabold text-teal-400 text-center sm:text-left mb-2 sm:mb-0">Ranglista 🏆</h3>
+                <div class="flex space-x-2">
+                    <button id="global-lb-btn" class="lb-btn py-2 px-3 text-sm font-bold rounded-lg transition-all duration-300 bg-teal-600 text-white">Globális</button>
+                    <button id="joker-free-lb-btn" class="lb-btn py-2 px-3 text-sm font-bold rounded-lg transition-all duration-300 bg-gray-700 text-white">Joker-mentes</button>
+                    <button id="weekly-lb-btn" class="lb-btn py-2 px-3 text-sm font-bold rounded-lg transition-all duration-300 bg-gray-700 text-white">Heti</button>
+                </div>
+            </div>
+            
+            <div class="mb-4 text-sm text-gray-400 text-center">
+                <p>Azonosítód: <span id="user-id-display" class="font-mono text-teal-400 cursor-pointer" title="Kattints a másoláshoz"></span></p>
+                <p class="mt-2 text-white">Keress rá egy barátodra:</p>
+                <div class="flex mt-1">
+                    <input type="text" id="friend-id-input" class="w-full p-2 rounded-l-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Írd be a barát azonosítóját">
+                    <button id="search-friend-btn" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-r-lg shadow-md">Keresés</button>
+                </div>
+            </div>
+
             <ul id="leaderboard-list" class="space-y-2">
                 <!-- Leaderboard items will be generated here -->
                 <div id="loader" class="text-center hidden">
@@ -233,7 +251,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Firebase configuration and initialization
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -289,6 +307,13 @@
         const jokerTimeBtn = document.getElementById('joker-time-btn');
         const jokerSkipBtn = document.getElementById('joker-skip-btn');
         const timerBar = document.getElementById('timer-bar');
+        const viewLeaderboardBtn = document.getElementById('view-leaderboard-btn');
+        const globalLbBtn = document.getElementById('global-lb-btn');
+        const jokerFreeLbBtn = document.getElementById('joker-free-lb-btn');
+        const weeklyLbBtn = document.getElementById('weekly-lb-btn');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const friendIdInput = document.getElementById('friend-id-input');
+        const searchFriendBtn = document.getElementById('search-friend-btn');
 
         // Initialize sound effects
         const synth = new Tone.PolySynth(Tone.Synth).toDestination();
@@ -605,14 +630,14 @@
                 score: score,
                 userId: userId,
                 jokersUsed: usedJokersThisGame,
-                timestamp: new Date().toISOString()
+                timestamp: serverTimestamp()
             };
             
             try {
                 const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
                 await addDoc(scoresCollection, newScore);
                 console.log("Score successfully saved.");
-                showLeaderboard();
+                showLeaderboard('global');
             } catch (e) {
                 console.error("Error saving score: ", e);
                 let highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
@@ -626,7 +651,7 @@
                 highScores.sort((a, b) => b.score - a.score);
                 highScores = highScores.slice(0, 10);
                 localStorage.setItem('cs_high_scores', JSON.stringify(highScores));
-                showLeaderboard(true);
+                showLeaderboard('global', true);
             } finally {
                 // Always reset button regardless of the outcome
                 saveScoreBtn.disabled = false;
@@ -635,8 +660,49 @@
             }
         });
 
+        // Event listeners for leaderboard buttons
+        viewLeaderboardBtn.addEventListener('click', () => showLeaderboard('global'));
+        globalLbBtn.addEventListener('click', () => {
+            setActiveButton(globalLbBtn);
+            showLeaderboard('global');
+        });
+        jokerFreeLbBtn.addEventListener('click', () => {
+            setActiveButton(jokerFreeLbBtn);
+            showLeaderboard('joker-free');
+        });
+        weeklyLbBtn.addEventListener('click', () => {
+            setActiveButton(weeklyLbBtn);
+            showLeaderboard('weekly');
+        });
+        searchFriendBtn.addEventListener('click', () => {
+            const friendId = friendIdInput.value.trim();
+            if (friendId) {
+                setActiveButton(null); // Deactivate all other buttons
+                showLeaderboard('friend', false, friendId);
+            }
+        });
+        userIdDisplay.addEventListener('click', () => {
+            navigator.clipboard.writeText(userId).then(() => {
+                alert('Azonosító a vágólapra másolva!');
+            }).catch(err => {
+                console.error('Hiba a másolásnál: ', err);
+            });
+        });
+        
+        function setActiveButton(button) {
+            document.querySelectorAll('.lb-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-600');
+                btn.classList.add('bg-gray-700');
+            });
+            if (button) {
+                button.classList.add('bg-teal-600');
+                button.classList.remove('bg-gray-700');
+            }
+        }
+
+
         // Display leaderboard
-        function showLeaderboard(useLocalStorage = false) {
+        async function showLeaderboard(type, useLocalStorage = false, friendId = null) {
             endScreen.classList.add('hidden');
             leaderboardScreen.classList.remove('hidden');
             loader.classList.remove('hidden');
@@ -647,21 +713,86 @@
                  renderLeaderboard(highScores, true);
                  return;
             }
-
-            // Load leaderboard in real-time from Firestore
-            const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
-            const q = query(scoresCollection, orderBy('score', 'desc'), limit(10));
             
-            onSnapshot(q, (snapshot) => {
-                loader.classList.add('hidden');
-                const highScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderLeaderboard(highScores);
-            }, (error) => {
-                console.error("Error fetching leaderboard: ", error);
-                loader.classList.add('hidden');
-                // Fallback to local storage on error
-                showLeaderboard(true);
-            });
+            const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
+            let q;
+            
+            if (type === 'global') {
+                q = query(scoresCollection, orderBy('score', 'desc'), limit(10));
+                
+                 onSnapshot(q, (snapshot) => {
+                    loader.classList.add('hidden');
+                    const highScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderLeaderboard(highScores);
+                }, (error) => {
+                    console.error("Error fetching global leaderboard: ", error);
+                    loader.classList.add('hidden');
+                    // Fallback to local storage on error
+                    showLeaderboard(type, true);
+                });
+
+            } else if (type === 'joker-free') {
+                // Fetch a larger set and filter client-side to avoid index requirement
+                q = query(scoresCollection, orderBy('score', 'desc'), limit(100));
+                
+                onSnapshot(q, (snapshot) => {
+                    loader.classList.add('hidden');
+                    const allScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    const filteredScores = allScores.filter(score => 
+                        !score.jokersUsed['50'] && !score.jokersUsed['time'] && !score.jokersUsed['skip']
+                    );
+                    const topTen = filteredScores.slice(0, 10);
+                    renderLeaderboard(topTen);
+                }, (error) => {
+                    console.error("Error fetching joker-free leaderboard: ", error);
+                    loader.classList.add('hidden');
+                    showLeaderboard(type, true);
+                });
+
+            } else if (type === 'weekly') {
+                // Fetch by timestamp and filter/sort client-side
+                q = query(scoresCollection, orderBy('timestamp', 'desc'), limit(100));
+                
+                 onSnapshot(q, (snapshot) => {
+                    loader.classList.add('hidden');
+                    const allScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    const now = new Date();
+                    const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+                    
+                    const filteredScores = allScores.filter(score => {
+                        return score.timestamp && score.timestamp.toDate() >= oneWeekAgo;
+                    });
+                    
+                    filteredScores.sort((a, b) => b.score - a.score);
+                    const topTen = filteredScores.slice(0, 10);
+                    renderLeaderboard(topTen);
+                }, (error) => {
+                    console.error("Error fetching weekly leaderboard: ", error);
+                    loader.classList.add('hidden');
+                    showLeaderboard(type, true);
+                });
+            } else if (type === 'friend') {
+                if (!friendId) return;
+                q = query(scoresCollection, 
+                    where('userId', '==', friendId),
+                    orderBy('score', 'desc'),
+                    limit(10)
+                );
+
+                 onSnapshot(q, (snapshot) => {
+                    loader.classList.add('hidden');
+                    const highScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderLeaderboard(highScores);
+                }, (error) => {
+                    console.error("Error fetching friend leaderboard: ", error);
+                    loader.classList.add('hidden');
+                    // Note: No local storage fallback for friend search as it's specific to Firestore.
+                    const li = document.createElement('li');
+                    li.textContent = 'Hiba történt a barát ranglista betöltésekor.';
+                    li.classList.add('text-center', 'text-red-500');
+                    leaderboardList.appendChild(li);
+                });
+            }
         }
         
         function renderLeaderboard(highScores, isLocal = false) {
@@ -718,6 +849,7 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userId = user.uid;
+                userIdDisplay.textContent = userId;
                 authReady = true;
             } else {
                 try {
@@ -728,6 +860,7 @@
                         const userCredential = await signInAnonymously(auth);
                         userId = userCredential.user.uid;
                     }
+                    userIdDisplay.textContent = userId;
                     authReady = true;
                 } catch (error) {
                     console.error("Authentication error: ", error);
