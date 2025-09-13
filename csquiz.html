@@ -105,7 +105,16 @@
         
         .joker-button {
             position: relative;
+            transition: transform 0.2s ease-in-out;
         }
+
+        .joker-button:disabled {
+            filter: grayscale(100%);
+            opacity: 0.6;
+            transform: scale(0.9);
+            cursor: not-allowed;
+        }
+
         .joker-tooltip {
             visibility: hidden;
             background-color: #1f2937;
@@ -131,17 +140,35 @@
             margin-left: 0.5rem;
             color: #6ee7b7;
         }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--color);
+            border-radius: 50%;
+            animation: confetti-fall 2s linear forwards;
+            opacity: 0;
+            transform: translateY(-100vh);
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 0; }
+            1% { opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 1; }
+        }
+
     </style>
 </head>
 <body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
 
     <div id="quiz-container" class="bg-gray-800 bg-opacity-80 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-700">
-        <!-- Időzítő és joker gomb -->
-        <div class="flex items-center justify-between mb-4">
-            <div id="timer-display" class="w-full h-2 bg-gray-600 rounded-full overflow-hidden">
+        <!-- Timer and Joker buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+            <div id="timer-display" class="w-full h-2 bg-gray-600 rounded-full overflow-hidden mb-4 sm:mb-0 sm:mr-4">
                 <div id="timer-bar" class="w-full"></div>
             </div>
-            <div class="flex space-x-2 ml-4">
+            <div class="flex space-x-2">
                 <button id="joker-50-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
                     <i class="fa-solid fa-divide"></i>
                     <span class="joker-tooltip">50:50 - Két rossz választ eltávolít</span>
@@ -160,11 +187,18 @@
             <span id="score-display" class="font-medium">Pontszám: 0 🎯</span>
             <span id="question-counter" class="font-medium">Kérdés: 1/0 📝</span>
         </div>
+        
+        <div id="loading-screen" class="text-center p-8 hidden">
+            <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
+                <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+            </div>
+            <p class="mt-4 text-gray-400 text-lg font-semibold">Kérdések betöltése...</p>
+        </div>
 
-        <div id="quiz-content" class="animate-fade-in">
+        <div id="quiz-content" class="animate-fade-in hidden">
             <h2 id="question-text" class="text-2xl font-extrabold mb-8 text-center text-teal-400 leading-snug"></h2>
             <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- A válasz gombok a JavaScript által kerülnek ide -->
+                <!-- Answer buttons will be generated here -->
             </div>
         </div>
 
@@ -184,7 +218,7 @@
         <div id="leaderboard-screen" class="hidden animate-fade-in mt-6">
             <h3 class="text-2xl font-extrabold text-teal-400 mb-4 text-center">Ranglista 🏆</h3>
             <ul id="leaderboard-list" class="space-y-2">
-                <!-- A ranglista elemei a JavaScript által kerülnek ide -->
+                <!-- Leaderboard items will be generated here -->
                 <div id="loader" class="text-center hidden">
                     <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
                         <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
@@ -201,7 +235,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // Firebase beállítások és inicializálás
+        // Firebase configuration and initialization
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -213,52 +247,10 @@
         let userId = null;
         let authReady = false;
 
-        // Kérdések és válaszok
-        const questions = [
-            {
-                question: "Hogyan hívják a Counter-Strike: Global Offensive híres olasz térképét?",
-                answers: ["Dust II", "Mirage", "Inferno", "Cache"],
-                correct: "Inferno"
-            },
-            {
-                question: "Melyik fegyver a leghíresebb a 'no-scope' lövéseiről?",
-                answers: ["AK-47", "AWP", "M4A4", "Desert Eagle"],
-                correct: "AWP"
-            },
-            {
-                question: "Melyik játékos látható a képen?",
-                image: "https://placehold.co/400x200/525252/fff?text=s1mple",
-                answers: ["s1mple", "ZywOo", "dev1ce", "NiKo"],
-                correct: "s1mple"
-            },
-            {
-                question: "Melyik játékos látható a képen?",
-                image: "https://img-cdn.hltv.org/playerbodyshot/yAqXqbDzYSFWZUNvMhdI07.png?ixlib=java-2.1.0&w=400&s=ad758e9a7138ef56ca6cd71dbccb90c0",
-                answers: ["coldzera", "dev1ce", "dupreeh", "shox"],
-                correct: "dev1ce"
-            },
-            {
-                question: "Hány másodperc áll a Counter-Terroristák rendelkezésére a bomba hatástalanítására (alapértelmezett idő)?",
-                answers: ["5 másodperc", "10 másodperc", "7 másodperc", "12 másodperc"],
-                correct: "7 másodperc"
-            },
-            {
-                question: "Melyik a leggyakrabban használt gránát a sarokból való 'push'-okhoz?",
-                answers: ["Flashbang", "Decoy", "Molotov", "Smoke"],
-                correct: "Smoke"
-            },
-            {
-                question: "Mi a neve a két kezdőpisztolynak a Terrorista csapatnál?",
-                answers: ["USP-S és Glock-18", "Glock-18 és P250", "Glock-18 és Tec-9", "Glock-18 és P2000"],
-                correct: "Glock-18 és P250"
-            },
-            {
-                question: "Hogyan nevezik a játékbeli valutát, amit győzelemért és ölésért kapnak?",
-                answers: ["Dollár", "Érme", "Kredit", "Pénz"],
-                correct: "Pénz"
-            }
-        ];
-
+        let questions = [];
+        let questionsLoaded = false;
+        
+        // Quiz state variables
         let currentQuestionIndex = 0;
         let score = 0;
         let selectedAnswer = null;
@@ -267,10 +259,18 @@
             'time': true,
             'skip': true
         };
+        let usedJokersThisGame = {
+            '50': false,
+            'time': false,
+            'skip': false
+        };
         let timer = null;
-        const timeLimit = 15; // 15 másodperc
+        const timeLimit = 15; // 15 seconds
         let timeRemaining = timeLimit;
 
+        // UI elements
+        const quizContainer = document.getElementById('quiz-container');
+        const loadingScreen = document.getElementById('loading-screen');
         const quizContent = document.getElementById('quiz-content');
         const endScreen = document.getElementById('end-screen');
         const leaderboardScreen = document.getElementById('leaderboard-screen');
@@ -290,24 +290,61 @@
         const jokerSkipBtn = document.getElementById('joker-skip-btn');
         const timerBar = document.getElementById('timer-bar');
 
-        // Hanghatások inicializálása
+        // Initialize sound effects
         const synth = new Tone.PolySynth(Tone.Synth).toDestination();
 
-        // Különböző hangok
+        // Different sounds
         const correctSound = () => synth.triggerAttackRelease("C6", "8n");
         const incorrectSound = () => synth.triggerAttackRelease("F#2", "8n");
         const gameOverSound = () => synth.triggerAttackRelease(["C3", "G#2"], "1s");
         const tickSound = () => synth.triggerAttackRelease("C4", "16n");
+        const confettiSound = () => synth.triggerAttackRelease(["C5", "E5", "G5"], "8n");
 
-        // Függvény a kvíz indításához
+        // Function to fetch questions from external URL
+        async function fetchQuestions() {
+            loadingScreen.classList.remove('hidden');
+            quizContent.classList.add('hidden');
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/korki32/krallinone/main/kviz.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP hiba! Státusz: ${response.status}`);
+                }
+                const rawQuestions = await response.json();
+
+                // Convert the `correctAnswer` index to the actual answer string and rename `imageUrl`
+                questions = rawQuestions.map(q => ({
+                    question: q.question,
+                    answers: q.answers,
+                    correct: q.answers[q.correctAnswer],
+                    image: q.imageUrl // Rename imageUrl to image for compatibility
+                }));
+
+                questionsLoaded = true;
+                loadingScreen.classList.add('hidden');
+                quizContent.classList.remove('hidden');
+                startQuiz();
+            } catch (error) {
+                console.error("Hiba a kérdések letöltésekor: ", error);
+                loadingScreen.innerHTML = `<p class="text-red-500 font-bold">Hiba történt a kérdések betöltése közben. Próbálja meg később!</p>`;
+            }
+        }
+
+        // Function to start the quiz
         function startQuiz() {
+            if (!questionsLoaded) {
+                fetchQuestions();
+                return;
+            }
+            
             currentQuestionIndex = 0;
             score = 0;
             selectedAnswer = null;
             jokers = { '50': true, 'time': true, 'skip': true };
+            usedJokersThisGame = { '50': false, 'time': false, 'skip': false };
             updateJokerButtons();
             
-            quizContent.classList.remove('hidden');
+            quizContainer.classList.remove('hidden');
+            quizContent.classList.remove('hidden', 'game-over-animation');
             endScreen.classList.add('hidden');
             leaderboardScreen.classList.add('hidden');
             playerNameInput.value = '';
@@ -315,14 +352,14 @@
             showQuestion();
         }
 
-        // Időzítő indítása
+        // Start the timer
         function startTimer() {
             timeRemaining = timeLimit;
             timerBar.style.width = '100%';
             timerBar.style.backgroundColor = '#16a34a';
             timerBar.classList.remove('timer-warning');
 
-            // Törli az előző időzítőt, ha van
+            // Clear previous timer if exists
             if (timer) clearInterval(timer);
 
             timer = setInterval(() => {
@@ -338,29 +375,19 @@
                 if (timeRemaining <= 0) {
                     clearInterval(timer);
                     selectedAnswer = "time_out";
-                    handleAnswer(null, null); // Rossz válasz, idő lejárt
+                    handleAnswer(null, null); // Incorrect answer, time ran out
                 }
             }, 1000);
         }
 
-        // Joker gombok állapotának frissítése
+        // Update the state of joker buttons
         function updateJokerButtons() {
             joker50Btn.disabled = !jokers['50'];
             jokerTimeBtn.disabled = !jokers['time'];
             jokerSkipBtn.disabled = !jokers['skip'];
-
-            [joker50Btn, jokerTimeBtn, jokerSkipBtn].forEach(btn => {
-                if (btn.disabled) {
-                    btn.classList.add('opacity-50', 'cursor-not-allowed');
-                    btn.classList.remove('hover:bg-teal-500');
-                } else {
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    btn.classList.add('hover:bg-teal-500');
-                }
-            });
         }
 
-        // Függvény a kérdés megjelenítéséhez
+        // Function to display the question
         function showQuestion() {
             if (currentQuestionIndex >= questions.length) {
                 clearInterval(timer);
@@ -388,12 +415,12 @@
                 questionText.insertAdjacentElement('beforebegin', img);
             }
 
-            // Törli az előző gombokat
+            // Clear previous buttons
             while (answerButtonsContainer.firstChild) {
                 answerButtonsContainer.removeChild(answerButtonsContainer.firstChild);
             }
 
-            // Gombok létrehozása a válaszokhoz
+            // Create buttons for answers
             currentQuestion.answers.forEach(answer => {
                 const button = document.createElement('button');
                 button.textContent = answer;
@@ -419,10 +446,11 @@
             });
         }
 
-        // Joker funkciók
+        // Joker functions
         joker50Btn.addEventListener('click', () => {
             if (!jokers['50']) return;
             jokers['50'] = false;
+            usedJokersThisGame['50'] = true;
             updateJokerButtons();
 
             const currentQuestion = questions[currentQuestionIndex];
@@ -443,6 +471,7 @@
         jokerTimeBtn.addEventListener('click', () => {
             if (!jokers['time']) return;
             jokers['time'] = false;
+            usedJokersThisGame['time'] = true;
             updateJokerButtons();
             
             timeRemaining += 10;
@@ -451,6 +480,7 @@
         jokerSkipBtn.addEventListener('click', () => {
             if (!jokers['skip']) return;
             jokers['skip'] = false;
+            usedJokersThisGame['skip'] = true;
             updateJokerButtons();
 
             clearInterval(timer);
@@ -460,11 +490,11 @@
         });
 
 
-        // Válasz kiválasztásának kezelése animációkkal
+        // Handle selected answer with animations
         function handleAnswer(button, answer) {
             clearInterval(timer);
             
-            // Csak egyszer válaszolhat
+            // Allow only one answer
             if (selectedAnswer !== null) return;
             selectedAnswer = answer;
             
@@ -472,74 +502,99 @@
             const currentQuestion = questions[currentQuestionIndex];
             const isCorrect = answer === currentQuestion.correct;
 
-            // Letiltja az összes gombot
+            // Disable all buttons
             document.querySelectorAll('.btn-answer').forEach(btn => {
                 btn.disabled = true;
                 btn.classList.remove('hover:bg-gray-600', 'hover:text-white');
             });
             
-            // A "time_out" nem igényel gomb animációt
-            if (!isTimeout) {
-                // Animáció és szín hozzáadása a helyes/helytelen válaszhoz
-                if (isCorrect) {
-                    correctSound();
-                    button.classList.add('correct-answer');
-                    score++;
-                    scoreDisplay.textContent = `Pontszám: ${score} 🎯`;
-                    // Animáció elindítása a pontszámnál
-                    scoreDisplay.classList.add('score-pulse');
-                    setTimeout(() => {
-                        scoreDisplay.classList.remove('score-pulse');
-                    }, 500); // 0.5 másodperc után törli az osztályt
-                    
-                    // Vár a válasz animáció befejezésére, majd lép tovább
-                    setTimeout(() => {
-                        selectedAnswer = null;
-                        currentQuestionIndex++;
-                        showQuestion();
-                    }, 1500); // 1.5 másodperc után lép a következő kérdésre
-                } else {
-                    incorrectSound();
-                    button.classList.add('incorrect-answer');
-                    const correctButton = Array.from(answerButtonsContainer.children).find(btn => btn.textContent === currentQuestion.correct);
-                    if (correctButton) {
-                        correctButton.classList.add('correct-answer');
-                    }
-                    
-                    // Játék vége a rossz válasz után
-                    setTimeout(() => {
-                        gameOverSound();
-                        quizContent.classList.add('game-over-animation');
-                        setTimeout(() => {
-                            showFinalScore(false); // Játék vége hibás válasz miatt
-                        }, 1000); // Vár az animációra
-                    }, 500); // Vár a gomb animációjára
-                }
-            } else {
-                gameOverSound();
-                quizContent.classList.add('game-over-animation');
+            // Add animation and color for correct/incorrect answer
+            if (isCorrect) {
+                correctSound();
+                button.classList.add('correct-answer');
+                score++;
+                scoreDisplay.textContent = `Pontszám: ${score} 🎯`;
+                // Trigger score pulse animation
+                scoreDisplay.classList.add('score-pulse');
                 setTimeout(() => {
-                    showFinalScore(false); // Játék vége idő lejárta miatt
-                }, 1000);
+                    scoreDisplay.classList.remove('score-pulse');
+                }, 500); // Remove class after 0.5 seconds
+                
+                // Wait for the animation to finish, then proceed
+                setTimeout(() => {
+                    selectedAnswer = null;
+                    currentQuestionIndex++;
+                    showQuestion();
+                }, 1500); // Proceed to the next question after 1.5 seconds
+            } else {
+                incorrectSound();
+                // If it's a timeout, find a random incorrect button to highlight
+                if (isTimeout) {
+                    const allButtons = Array.from(answerButtonsContainer.children);
+                    const incorrectButtons = allButtons.filter(btn => btn.textContent !== currentQuestion.correct);
+                    if (incorrectButtons.length > 0) {
+                        const randomIncorrectButton = incorrectButtons[Math.floor(Math.random() * incorrectButtons.length)];
+                        randomIncorrectButton.classList.add('incorrect-answer');
+                    }
+                } else {
+                     // If it's a regular incorrect click, highlight the clicked button
+                    button.classList.add('incorrect-answer');
+                }
+
+                // Always highlight the correct answer on an incorrect attempt or timeout
+                const correctButton = Array.from(answerButtonsContainer.children).find(btn => btn.textContent === currentQuestion.correct);
+                if (correctButton) {
+                    correctButton.classList.add('correct-answer');
+                }
+                
+                // Game over on incorrect answer or timeout
+                setTimeout(() => {
+                    gameOverSound();
+                    quizContent.classList.add('game-over-animation');
+                    setTimeout(() => {
+                        showFinalScore(false); // Game over due to wrong answer or timeout
+                    }, 1000); // Wait for animation
+                }, 500); // Wait for button animation
             }
         }
 
-        // Végleges pontszám kijelzése
+        // Display final score
         function showFinalScore(isGameComplete) {
             quizContent.classList.add('hidden');
-            quizContent.classList.remove('game-over-animation'); // Töröljük az animációt a következő játékhoz
+            quizContent.classList.remove('game-over-animation'); // Clear animation for next game
             endScreen.classList.remove('hidden');
             
             if (isGameComplete) {
                 finalScore.textContent = `Gratulálunk, végigjátszottad a kvízt! A végső pontszámod: ${score} a ${questions.length}-ból! 🎉`;
+                if (score === questions.length) {
+                    createConfetti();
+                    confettiSound();
+                }
             } else {
                 finalScore.textContent = `Game Over! A végső pontszámod: ${score}. 😭`;
             }
         }
         
-        // Pontszám mentése Firestore-ba
+        // Function to create confetti effect
+        function createConfetti() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#795548', '#9e9e9e', '#607d8b'];
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti-piece');
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = `translateY(-100vh) rotate(${Math.random() * 720}deg)`;
+                document.body.appendChild(confetti);
+            }
+            setTimeout(() => {
+                document.querySelectorAll('.confetti-piece').forEach(c => c.remove());
+            }, 3000);
+        }
+
+        // Save score to Firestore
         saveScoreBtn.addEventListener('click', async () => {
-            // Megakadályozzuk a többszörös mentést
+            // Prevent multiple saves
             saveScoreBtn.disabled = true;
             saveScoreBtn.textContent = 'Mentés...';
             saveScoreBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -549,30 +604,22 @@
                 name: playerName,
                 score: score,
                 userId: userId,
-                jokersUsed: {
-                    '50': !jokers['50'],
-                    'time': !jokers['time'],
-                    'skip': !jokers['skip']
-                },
+                jokersUsed: usedJokersThisGame,
                 timestamp: new Date().toISOString()
             };
             
             try {
                 const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
                 await addDoc(scoresCollection, newScore);
-                console.log("Pontszám sikeresen mentve.");
+                console.log("Score successfully saved.");
                 showLeaderboard();
             } catch (e) {
-                console.error("Hiba a pontszám mentésekor: ", e);
+                console.error("Error saving score: ", e);
                 let highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
                 const localScore = {
                     name: playerName,
                     score: score,
-                    jokersUsed: {
-                        '50': !jokers['50'],
-                        'time': !jokers['time'],
-                        'skip': !jokers['skip']
-                    },
+                    jokersUsed: usedJokersThisGame,
                     date: new Date().toISOString()
                 };
                 highScores.push(localScore);
@@ -581,14 +628,14 @@
                 localStorage.setItem('cs_high_scores', JSON.stringify(highScores));
                 showLeaderboard(true);
             } finally {
-                // Mindig visszaállítjuk a gombot, függetlenül az eredménytől
+                // Always reset button regardless of the outcome
                 saveScoreBtn.disabled = false;
                 saveScoreBtn.textContent = 'Pontszám mentése';
                 saveScoreBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         });
 
-        // Ranglista megjelenítése
+        // Display leaderboard
         function showLeaderboard(useLocalStorage = false) {
             endScreen.classList.add('hidden');
             leaderboardScreen.classList.remove('hidden');
@@ -601,7 +648,7 @@
                  return;
             }
 
-            // Ranglista valós idejű betöltése a Firestore-ból
+            // Load leaderboard in real-time from Firestore
             const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
             const q = query(scoresCollection, orderBy('score', 'desc'), limit(10));
             
@@ -610,9 +657,9 @@
                 const highScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderLeaderboard(highScores);
             }, (error) => {
-                console.error("Hiba a ranglista betöltésekor: ", error);
+                console.error("Error fetching leaderboard: ", error);
                 loader.classList.add('hidden');
-                // Hiba esetén visszaállás a lokális tárolásra
+                // Fallback to local storage on error
                 showLeaderboard(true);
             });
         }
@@ -663,11 +710,11 @@
             });
         }
 
-        // Újraindítás gombok
+        // Restart buttons
         restartBtn.addEventListener('click', startQuiz);
         leaderboardRestartBtn.addEventListener('click', startQuiz);
 
-        // Firebase hitelesítés
+        // Firebase authentication
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userId = user.uid;
@@ -683,7 +730,7 @@
                     }
                     authReady = true;
                 } catch (error) {
-                    console.error("Hitelesítési hiba: ", error);
+                    console.error("Authentication error: ", error);
                     authReady = true;
                 }
             }
