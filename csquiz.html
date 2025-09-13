@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/tone@14.7.58/build/Tone.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --quiz-color: #2dd4bf; /* teal-400 */
@@ -101,6 +102,35 @@
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.02); opacity: 0.7; }
         }
+        
+        .joker-button {
+            position: relative;
+        }
+        .joker-tooltip {
+            visibility: hidden;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .joker-button:hover .joker-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .joker-icon {
+            font-size: 1rem;
+            margin-left: 0.5rem;
+            color: #6ee7b7;
+        }
     </style>
 </head>
 <body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
@@ -111,9 +141,20 @@
             <div id="timer-display" class="w-full h-2 bg-gray-600 rounded-full overflow-hidden">
                 <div id="timer-bar" class="w-full"></div>
             </div>
-            <button id="joker-btn" class="ml-4 py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
-                50:50
-            </button>
+            <div class="flex space-x-2 ml-4">
+                <button id="joker-50-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
+                    <i class="fa-solid fa-divide"></i>
+                    <span class="joker-tooltip">50:50 - Két rossz választ eltávolít</span>
+                </button>
+                <button id="joker-time-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
+                    <i class="fa-solid fa-clock"></i>
+                    <span class="joker-tooltip">+10 másodpercet ad az időhöz</span>
+                </button>
+                <button id="joker-skip-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
+                    <i class="fa-solid fa-forward"></i>
+                    <span class="joker-tooltip">Átlépi a jelenlegi kérdést</span>
+                </button>
+            </div>
         </div>
         <div class="flex items-center justify-between mb-6 text-sm text-gray-400">
             <span id="score-display" class="font-medium">Pontszám: 0 🎯</span>
@@ -146,7 +187,7 @@
                 <!-- A ranglista elemei a JavaScript által kerülnek ide -->
                 <div id="loader" class="text-center hidden">
                     <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
-                        <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                        <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
                     </div>
                     <p class="mt-2 text-gray-400">Ranglista betöltése...</p>
                 </div>
@@ -221,9 +262,14 @@
         let currentQuestionIndex = 0;
         let score = 0;
         let selectedAnswer = null;
-        let jokerUsed = false;
+        let jokers = {
+            '50': true,
+            'time': true,
+            'skip': true
+        };
         let timer = null;
         const timeLimit = 15; // 15 másodperc
+        let timeRemaining = timeLimit;
 
         const quizContent = document.getElementById('quiz-content');
         const endScreen = document.getElementById('end-screen');
@@ -239,7 +285,9 @@
         const playerNameInput = document.getElementById('player-name');
         const leaderboardList = document.getElementById('leaderboard-list');
         const loader = document.getElementById('loader');
-        const jokerBtn = document.getElementById('joker-btn');
+        const joker50Btn = document.getElementById('joker-50-btn');
+        const jokerTimeBtn = document.getElementById('joker-time-btn');
+        const jokerSkipBtn = document.getElementById('joker-skip-btn');
         const timerBar = document.getElementById('timer-bar');
 
         // Hanghatások inicializálása
@@ -256,10 +304,8 @@
             currentQuestionIndex = 0;
             score = 0;
             selectedAnswer = null;
-            jokerUsed = false;
-            jokerBtn.disabled = false;
-            jokerBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'hover:bg-teal-500');
-            jokerBtn.classList.add('hover:bg-teal-500');
+            jokers = { '50': true, 'time': true, 'skip': true };
+            updateJokerButtons();
             
             quizContent.classList.remove('hidden');
             endScreen.classList.add('hidden');
@@ -271,7 +317,7 @@
 
         // Időzítő indítása
         function startTimer() {
-            let timeRemaining = timeLimit;
+            timeRemaining = timeLimit;
             timerBar.style.width = '100%';
             timerBar.style.backgroundColor = '#16a34a';
             timerBar.classList.remove('timer-warning');
@@ -295,6 +341,23 @@
                     handleAnswer(null, null); // Rossz válasz, idő lejárt
                 }
             }, 1000);
+        }
+
+        // Joker gombok állapotának frissítése
+        function updateJokerButtons() {
+            joker50Btn.disabled = !jokers['50'];
+            jokerTimeBtn.disabled = !jokers['time'];
+            jokerSkipBtn.disabled = !jokers['skip'];
+
+            [joker50Btn, jokerTimeBtn, jokerSkipBtn].forEach(btn => {
+                if (btn.disabled) {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    btn.classList.remove('hover:bg-teal-500');
+                } else {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.classList.add('hover:bg-teal-500');
+                }
+            });
         }
 
         // Függvény a kérdés megjelenítéséhez
@@ -356,14 +419,11 @@
             });
         }
 
-        // "50:50" joker funkció
-        jokerBtn.addEventListener('click', () => {
-            if (jokerUsed) return;
-
-            jokerUsed = true;
-            jokerBtn.disabled = true;
-            jokerBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            jokerBtn.classList.remove('hover:bg-teal-500');
+        // Joker funkciók
+        joker50Btn.addEventListener('click', () => {
+            if (!jokers['50']) return;
+            jokers['50'] = false;
+            updateJokerButtons();
 
             const currentQuestion = questions[currentQuestionIndex];
             const correctText = currentQuestion.correct;
@@ -371,7 +431,6 @@
             
             const incorrectAnswers = answerButtons.filter(btn => btn.textContent !== correctText);
 
-            // Két rossz válasz véletlenszerű kiválasztása
             for (let i = 0; i < 2; i++) {
                 if (incorrectAnswers.length > 0) {
                     const randomIndex = Math.floor(Math.random() * incorrectAnswers.length);
@@ -380,6 +439,26 @@
                 }
             }
         });
+        
+        jokerTimeBtn.addEventListener('click', () => {
+            if (!jokers['time']) return;
+            jokers['time'] = false;
+            updateJokerButtons();
+            
+            timeRemaining += 10;
+        });
+
+        jokerSkipBtn.addEventListener('click', () => {
+            if (!jokers['skip']) return;
+            jokers['skip'] = false;
+            updateJokerButtons();
+
+            clearInterval(timer);
+            selectedAnswer = null;
+            currentQuestionIndex++;
+            showQuestion();
+        });
+
 
         // Válasz kiválasztásának kezelése animációkkal
         function handleAnswer(button, answer) {
@@ -470,6 +549,11 @@
                 name: playerName,
                 score: score,
                 userId: userId,
+                jokersUsed: {
+                    '50': !jokers['50'],
+                    'time': !jokers['time'],
+                    'skip': !jokers['skip']
+                },
                 timestamp: new Date().toISOString()
             };
             
@@ -481,7 +565,17 @@
             } catch (e) {
                 console.error("Hiba a pontszám mentésekor: ", e);
                 let highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
-                highScores.push({ name: playerName, score: score, date: new Date().toISOString() });
+                const localScore = {
+                    name: playerName,
+                    score: score,
+                    jokersUsed: {
+                        '50': !jokers['50'],
+                        'time': !jokers['time'],
+                        'skip': !jokers['skip']
+                    },
+                    date: new Date().toISOString()
+                };
+                highScores.push(localScore);
                 highScores.sort((a, b) => b.score - a.score);
                 highScores = highScores.slice(0, 10);
                 localStorage.setItem('cs_high_scores', JSON.stringify(highScores));
@@ -543,12 +637,25 @@
                 else if (rank === 3) emoji = '🥉';
                 
                 let nameToDisplay = entry.name;
-                let userIdToDisplay = isLocal ? '' : ` (${entry.userId.slice(0, 8)}...)`;
                 
+                let jokerIcons = '';
+                if (entry.jokersUsed) {
+                    if (entry.jokersUsed['50']) {
+                        jokerIcons += '<i class="fa-solid fa-divide joker-icon" title="50:50"></i>';
+                    }
+                    if (entry.jokersUsed['time']) {
+                        jokerIcons += '<i class="fa-solid fa-clock joker-icon" title="Időpótló"></i>';
+                    }
+                    if (entry.jokersUsed['skip']) {
+                        jokerIcons += '<i class="fa-solid fa-forward joker-icon" title="Kihagyás"></i>';
+                    }
+                }
+
                 li.innerHTML = `
                     <div class="flex items-center">
                         <span class="font-bold text-teal-300 w-6">#${rank}. ${emoji}</span>
-                        <span class="font-medium">${nameToDisplay}${userIdToDisplay}</span>
+                        <span class="font-medium">${nameToDisplay}</span>
+                        ${jokerIcons}
                     </div>
                     <span class="text-right text-gray-400 font-bold">${entry.score} pont</span>
                 `;
