@@ -1,0 +1,806 @@
+
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profi To-Do Lista & Naptár</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #e2e8f0;
+            background-image: linear-gradient(135deg, #f0f4f8 0%, #dbe9f4 100%);
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .day-cell {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .day-cell.current-month:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .day-cell.selected {
+            background-color: #3b82f6;
+            color: #fff;
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+            z-index: 10;
+        }
+
+        /* Feladat Prioritás Színei */
+        .bg-prio-1 { background-color: #fca5a5; } /* Piros */
+        .bg-prio-2 { background-color: #fdba74; } /* Narancs */
+        .bg-prio-3 { background-color: #fde047; } /* Sárga */
+        .bg-prio-4 { background-color: #a7f3d0; } /* Világoszöld */
+        .bg-prio-5 { background-color: #34d399; } /* Zöld */
+
+        /* Feladat Címke Színei */
+        .bg-tag-Személyes { background-color: #f3f4f6; color: #4b5563; }
+        .bg-tag-Munka { background-color: #bfdbfe; color: #1d4ed8; }
+        .bg-tag-Bevásárlás { background-color: #a7f3d0; color: #065f46; }
+        .bg-tag-Fitness { background-color: #fbcfe8; color: #9d174d; }
+        .bg-tag-Egyéb { background-color: #e5e7eb; color: #374151; }
+
+        .task-list-item {
+            transform: scale(0.95);
+            opacity: 0;
+            animation: fadeInScale 0.4s ease-out forwards;
+        }
+
+        .task-list-item.is-deleting {
+            animation: fadeOutDown 0.4s ease-in forwards;
+        }
+        
+        .task-list-item.is-dragging {
+            opacity: 0.5;
+            transform: scale(0.9);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 999;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOutDown {
+            from {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(20px) scale(0.9);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center min-h-screen">
+    <div class="max-w-5xl w-full mx-auto glass-container rounded-3xl p-6 md:p-10 transition-all duration-300">
+        <h1 class="text-3xl md:text-5xl font-extrabold text-center text-gray-800 mb-8">Teendők és Naptár</h1>
+        
+        <!-- Nézet kiválasztása -->
+        <div class="flex justify-center space-x-4 mb-6">
+            <button id="calendar-view-btn" class="px-4 py-2 rounded-xl text-white bg-blue-500 hover:bg-blue-600 transition-colors">Naptár</button>
+            <button id="stats-view-btn" class="px-4 py-2 rounded-xl text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors">Statisztika</button>
+        </div>
+
+        <!-- Naptár szekció -->
+        <div id="calendar-view" class="active-view">
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="monthly-view-btn" class="px-4 py-2 rounded-xl text-white bg-blue-500 hover:bg-blue-600 transition-colors">Havi nézet</button>
+                <button id="weekly-view-btn" class="px-4 py-2 rounded-xl text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors">Heti nézet</button>
+                <button id="daily-view-btn" class="px-4 py-2 rounded-xl text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors">Napi nézet</button>
+            </div>
+            <div class="calendar-section mb-8 p-4 bg-gray-50 bg-opacity-30 rounded-2xl shadow-inner">
+                <div class="flex justify-between items-center mb-4">
+                    <button id="prev-btn" class="p-3 text-gray-600 hover:text-gray-900 transition rounded-full hover:bg-white active:scale-95 duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <h2 id="current-month-year" class="text-xl md:text-3xl font-bold text-gray-800 text-center"></h2>
+                    <button id="next-btn" class="p-3 text-gray-600 hover:text-gray-900 transition rounded-full hover:bg-white active:scale-95 duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                </div>
+                <div id="calendar-days-header" class="calendar-grid text-center font-bold text-sm text-gray-500 mb-2">
+                    <div>H</div><div>K</div><div>Sz</div><div>Cs</div><div>P</div><div>Sz</div><div>V</div>
+                </div>
+                <div id="calendar-days" class="calendar-grid text-center text-gray-700">
+                    <!-- A napok itt jelennek meg -->
+                </div>
+            </div>
+
+            <!-- Feladatok szekció -->
+            <div class="tasks-section">
+                <h3 id="tasks-title" class="text-2xl md:text-3xl font-semibold text-gray-800 mb-4">Feladatok:</h3>
+                
+                <!-- Helykitöltő, ami kattintásra aktiválja a beviteli mezőket -->
+                <div id="add-task-placeholder" class="p-4 bg-white bg-opacity-70 rounded-xl border-2 border-dashed border-gray-400 text-center text-gray-600 cursor-pointer hover:border-blue-500 transition-colors">
+                    <p class="font-medium text-lg">Kattints egy napra a naptárban, hogy feladatot adj hozzá.</p>
+                </div>
+
+                <!-- A beviteli mezők alapértelmezetten rejtettek. Mobilnézetben egymás alá, asztali gépen egymás mellé rendeződnek. -->
+                <div id="task-input-section" class="hidden flex flex-col space-y-4 md:space-y-0 md:space-x-4 p-4 rounded-xl bg-gray-50 bg-opacity-30 shadow-inner">
+                    <!-- Első sor: Feladat neve, időtartam -->
+                    <div class="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 w-full">
+                        <input type="text" id="task-input" placeholder="Adj hozzá egy teendőt..." class="w-full p-4 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-blue-500 transition-colors bg-white bg-opacity-70 text-gray-700">
+                        <div class="flex space-x-2 w-full md:w-1/2">
+                            <input type="time" id="start-time-input" class="p-4 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-blue-500 transition-colors bg-white bg-opacity-70 text-gray-700 w-1/2">
+                            <input type="time" id="end-time-input" class="p-4 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-blue-500 transition-colors bg-white bg-opacity-70 text-gray-700 w-1/2">
+                        </div>
+                    </div>
+                    
+                    <!-- Második sor: Prioritás, Címke, Ismétlődés, Emlékeztető -->
+                    <div class="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 w-full md:items-center">
+                        <select id="priority-select" class="p-4 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-blue-500 transition-colors bg-white bg-opacity-70 text-gray-700 w-full md:w-1/4">
+                            <option value="1">Prioritás: 1</option>
+                            <option value="2">Prioritás: 2</option>
+                            <option value="3" selected>Prioritás: 3</option>
+                            <option value="4">Prioritás: 4</option>
+                            <option value="5">Prioritás: 5</option>
+                        </select>
+                        <select id="tag-select" class="p-4 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-blue-500 transition-colors bg-white bg-opacity-70 text-gray-700 w-full md:w-1/4">
+                            <option value="Személyes">Személyes</option>
+                            <option value="Munka">Munka</option>
+                            <option value="Bevásárlás">Bevásárlás</option>
+                            <option value="Fitness">Fitness</option>
+                            <option value="Egyéb" selected>Egyéb</option>
+                        </select>
+                        <select id="repetition-select" class="p-4 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-blue-500 transition-colors bg-white bg-opacity-70 text-gray-700 w-full md:w-1/4">
+                            <option value="Soha">Ismétlődés: Soha</option>
+                            <option value="Naponta">Ismétlődés: Naponta</option>
+                            <option value="Hetente">Ismétlődés: Hetente</option>
+                            <option value="Havonta">Ismétlődés: Havonta</option>
+                        </select>
+                        <div class="flex items-center space-x-2 w-full md:w-1/4">
+                            <input type="checkbox" id="reminder-checkbox" class="h-6 w-6 text-blue-500 rounded focus:ring-blue-500 transition-colors cursor-pointer">
+                            <label for="reminder-checkbox" class="text-sm text-gray-700 font-medium">Emlékeztető (15p)</label>
+                        </div>
+                    </div>
+
+                    <!-- Harmadik sor: Gombok -->
+                    <div class="flex space-x-2 w-full justify-end">
+                        <button id="add-task-btn" class="bg-blue-500 text-white p-4 rounded-xl shadow-lg hover:bg-blue-600 active:scale-98 transition font-bold text-base w-full md:w-auto">Hozzáadás</button>
+                        <button id="cancel-edit-btn" class="bg-gray-300 text-gray-800 p-4 rounded-xl shadow-lg hover:bg-gray-400 active:scale-98 transition font-bold text-base w-full md:w-auto hidden">Mégsem</button>
+                    </div>
+                </div>
+
+                <ul id="task-list" class="space-y-3">
+                    <!-- Aktív feladatok -->
+                </ul>
+
+                <h3 id="completed-tasks-title" class="text-2xl md:text-3xl font-semibold text-gray-800 mt-8 mb-4">Befejezett feladatok:</h3>
+                <ul id="completed-task-list" class="space-y-3 opacity-60">
+                    <!-- Befejezett feladatok -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Statisztika szekció -->
+        <div id="stats-view" class="hidden-view hidden">
+            <h2 class="text-2xl md:text-3xl font-semibold text-gray-800 mb-4">Feladat statisztikák</h2>
+            <div class="space-y-6">
+                <div class="bg-white bg-opacity-30 rounded-xl p-6 shadow-inner">
+                    <h4 class="text-xl font-medium text-gray-700 mb-4">Befejezett feladatok száma: <span id="total-completed-count" class="font-bold text-blue-600">0</span></h4>
+                </div>
+
+                <div class="bg-white bg-opacity-30 rounded-xl p-6 shadow-inner">
+                    <h4 class="text-xl font-medium text-gray-700 mb-4">Prioritás szerinti megoszlás</h4>
+                    <div id="priority-chart-container" class="w-full h-40 flex items-end space-x-2 border-b-2 border-gray-400">
+                        <!-- A chart sávok itt jelennek meg -->
+                    </div>
+                    <div id="priority-labels" class="flex justify-between mt-2 text-xs text-gray-600">
+                        <span>P1</span><span>P2</span><span>P3</span><span>P4</span><span>P5</span>
+                    </div>
+                </div>
+
+                <div class="bg-white bg-opacity-30 rounded-xl p-6 shadow-inner">
+                    <h4 class="text-xl font-medium text-gray-700 mb-4">Címke szerinti megoszlás</h4>
+                    <ul id="tag-stats-list" class="space-y-2">
+                        <!-- A címke statisztikák itt jelennek meg -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const calendarView = document.getElementById('calendar-view');
+            const statsView = document.getElementById('stats-view');
+            const calendarViewBtn = document.getElementById('calendar-view-btn');
+            const statsViewBtn = document.getElementById('stats-view-btn');
+            const calendarDays = document.getElementById('calendar-days');
+            const calendarDaysHeader = document.getElementById('calendar-days-header');
+            const currentMonthYear = document.getElementById('current-month-year');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const monthlyViewBtn = document.getElementById('monthly-view-btn');
+            const weeklyViewBtn = document.getElementById('weekly-view-btn');
+            const dailyViewBtn = document.getElementById('daily-view-btn');
+            
+            // Feladatokkal kapcsolatos elemek
+            const taskInputSection = document.getElementById('task-input-section');
+            const addTaskPlaceholder = document.getElementById('add-task-placeholder');
+            const taskInput = document.getElementById('task-input');
+            const startTimeInput = document.getElementById('start-time-input');
+            const endTimeInput = document.getElementById('end-time-input');
+            const prioritySelect = document.getElementById('priority-select');
+            const tagSelect = document.getElementById('tag-select');
+            const repetitionSelect = document.getElementById('repetition-select');
+            const reminderCheckbox = document.getElementById('reminder-checkbox');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+            const taskList = document.getElementById('task-list');
+            const completedTaskList = document.getElementById('completed-task-list');
+            const tasksTitle = document.getElementById('tasks-title');
+            const completedTasksTitle = document.getElementById('completed-tasks-title');
+            
+            // Statisztikai elemek
+            const totalCompletedCount = document.getElementById('total-completed-count');
+            const priorityChartContainer = document.getElementById('priority-chart-container');
+            const tagStatsList = document.getElementById('tag-stats-list');
+
+            // Állapotkezelés
+            let currentDate = new Date();
+            let selectedDate = null; 
+            let currentView = 'monthly';
+            const storageKey = 'professional-todos';
+            let allTasks = JSON.parse(localStorage.getItem(storageKey)) || {};
+            let editingTask = null;
+
+            // Segítő funkciók
+            const formatDate = (date) => date.toISOString().split('T')[0];
+            const getPriorityColor = (priority) => {
+                switch (priority) {
+                    case '1': return 'bg-prio-1';
+                    case '2': return 'bg-prio-2';
+                    case '3': return 'bg-prio-3';
+                    case '4': return 'bg-prio-4';
+                    case '5': return 'bg-prio-5';
+                    default: return 'bg-gray-100';
+                }
+            };
+            const getTagColor = (tag) => {
+                const tagColors = {
+                    'Személyes': 'bg-tag-Személyes',
+                    'Munka': 'bg-tag-Munka',
+                    'Bevásárlás': 'bg-tag-Bevásárlás',
+                    'Fitness': 'bg-tag-Fitness',
+                    'Egyéb': 'bg-tag-Egyéb',
+                };
+                return tagColors[tag] || 'bg-gray-200';
+            };
+
+            const requestNotificationPermission = () => {
+                if (Notification.permission === 'default') {
+                    Notification.requestPermission();
+                }
+            };
+
+            const scheduleNotification = (task) => {
+                if (Notification.permission === 'granted' && task.startTime) {
+                    const [hour, minute] = task.startTime.split(':');
+                    const taskDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), hour, minute, 0);
+                    
+                    const now = new Date();
+                    let timeUntilTask = taskDate.getTime() - now.getTime();
+                    
+                    if (task.reminder) {
+                        timeUntilTask -= 15 * 60 * 1000;
+                    }
+
+                    if (timeUntilTask > 0) {
+                        setTimeout(() => {
+                            new Notification('Emlékeztető!', {
+                                body: task.text,
+                                icon: 'https://placehold.co/64x64/3b82f6/fff?text=🔔'
+                            });
+                        }, timeUntilTask);
+                    }
+                }
+            };
+
+            // Drag-and-drop logika
+            let draggedItem = null;
+            let draggedItemDate = null;
+
+            const handleDragStart = (e) => {
+                draggedItem = e.target;
+                draggedItemDate = e.target.closest('.task-list-item').dataset.date;
+                e.dataTransfer.setData('text/plain', e.target.dataset.index);
+                e.target.classList.add('is-dragging');
+            };
+
+            const handleDragEnd = (e) => {
+                e.target.classList.remove('is-dragging');
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault();
+                const targetCell = e.target.closest('.day-cell');
+                if (!targetCell) return;
+                
+                const targetDate = targetCell.dataset.date;
+                const taskIndex = e.dataTransfer.getData('text/plain');
+                
+                if (draggedItemDate && targetDate && draggedItemDate !== targetDate) {
+                    const sourceTasks = allTasks[draggedItemDate];
+                    const [taskToMove] = sourceTasks.splice(taskIndex, 1);
+
+                    if (!allTasks[targetDate]) {
+                        allTasks[targetDate] = [];
+                    }
+                    allTasks[targetDate].push(taskToMove);
+                    
+                    saveTasks();
+                    renderView();
+                    setSelectedDate(new Date(targetDate));
+                }
+            };
+            
+            // Kiválasztott dátum beállítása
+            const setSelectedDate = (date) => {
+                selectedDate = date;
+                if (selectedDate) {
+                    taskInputSection.classList.remove('hidden');
+                    addTaskPlaceholder.classList.add('hidden');
+                    tasksTitle.textContent = `Feladatok (${selectedDate.toLocaleDateString('hu-HU', { day: 'numeric', month: 'long', year: 'numeric' })}):`;
+                    taskInput.placeholder = `Adj hozzá egy teendőt ehhez a naphoz...`;
+                } else {
+                    taskInputSection.classList.add('hidden');
+                    addTaskPlaceholder.classList.remove('hidden');
+                    tasksTitle.textContent = 'Feladatok:';
+                }
+                renderView();
+                renderTasks();
+            };
+
+            // Naptár nézet renderelése
+            const renderView = () => {
+                calendarDays.innerHTML = '';
+                calendarDays.classList.remove('weekly', 'daily');
+                calendarDaysHeader.style.display = 'grid';
+
+                // Gombstílusok alaphelyzetbe állítása
+                monthlyViewBtn.classList.replace('bg-blue-500', 'bg-gray-200');
+                monthlyViewBtn.classList.replace('text-white', 'text-gray-800');
+                weeklyViewBtn.classList.replace('bg-blue-500', 'bg-gray-200');
+                weeklyViewBtn.classList.replace('text-white', 'text-gray-800');
+                dailyViewBtn.classList.replace('bg-blue-500', 'bg-gray-200');
+                dailyViewBtn.classList.replace('text-white', 'text-gray-800');
+
+                let daysToRender = [];
+                let headerContent = ['H', 'K', 'Sz', 'Cs', 'P', 'Sz', 'V'];
+                
+                // Helyes dátumtartomány lekérése a nézet alapján
+                if (currentView === 'monthly') {
+                    monthlyViewBtn.classList.replace('bg-gray-200', 'bg-blue-500');
+                    monthlyViewBtn.classList.replace('text-gray-800', 'text-white');
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    currentMonthYear.textContent = `${new Intl.DateTimeFormat('hu-HU', { month: 'long', year: 'numeric' }).format(currentDate)}`;
+
+                    const firstDayOfMonth = new Date(year, month, 1);
+                    const startingDay = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
+
+                    const prevMonthDays = new Date(year, month, 0).getDate();
+                    for (let i = startingDay; i > 0; i--) {
+                        daysToRender.push(new Date(year, month - 1, prevMonthDays - i + 1));
+                    }
+
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    for (let i = 1; i <= daysInMonth; i++) {
+                        daysToRender.push(new Date(year, month, i));
+                    }
+                } else if (currentView === 'weekly') {
+                    weeklyViewBtn.classList.replace('bg-gray-200', 'bg-blue-500');
+                    weeklyViewBtn.classList.replace('text-gray-800', 'text-white');
+                    const startOfWeek = new Date(currentDate);
+                    startOfWeek.setDate(currentDate.getDate() - (currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1));
+                    for (let i = 0; i < 7; i++) {
+                        const day = new Date(startOfWeek);
+                        day.setDate(startOfWeek.getDate() + i);
+                        daysToRender.push(day);
+                    }
+                    const weekStartStr = new Intl.DateTimeFormat('hu-HU', { day: 'numeric', month: 'short' }).format(daysToRender[0]);
+                    const weekEndStr = new Intl.DateTimeFormat('hu-HU', { day: 'numeric', month: 'short', year: 'numeric' }).format(daysToRender[6]);
+                    currentMonthYear.textContent = `${weekStartStr} - ${weekEndStr}`;
+                } else if (currentView === 'daily') {
+                    dailyViewBtn.classList.replace('bg-gray-200', 'bg-blue-500');
+                    dailyViewBtn.classList.replace('text-gray-800', 'text-white');
+                    daysToRender.push(currentDate);
+                    currentMonthYear.textContent = new Intl.DateTimeFormat('hu-HU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(currentDate);
+                    headerContent = [];
+                    calendarDaysHeader.style.display = 'none';
+                    calendarDays.style.gridTemplateColumns = '1fr';
+                }
+
+                calendarDaysHeader.innerHTML = headerContent.map(day => `<div>${day}</div>`).join('');
+                calendarDays.classList.remove('grid-cols-7');
+                if (currentView !== 'daily') {
+                    calendarDays.classList.add('grid-cols-7');
+                } else {
+                    calendarDays.classList.add('grid-cols-1');
+                }
+
+                daysToRender.forEach(dayDate => {
+                    const dayCell = document.createElement('div');
+                    const formattedDate = formatDate(dayDate);
+                    dayCell.classList.add('day-cell', 'p-2', 'relative', 'bg-white', 'bg-opacity-30', 'shadow-inner', 'rounded-xl', 'min-h-[100px]');
+                    dayCell.dataset.date = formattedDate;
+                    
+                    if (selectedDate && formattedDate === formatDate(selectedDate)) {
+                        dayCell.classList.add('selected');
+                    }
+                    if (formattedDate === formatDate(new Date())) {
+                        dayCell.classList.add('border-2', 'border-blue-500', 'font-bold', 'shadow-md');
+                    }
+
+                    const dayNumber = dayDate.getDate();
+                    dayCell.innerHTML = `<span class="text-xs font-bold">${dayNumber}</span>`;
+                    
+                    // Feladatok megjelenítése a naptár cellákon
+                    const tasksForDay = Object.keys(allTasks).flatMap(date => {
+                        return allTasks[date].filter(task => {
+                            const taskDate = new Date(date);
+                            if (taskDate.toISOString().split('T')[0] === dayDate.toISOString().split('T')[0] && !task.completed) {
+                                return true;
+                            }
+                            if (task.repetition === 'Naponta') {
+                                return !task.completed;
+                            }
+                            if (task.repetition === 'Hetente' && taskDate.getDay() === dayDate.getDay()) {
+                                return !task.completed;
+                            }
+                            if (task.repetition === 'Havonta' && taskDate.getDate() === dayDate.getDate()) {
+                                return !task.completed;
+                            }
+                            return false;
+                        });
+                    });
+                    
+                    if (tasksForDay.length > 0) {
+                        const taskListForCell = document.createElement('ul');
+                        taskListForCell.classList.add('mt-2', 'space-y-1', 'text-sm');
+                        tasksForDay.forEach(task => {
+                            const li = document.createElement('li');
+                            li.textContent = task.text;
+                            li.classList.add('px-2', 'py-1', 'rounded-md', getPriorityColor(task.priority), 'text-xs', 'truncate');
+                            taskListForCell.appendChild(li);
+                        });
+                        dayCell.appendChild(taskListForCell);
+                    }
+                    
+                    dayCell.addEventListener('dragover', handleDragOver);
+                    dayCell.addEventListener('drop', handleDrop);
+                    
+                    dayCell.addEventListener('click', () => setSelectedDate(dayDate));
+                    
+                    calendarDays.appendChild(dayCell);
+                });
+            };
+
+            // Feladatok renderelése a kiválasztott napra
+            const renderTasks = () => {
+                taskList.innerHTML = '';
+                completedTaskList.innerHTML = '';
+                
+                if (!selectedDate) {
+                    taskList.innerHTML = '<li class="text-gray-500 text-center py-4 text-lg">Válassz ki egy napot a naptárban.</li>';
+                    completedTaskList.innerHTML = '';
+                    tasksTitle.textContent = 'Feladatok:';
+                    return;
+                }
+
+                const formattedDate = formatDate(selectedDate);
+                const tasksForDay = allTasks[formattedDate] || [];
+
+                completedTasksTitle.textContent = `Befejezett feladatok:`;
+                
+                if (tasksForDay.length === 0) {
+                    taskList.innerHTML = '<li class="text-gray-500 text-center py-4 text-lg">Nincs feladat erre a napra.</li>';
+                }
+
+                tasksForDay.sort((a, b) => {
+                    if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
+                    return 0;
+                }).forEach((task, index) => {
+                    const li = document.createElement('li');
+                    li.classList.add('task-list-item', 'flex', 'flex-col', 'sm:flex-row', 'items-start', 'sm:items-center', 'p-4', 'rounded-xl', 'shadow-md', 'transition-all', getPriorityColor(task.priority));
+                    li.draggable = true;
+                    li.dataset.index = index;
+                    li.dataset.date = formattedDate;
+
+                    if (task.completed) {
+                        li.classList.add('opacity-70', 'line-through', 'text-gray-500');
+                    }
+
+                    const timeRangeHtml = task.startTime || task.endTime ? `
+                        <span class="text-sm font-semibold text-gray-700">
+                            🕒 ${task.startTime} - ${task.endTime}
+                        </span>
+                    ` : '';
+
+                    const tagHtml = task.tag ? `
+                        <span class="text-xs font-semibold px-2 py-1 rounded-full ${getTagColor(task.tag)}">${task.tag}</span>
+                    ` : '';
+
+                    const repetitionHtml = task.repetition && task.repetition !== 'Soha' ? `
+                        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-indigo-200 text-indigo-700 ml-2">Ismétlődik: ${task.repetition}</span>
+                    ` : '';
+
+                    li.innerHTML = `
+                        <div class="flex-1 cursor-pointer flex items-center space-x-4 mb-2 sm:mb-0">
+                            <input type="checkbox" ${task.completed ? 'checked' : ''} class="h-6 w-6 text-blue-500 rounded focus:ring-blue-500 transition-colors cursor-pointer" />
+                            <div class="flex flex-col">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-lg">${task.text}</span>
+                                    ${tagHtml}
+                                    ${repetitionHtml}
+                                </div>
+                                ${timeRangeHtml}
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="edit-btn bg-gray-500 text-white p-2 rounded-full shadow-md hover:bg-gray-600 active:scale-95 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <button class="delete-btn bg-red-500 text-white p-2 rounded-full shadow-md hover:bg-red-600 active:scale-95 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                    `;
+                    
+                    li.addEventListener('dragstart', handleDragStart);
+                    li.addEventListener('dragend', handleDragEnd);
+
+                    li.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+                        tasksForDay[index].completed = e.target.checked;
+                        saveTasks();
+                        renderTasks();
+                        renderStatistics();
+                    });
+                    
+                    li.querySelector('.edit-btn').addEventListener('click', () => {
+                        editingTask = { date: formattedDate, index: index };
+                        taskInput.value = task.text;
+                        startTimeInput.value = task.startTime || '';
+                        endTimeInput.value = task.endTime || '';
+                        prioritySelect.value = task.priority;
+                        tagSelect.value = task.tag;
+                        repetitionSelect.value = task.repetition || 'Soha';
+                        reminderCheckbox.checked = task.reminder || false;
+                        addTaskBtn.textContent = 'Mentés';
+                        cancelEditBtn.classList.remove('hidden');
+                    });
+
+                    li.querySelector('.delete-btn').addEventListener('click', () => {
+                        li.classList.add('is-deleting');
+                        setTimeout(() => {
+                            tasksForDay.splice(index, 1);
+                            saveTasks();
+                            renderView();
+                            renderTasks();
+                            renderStatistics();
+                        }, 400);
+                    });
+                    
+                    if (task.completed) {
+                        completedTaskList.appendChild(li);
+                    } else {
+                        taskList.appendChild(li);
+                    }
+                });
+            };
+
+            const saveTasks = () => {
+                localStorage.setItem(storageKey, JSON.stringify(allTasks));
+            };
+
+            const addTask = () => {
+                const taskText = taskInput.value.trim();
+                const taskPriority = prioritySelect.value;
+                const taskTag = tagSelect.value;
+                const taskRepetition = repetitionSelect.value;
+                const taskReminder = reminderCheckbox.checked;
+                const startTime = startTimeInput.value;
+                const endTime = endTimeInput.value;
+
+                if (taskText === '') return;
+                if (!selectedDate) {
+                    alert('Kérlek, válassz ki egy napot a naptárban!');
+                    return;
+                }
+
+                const formattedDate = formatDate(selectedDate);
+                
+                if (editingTask) {
+                    const taskToEdit = allTasks[editingTask.date][editingTask.index];
+                    taskToEdit.text = taskText;
+                    taskToEdit.priority = taskPriority;
+                    taskToEdit.tag = taskTag;
+                    taskToEdit.repetition = taskRepetition;
+                    taskToEdit.reminder = taskReminder;
+                    taskToEdit.startTime = startTime;
+                    taskToEdit.endTime = endTime;
+                    
+                    if (editingTask.date !== formattedDate) {
+                        allTasks[editingTask.date].splice(editingTask.index, 1);
+                        if (!allTasks[formattedDate]) {
+                            allTasks[formattedDate] = [];
+                        }
+                        allTasks[formattedDate].push(taskToEdit);
+                    }
+                    editingTask = null;
+                    addTaskBtn.textContent = 'Hozzáadás';
+                    cancelEditBtn.classList.add('hidden');
+                } else {
+                    if (!allTasks[formattedDate]) {
+                        allTasks[formattedDate] = [];
+                    }
+                    const newTask = { text: taskText, priority: taskPriority, tag: taskTag, repetition: taskRepetition, reminder: taskReminder, startTime, endTime, completed: false };
+                    allTasks[formattedDate].push(newTask);
+                    scheduleNotification(newTask);
+                }
+
+                taskInput.value = '';
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+                repetitionSelect.value = 'Soha';
+                reminderCheckbox.checked = false;
+                
+                saveTasks();
+                renderView();
+                renderTasks();
+                renderStatistics();
+            };
+
+            const cancelEdit = () => {
+                editingTask = null;
+                taskInput.value = '';
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+                prioritySelect.value = '3';
+                tagSelect.value = 'Egyéb';
+                repetitionSelect.value = 'Soha';
+                reminderCheckbox.checked = false;
+                addTaskBtn.textContent = 'Hozzáadás';
+                cancelEditBtn.classList.add('hidden');
+            };
+
+            // Statisztika nézet renderelése
+            const renderStatistics = () => {
+                const completedTasks = Object.values(allTasks).flat().filter(task => task.completed);
+                totalCompletedCount.textContent = completedTasks.length;
+
+                // Prioritás statisztika
+                const priorityCounts = completedTasks.reduce((acc, task) => {
+                    acc[task.priority] = (acc[task.priority] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const maxCount = Math.max(...Object.values(priorityCounts), 1);
+                priorityChartContainer.innerHTML = '';
+                ['1', '2', '3', '4', '5'].forEach(prio => {
+                    const count = priorityCounts[prio] || 0;
+                    const height = (count / maxCount) * 100;
+                    const bar = document.createElement('div');
+                    bar.classList.add('flex-1', 'flex', 'flex-col', 'justify-end', 'items-center', 'rounded-t', getPriorityColor(prio));
+                    bar.style.height = `${Math.max(10, height)}%`;
+                    bar.style.transition = 'height 0.5s ease-out';
+                    bar.innerHTML = `<span class="text-xs font-semibold text-gray-800">${count}</span>`;
+                    priorityChartContainer.appendChild(bar);
+                });
+
+                // Címke statisztika
+                const tagCounts = completedTasks.reduce((acc, task) => {
+                    acc[task.tag] = (acc[task.tag] || 0) + 1;
+                    return acc;
+                }, {});
+
+                tagStatsList.innerHTML = '';
+                Object.entries(tagCounts).forEach(([tag, count]) => {
+                    const li = document.createElement('li');
+                    li.classList.add('flex', 'items-center', 'justify-between', 'px-4', 'py-2', 'bg-white', 'bg-opacity-50', 'rounded-xl', 'shadow-sm');
+                    li.innerHTML = `
+                        <span class="text-sm font-semibold">${tag}</span>
+                        <span class="text-lg font-bold text-blue-600">${count}</span>
+                    `;
+                    tagStatsList.appendChild(li);
+                });
+            };
+
+            // Nézet váltó logika
+            const showView = (viewId) => {
+                calendarView.classList.add('hidden');
+                statsView.classList.add('hidden');
+                document.getElementById(viewId).classList.remove('hidden');
+
+                calendarViewBtn.classList.replace('bg-blue-500', 'bg-gray-200');
+                calendarViewBtn.classList.replace('text-white', 'text-gray-800');
+                statsViewBtn.classList.replace('bg-blue-500', 'bg-gray-200');
+                statsViewBtn.classList.replace('text-white', 'text-gray-800');
+
+                if (viewId === 'calendar-view') {
+                    calendarViewBtn.classList.replace('bg-gray-200', 'bg-blue-500');
+                    calendarViewBtn.classList.replace('text-gray-800', 'text-white');
+                    setSelectedDate(null); 
+                } else if (viewId === 'stats-view') {
+                    statsViewBtn.classList.replace('bg-gray-200', 'bg-blue-500');
+                    statsViewBtn.classList.replace('text-gray-800', 'text-white');
+                    renderStatistics();
+                }
+            };
+
+
+            // Eseményfigyelők
+            calendarViewBtn.addEventListener('click', () => showView('calendar-view'));
+            statsViewBtn.addEventListener('click', () => showView('stats-view'));
+            
+            monthlyViewBtn.addEventListener('click', () => { currentView = 'monthly'; renderView(); });
+            weeklyViewBtn.addEventListener('click', () => { currentView = 'weekly'; renderView(); });
+            dailyViewBtn.addEventListener('click', () => { currentView = 'daily'; renderView(); });
+            prevBtn.addEventListener('click', () => {
+                if (currentView === 'monthly') currentDate.setMonth(currentDate.getMonth() - 1);
+                if (currentView === 'weekly') currentDate.setDate(currentDate.getDate() - 7);
+                if (currentView === 'daily') currentDate.setDate(currentDate.getDate() - 1);
+                renderView();
+            });
+            nextBtn.addEventListener('click', () => {
+                if (currentView === 'monthly') currentDate.setMonth(currentDate.getMonth() + 1);
+                if (currentView === 'weekly') currentDate.setDate(currentDate.getDate() + 7);
+                if (currentView === 'daily') currentDate.setDate(currentDate.getDate() + 1);
+                renderView();
+            });
+            addTaskBtn.addEventListener('click', addTask);
+            cancelEditBtn.addEventListener('click', cancelEdit);
+            taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTask();
+            });
+
+            addTaskPlaceholder.addEventListener('click', () => {
+                setSelectedDate(new Date());
+            });
+            
+            // Kezdeti renderelés
+            showView('calendar-view');
+            requestNotificationPermission();
+        });
+    </script>
+</body>
+</html>
