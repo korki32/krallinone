@@ -179,6 +179,16 @@
             text-align: center;
             position: relative;
         }
+        .heart-icon {
+            font-size: 1.5rem;
+            color: #dc2626; /* piros */
+            transition: transform 0.3s ease-in-out;
+        }
+        .heart-lost {
+            color: #4b5563; /* szürke */
+            transform: scale(0.8);
+            transition: transform 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
@@ -207,11 +217,17 @@
         <div class="flex items-center justify-between mb-6 text-sm text-gray-400">
             <span id="score-display" class="font-medium">Pontszám: 0 🎯</span>
             <span id="question-counter" class="font-medium">Kérdés: 1/0 📝</span>
+            <!-- Lives display -->
+            <div id="lives-display" class="flex items-center space-x-1">
+                <i class="fa-solid fa-heart heart-icon"></i>
+                <i class="fa-solid fa-heart heart-icon"></i>
+                <i class="fa-solid fa-heart heart-icon"></i>
+            </div>
         </div>
         
         <div id="loading-screen" class="text-center p-8 hidden">
             <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
-                <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]]">Loading...</span>
             </div>
             <p class="mt-4 text-gray-400 text-lg font-semibold">Kérdések betöltése...</p>
         </div>
@@ -252,7 +268,7 @@
                 <!-- Leaderboard items will be generated here -->
                 <div id="loader" class="text-center hidden">
                     <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
-                        <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                        <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]]">Loading...</span>
                     </div>
                     <p class="mt-2 text-gray-400">Ranglista betöltése...</p>
                 </div>
@@ -276,6 +292,8 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.44.2/+esm';
 
         // --- Konfiguráció: CSERÉLD KI EZEKET A SAJÁT SUPABASE-ADATAIDRA! ---
+        // 1. A Supabase felületén a Project Settings -> API menüben találsz egy "Project URL" és egy "Public API Key" értéket.
+        // 2. Másold át ezeket a megfelelő változókba. Ügyelj arra, hogy ne másolj extra szóközöket vagy karaktereket!
         const supabaseUrl = 'https://badqobyvbfuhpxkoomhu.supabase.co'; // Pl.: https://your-project-id.supabase.co
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhZHFvYnl2YmZ1aHB4a29vbWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjEyNDUsImV4cCI6MjA3MzMzNzI0NX0.FTiQfMgEZQryLscrBi4bvGQwtZY_KqTT3wcOu9vTcZY'; // Pl.: eyJhbGciOi...
         
@@ -321,6 +339,7 @@
         // Quiz state variables
         let currentQuestionIndex = 0;
         let score = 0;
+        let lives = 3; // New lives variable
         let selectedAnswer = null;
         let jokers = {
             '50': true,
@@ -361,6 +380,7 @@
         const globalLbBtn = document.getElementById('global-lb-btn');
         const jokerFreeLbBtn = document.getElementById('joker-free-lb-btn');
         const statusMessage = document.getElementById('status-message');
+        const livesDisplay = document.getElementById('lives-display'); // New lives display element
 
         // Initialize sound effects
         const synth = new Tone.PolySynth(Tone.Synth).toDestination();
@@ -371,6 +391,7 @@
         const gameOverSound = () => synth.triggerAttackRelease(["C3", "G#2"], "1s");
         const tickSound = () => synth.triggerAttackRelease("C4", "16n");
         const confettiSound = () => synth.triggerAttackRelease(["C5", "E5", "G5"], "8n");
+        const lostLifeSound = () => synth.triggerAttackRelease(["C2", "G1"], "4n"); // Sound for losing a life
 
         // Function to fetch questions from external URL
         async function fetchQuestions() {
@@ -410,10 +431,12 @@
             
             currentQuestionIndex = 0;
             score = 0;
+            lives = 3; // Reset lives at the start of the game
             selectedAnswer = null;
             jokers = { '50': true, 'time': true, 'skip': true };
             usedJokersThisGame = { '50': false, 'time': false, 'skip': false };
             updateJokerButtons();
+            updateLivesDisplay();
             
             quizContainer.classList.remove('hidden');
             quizContent.classList.remove('hidden', 'game-over-animation');
@@ -464,6 +487,18 @@
             joker50Btn.disabled = !jokers['50'];
             jokerTimeBtn.disabled = !jokers['time'];
             jokerSkipBtn.disabled = !jokers['skip'];
+        }
+
+        // Update the lives display
+        function updateLivesDisplay() {
+            const hearts = livesDisplay.querySelectorAll('.heart-icon');
+            hearts.forEach((heart, index) => {
+                if (index >= lives) {
+                    heart.classList.add('heart-lost');
+                } else {
+                    heart.classList.remove('heart-lost');
+                }
+            });
         }
 
         // Function to display the question
@@ -577,7 +612,7 @@
             if (selectedAnswer !== null) return;
             selectedAnswer = answer;
             
-            const isTimeout = selectedAnswer === "time_out";
+            const isTimeout = (button === null); // It's a timeout if no button was clicked
             const currentQuestion = questions[currentQuestionIndex];
             const isCorrect = answer === currentQuestion.correct;
 
@@ -590,7 +625,9 @@
             // Add animation and color for correct/incorrect answer
             if (isCorrect) {
                 correctSound();
-                button.classList.add('correct-answer');
+                if (button) {
+                    button.classList.add('correct-answer');
+                }
                 score++;
                 scoreDisplay.textContent = `Pontszám: ${score} 🎯`;
                 // Trigger score pulse animation
@@ -607,6 +644,10 @@
                 }, 1500); // Proceed to the next question after 1.5 seconds
             } else {
                 incorrectSound();
+                lives--; // Lose a life
+                lostLifeSound();
+                updateLivesDisplay();
+
                 // If it's a timeout, find a random incorrect button to highlight
                 if (isTimeout) {
                     const allButtons = Array.from(answerButtonsContainer.children);
@@ -626,14 +667,23 @@
                     correctButton.classList.add('correct-answer');
                 }
                 
-                // Game over on incorrect answer or timeout
-                setTimeout(() => {
-                    gameOverSound();
-                    quizContent.classList.add('game-over-animation');
+                // Check if the game is over
+                if (lives <= 0) {
                     setTimeout(() => {
-                        showFinalScore(false); // Game over due to wrong answer or timeout
-                    }, 1000); // Wait for animation
-                }, 500); // Wait for button animation
+                        gameOverSound();
+                        quizContent.classList.add('game-over-animation');
+                        setTimeout(() => {
+                            showFinalScore(false);
+                        }, 1000);
+                    }, 500);
+                } else {
+                    // If lives remain, proceed to the next question
+                    setTimeout(() => {
+                        selectedAnswer = null;
+                        currentQuestionIndex++;
+                        showQuestion();
+                    }, 1500);
+                }
             }
         }
 
@@ -771,6 +821,8 @@
             if (type === 'global') {
                 query = query.order('score', { ascending: false }).limit(10);
             } else if (type === 'joker-free') {
+                // Note: The following query assumes the 'jokers_used' column is a JSONB type
+                // in your Supabase table. It filters for records where each joker was NOT used.
                 query = query
                     .order('score', { ascending: false })
                     .limit(10)
