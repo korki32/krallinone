@@ -193,53 +193,77 @@
 </head>
 <body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div id="quiz-container" class="bg-gray-800 bg-opacity-80 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-700">
-        <!-- Timer and Joker buttons -->
-        <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
-            <div id="timer-display" class="w-full h-2 bg-gray-600 rounded-full overflow-hidden mb-4 sm:mb-0 sm:mr-4">
-                <div id="timer-bar" class="w-full"></div>
-            </div>
-            <div class="flex space-x-2">
-                <button id="joker-50-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
-                    <i class="fa-solid fa-divide"></i>
-                    <span class="joker-tooltip">50:50 - Két rossz választ eltávolít</span>
-                </button>
-                <button id="joker-time-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
-                    <i class="fa-solid fa-clock"></i>
-                    <span class="joker-tooltip">+10 másodpercet ad az időhöz</span>
-                </button>
-                <button id="joker-skip-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
-                    <i class="fa-solid fa-forward"></i>
-                    <span class="joker-tooltip">Átlépi a jelenlegi kérdést</span>
-                </button>
-            </div>
-        </div>
-        <div class="flex items-center justify-between mb-6 text-sm text-gray-400">
-            <span id="score-display" class="font-medium">Pontszám: 0 🎯</span>
-            <span id="question-counter" class="font-medium">Kérdés: 1/0 📝</span>
-            <!-- Lives display -->
-            <div id="lives-display" class="flex items-center space-x-1">
-                <i class="fa-solid fa-heart heart-icon"></i>
-                <i class="fa-solid fa-heart heart-icon"></i>
-                <i class="fa-solid fa-heart heart-icon"></i>
-            </div>
-        </div>
-        
-        <div id="loading-screen" class="text-center p-8 hidden">
-            <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
-                <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]]">Loading...</span>
-            </div>
-            <p class="mt-4 text-gray-400 text-lg font-semibold">Kérdések betöltése...</p>
-        </div>
-
-        <div id="quiz-content" class="animate-fade-in hidden">
-            <h2 id="question-text" class="text-2xl font-extrabold mb-8 text-center text-teal-400 leading-snug"></h2>
-            <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Answer buttons will be generated here -->
+    <div id="app-container" class="bg-gray-800 bg-opacity-80 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-700">
+        <!-- Kezdőképernyő -->
+        <div id="start-screen">
+            <h1 class="text-4xl font-extrabold text-teal-400 mb-6 text-center">CS:GO Térkép Kvíz</h1>
+            <p class="text-lg text-gray-300 mb-8 text-center">Tedd próbára tudásod! Hány térképet ismersz fel a Counter-Strike univerzumából?</p>
+            <div class="flex flex-col space-y-4">
+                <button id="start-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300">Játék Indítása</button>
+                <button id="settings-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300">Beállítások</button>
+                <button id="leaderboard-from-start-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300">Ranglista</button>
             </div>
         </div>
 
-        <div id="end-screen" class="text-center hidden animate-fade-in">
+        <!-- Beállítások képernyő -->
+        <div id="settings-screen" class="hidden">
+            <h2 class="text-3xl font-extrabold text-teal-400 mb-6 text-center">Beállítások</h2>
+            <div class="flex items-center justify-between mb-6">
+                <span class="text-lg font-medium text-gray-300">Hangeffektusok</span>
+                <input type="checkbox" id="sound-toggle" class="form-checkbox h-6 w-6 text-teal-600 bg-gray-700 rounded-full focus:ring-teal-500" checked>
+            </div>
+            <button id="back-to-menu-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300">Vissza a Menübe</button>
+        </div>
+
+        <!-- Kvíz képernyő -->
+        <div id="quiz-screen" class="hidden">
+            <!-- Timer and Joker buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+                <div id="timer-display" class="w-full h-2 bg-gray-600 rounded-full overflow-hidden mb-4 sm:mb-0 sm:mr-4">
+                    <div id="timer-bar" class="w-full"></div>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="joker-50-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
+                        <i class="fa-solid fa-divide"></i>
+                        <span class="joker-tooltip">50:50 - Két rossz választ eltávolít</span>
+                    </button>
+                    <button id="joker-time-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
+                        <i class="fa-solid fa-clock"></i>
+                        <span class="joker-tooltip">+10 másodpercet ad az időhöz</span>
+                    </button>
+                    <button id="joker-skip-btn" class="joker-button py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
+                        <i class="fa-solid fa-forward"></i>
+                        <span class="joker-tooltip">Átlépi a jelenlegi kérdést</span>
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center justify-between mb-6 text-sm text-gray-400">
+                <span id="score-display" class="font-medium">Pontszám: 0 🎯</span>
+                <span id="question-counter" class="font-medium">Kérdés: 1/0 📝</span>
+                <div id="lives-display" class="flex items-center space-x-1">
+                    <i class="fa-solid fa-heart heart-icon"></i>
+                    <i class="fa-solid fa-heart heart-icon"></i>
+                    <i class="fa-solid fa-heart heart-icon"></i>
+                </div>
+            </div>
+            
+            <div id="loading-screen" class="text-center p-8 hidden">
+                <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
+                    <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]]">Loading...</span>
+                </div>
+                <p class="mt-4 text-gray-400 text-lg font-semibold">Kérdések betöltése...</p>
+            </div>
+
+            <div id="quiz-content" class="animate-fade-in hidden">
+                <h2 id="question-text" class="text-2xl font-extrabold mb-8 text-center text-teal-400 leading-snug"></h2>
+                <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Answer buttons will be generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Vége képernyő -->
+        <div id="end-screen" class="hidden animate-fade-in">
             <h2 class="text-3xl font-extrabold text-teal-400 mb-4">Kvíz vége!</h2>
             <p id="final-score" class="text-xl mb-6 font-medium"></p>
             
@@ -253,7 +277,8 @@
             <button id="view-leaderboard-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4 hidden">Ranglista megtekintése</button>
         </div>
 
-        <div id="leaderboard-screen" class="hidden animate-fade-in mt-6">
+        <!-- Ranglista képernyő -->
+        <div id="leaderboard-screen" class="hidden animate-fade-in">
             <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
                 <h3 class="text-2xl font-extrabold text-teal-400 text-center sm:text-left mb-2 sm:mb-0">Ranglista 🏆</h3>
                 <div class="flex space-x-2">
@@ -354,13 +379,26 @@
         let timer = null;
         const timeLimit = 15; // 15 seconds
         let timeRemaining = timeLimit;
+        
+        // Sound state
+        let soundEnabled = true;
 
         // UI elements
-        const quizContainer = document.getElementById('quiz-container');
-        const loadingScreen = document.getElementById('loading-screen');
-        const quizContent = document.getElementById('quiz-content');
+        const appContainer = document.getElementById('app-container');
+        const startScreen = document.getElementById('start-screen');
+        const settingsScreen = document.getElementById('settings-screen');
+        const quizScreen = document.getElementById('quiz-screen');
         const endScreen = document.getElementById('end-screen');
         const leaderboardScreen = document.getElementById('leaderboard-screen');
+
+        const startBtn = document.getElementById('start-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const leaderboardFromStartBtn = document.getElementById('leaderboard-from-start-btn');
+        const backToMenuBtn = document.getElementById('back-to-menu-btn');
+        const soundToggle = document.getElementById('sound-toggle');
+        
+        const loadingScreen = document.getElementById('loading-screen');
+        const quizContent = document.getElementById('quiz-content');
         const questionText = document.getElementById('question-text');
         const answerButtonsContainer = document.getElementById('answer-buttons');
         const scoreDisplay = document.getElementById('score-display');
@@ -386,6 +424,12 @@
         const synth = new Tone.PolySynth(Tone.Synth).toDestination();
 
         // Different sounds
+        const playSound = (soundFunc) => {
+            if (soundEnabled) {
+                soundFunc();
+            }
+        };
+
         const correctSound = () => synth.triggerAttackRelease("C6", "8n");
         const incorrectSound = () => synth.triggerAttackRelease("F#2", "8n");
         const gameOverSound = () => synth.triggerAttackRelease(["C3", "G#2"], "1s");
@@ -393,8 +437,45 @@
         const confettiSound = () => synth.triggerAttackRelease(["C5", "E5", "G5"], "8n");
         const lostLifeSound = () => synth.triggerAttackRelease(["C2", "G1"], "4n"); // Sound for losing a life
 
+        // --- Navigáció függvények ---
+        function showScreen(screenId) {
+            startScreen.classList.add('hidden');
+            settingsScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            leaderboardScreen.classList.add('hidden');
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        startBtn.addEventListener('click', () => {
+            if (!questionsLoaded) {
+                fetchQuestionsAndStartQuiz();
+            } else {
+                startQuiz();
+            }
+        });
+        
+        settingsBtn.addEventListener('click', () => {
+            showScreen('settings-screen');
+        });
+
+        backToMenuBtn.addEventListener('click', () => {
+            showScreen('start-screen');
+        });
+        
+        leaderboardFromStartBtn.addEventListener('click', () => {
+            showScreen('leaderboard-screen');
+            showLeaderboard('global');
+            setActiveButton(globalLbBtn);
+        });
+
+        soundToggle.addEventListener('change', (e) => {
+            soundEnabled = e.target.checked;
+        });
+
         // Function to fetch questions from external URL
-        async function fetchQuestions() {
+        async function fetchQuestionsAndStartQuiz() {
+            showScreen('quiz-screen');
             loadingScreen.classList.remove('hidden');
             quizContent.classList.add('hidden');
             try {
@@ -425,10 +506,11 @@
         // Function to start the quiz
         function startQuiz() {
             if (!questionsLoaded) {
-                fetchQuestions();
+                fetchQuestionsAndStartQuiz();
                 return;
             }
             
+            showScreen('quiz-screen');
             currentQuestionIndex = 0;
             score = 0;
             lives = 3; // Reset lives at the start of the game
@@ -438,8 +520,6 @@
             updateJokerButtons();
             updateLivesDisplay();
             
-            quizContainer.classList.remove('hidden');
-            quizContent.classList.remove('hidden', 'game-over-animation');
             endScreen.classList.add('hidden');
             leaderboardScreen.classList.add('hidden');
             playerNameInput.value = '';
@@ -471,7 +551,7 @@
 
                 if (timeRemaining <= 5) {
                     timerBar.classList.add('timer-warning');
-                    tickSound();
+                    playSound(tickSound);
                 }
 
                 if (timeRemaining <= 0) {
@@ -624,7 +704,7 @@
             
             // Add animation and color for correct/incorrect answer
             if (isCorrect) {
-                correctSound();
+                playSound(correctSound);
                 if (button) {
                     button.classList.add('correct-answer');
                 }
@@ -643,9 +723,9 @@
                     showQuestion();
                 }, 1500); // Proceed to the next question after 1.5 seconds
             } else {
-                incorrectSound();
+                playSound(incorrectSound);
                 lives--; // Lose a life
-                lostLifeSound();
+                playSound(lostLifeSound);
                 updateLivesDisplay();
 
                 // If it's a timeout, find a random incorrect button to highlight
@@ -670,7 +750,7 @@
                 // Check if the game is over
                 if (lives <= 0) {
                     setTimeout(() => {
-                        gameOverSound();
+                        playSound(gameOverSound);
                         quizContent.classList.add('game-over-animation');
                         setTimeout(() => {
                             updateJokerButtonsForEndGame();
@@ -697,18 +777,18 @@
 
         // Display final score
         function showFinalScore(isGameComplete) {
-            quizContent.classList.add('hidden');
+            quizScreen.classList.add('hidden');
             quizContent.classList.remove('game-over-animation'); // Clear animation for next game
             endScreen.classList.remove('hidden');
             
-            restartBtn.classList.add('hidden');
-            viewLeaderboardBtn.classList.add('hidden');
+            restartBtn.classList.remove('hidden');
+            viewLeaderboardBtn.classList.remove('hidden');
 
             if (isGameComplete) {
                 finalScore.textContent = `Gratulálunk, végigjátszottad a kvízt! A végső pontszámod: ${score} a ${questions.length}-ból! 🎉`;
                 if (score === questions.length) {
                     createConfetti();
-                    confettiSound();
+                    playSound(confettiSound);
                 }
             } else {
                 finalScore.textContent = `Game Over! A végső pontszámod: ${score}. 😭`;
@@ -770,9 +850,6 @@
                 showLeaderboard('global', true);
             }
             
-            restartBtn.classList.remove('hidden');
-            viewLeaderboardBtn.classList.remove('hidden');
-
             // Always reset button regardless of the outcome
             saveScoreBtn.disabled = false;
             saveScoreBtn.textContent = 'Pontszám mentése';
@@ -795,7 +872,12 @@
         }
 
         // Event listeners for leaderboard buttons
-        viewLeaderboardBtn.addEventListener('click', () => showLeaderboard('global'));
+        viewLeaderboardBtn.addEventListener('click', () => {
+            showScreen('leaderboard-screen');
+            showLeaderboard('global');
+            setActiveButton(globalLbBtn);
+        });
+
         globalLbBtn.addEventListener('click', () => {
             setActiveButton(globalLbBtn);
             showLeaderboard('global');
@@ -912,11 +994,11 @@
         }
 
         // Restart buttons
-        restartBtn.addEventListener('click', startQuiz);
-        leaderboardRestartBtn.addEventListener('click', startQuiz);
+        restartBtn.addEventListener('click', () => showScreen('start-screen'));
+        leaderboardRestartBtn.addEventListener('click', () => showScreen('start-screen'));
 
         // Initial setup
-        startQuiz();
+        showScreen('start-screen');
     </script>
 </body>
 </html>
