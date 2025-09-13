@@ -12,6 +12,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- D3.js a diagramhoz -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- PDF generáló könyvtárak -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -496,6 +499,18 @@
             </div>
         </div>
     </div>
+    <!-- Modal for PDF save confirmation -->
+    <div id="pdfConfirmModal" class="modal">
+        <div class="modal-content text-white text-center">
+            <h3 class="text-xl font-bold mb-4">Adatok mentése</h3>
+            <p class="mb-6">Szeretnéd elmenteni a havi adatokat PDF-be, mielőtt új hónapra váltasz?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="saveAndContinueBtn" class="bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200">Igen, mentés</button>
+                <button id="continueWithoutSavingBtn" class="bg-gray-600 text-white font-bold p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200">Nem, folytatás</button>
+                <button id="cancelMonthChangeBtn" class="bg-red-600 text-white font-bold p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">Mégsem</button>
+            </div>
+        </div>
+    </div>
     <!-- Message Box -->
     <div id="messageBox" class="message-box text-white">
         <p id="messageText" class="text-lg font-medium mb-4"></p>
@@ -631,6 +646,10 @@
             const messageText = document.getElementById('messageText');
             const closeMessageBtn = document.getElementById('closeMessageBtn');
             const infoButtons = document.querySelectorAll('.info-icon');
+            const pdfConfirmModal = document.getElementById('pdfConfirmModal');
+            const saveAndContinueBtn = document.getElementById('saveAndContinueBtn');
+            const continueWithoutSavingBtn = document.getElementById('continueWithoutSavingBtn');
+            const cancelMonthChangeBtn = document.getElementById('cancelMonthChangeBtn');
 
             // Hozzáadott elemek a localStorage-hoz
             const settingsInputs = [
@@ -646,6 +665,7 @@
             let currentDate = new Date();
             let selectedDays = {};
             let activeDate = null;
+            let monthChangeDirection = 0; // -1: prev, 1: next
 
             const formatCurrency = (amount) => {
                 return `${Math.round(amount).toLocaleString('hu-HU')} Ft`;
@@ -735,6 +755,23 @@
                     settings[checkbox.id] = checkbox.checked;
                 });
                 localStorage.setItem('calculatorSettings', JSON.stringify(settings));
+            };
+
+            // Havi adatok mentése a localStorage-ba
+            const saveMonthlyData = () => {
+                const key = `calculatorData-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+                localStorage.setItem(key, JSON.stringify(selectedDays));
+            };
+
+            // Havi adatok betöltése a localStorage-ból
+            const loadMonthlyData = () => {
+                const key = `calculatorData-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+                const savedData = localStorage.getItem(key);
+                if (savedData) {
+                    selectedDays = JSON.parse(savedData);
+                } else {
+                    selectedDays = {};
+                }
             };
 
             const renderCalendar = () => {
@@ -1118,16 +1155,83 @@
                     });
             };
 
-            prevBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                renderCalendar();
-                calculate();
-            });
+            // PDF generálás funkció
+            const generatePdf = () => {
+                const { jsPDF } = window.jspdf;
+                const element = document.getElementById('chart-panel').parentNode; // PDF a teljes konténerről készül
 
-            nextBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() + 1);
+                const monthNames = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
+                const filename = `${monthNames[currentDate.getMonth()]}${currentDate.getFullYear()}_fizukalk.pdf`;
+
+                const originalBg = document.body.style.backgroundColor;
+                document.body.style.backgroundColor = '#1f2937'; // Háttér beállítása a PDF-hez
+                
+                html2canvas(element, {
+                    scale: 2, // Magasabb felbontás
+                    backgroundColor: '#1f2937', // A screenshot háttere
+                    scrollY: -window.scrollY
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgWidth = 210;
+                    const pageHeight = 297;
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    
+                    const doc = new jsPDF('p', 'mm');
+                    let position = 0;
+                    
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        doc.addPage();
+                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    doc.save(filename);
+                    document.body.style.backgroundColor = originalBg;
+                });
+            };
+
+            // Hónapváltás logika a megerősítő modállal
+            const handleMonthChange = (direction) => {
+                // Ha van adat a naptárban, megerősítést kérünk
+                if (Object.keys(selectedDays).length > 0) {
+                    monthChangeDirection = direction;
+                    pdfConfirmModal.style.display = 'flex';
+                } else {
+                    changeMonth(direction);
+                }
+            };
+            
+            // A tényleges hónapváltást végrehajtó funkció
+            const changeMonth = (direction) => {
+                currentDate.setMonth(currentDate.getMonth() + direction);
+                loadMonthlyData();
                 renderCalendar();
                 calculate();
+            };
+
+            prevBtn.addEventListener('click', () => handleMonthChange(-1));
+            nextBtn.addEventListener('click', () => handleMonthChange(1));
+
+            saveAndContinueBtn.addEventListener('click', () => {
+                pdfConfirmModal.style.display = 'none';
+                generatePdf();
+                saveMonthlyData(); // Mentes a localStorage-ba
+                changeMonth(monthChangeDirection);
+            });
+            
+            continueWithoutSavingBtn.addEventListener('click', () => {
+                pdfConfirmModal.style.display = 'none';
+                saveMonthlyData(); // Mentes a localStorage-ba
+                changeMonth(monthChangeDirection);
+            });
+            
+            cancelMonthChangeBtn.addEventListener('click', () => {
+                pdfConfirmModal.style.display = 'none';
             });
 
             saveShiftBtn.addEventListener('click', () => {
@@ -1161,6 +1265,7 @@
                 }
 
                 shiftModal.style.display = 'none';
+                saveMonthlyData(); // Munkaórák mentése
                 renderCalendar();
                 calculate();
             });
@@ -1168,6 +1273,7 @@
             cancelShiftBtn.addEventListener('click', () => {
                 if (activeDate) delete selectedDays[activeDate];
                 shiftModal.style.display = 'none';
+                saveMonthlyData(); // Módosítás mentése
                 renderCalendar();
                 calculate();
             });
@@ -1189,6 +1295,7 @@
 
             // Kzdeti renderelés és adatok betöltése
             loadSettings();
+            loadMonthlyData();
             renderCalendar();
             calculate();
         });
