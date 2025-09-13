@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counter-Strike kvíz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/tone@14.7.58/build/Tone.js"></script>
+    <style>
+        :root {
+            --quiz-color: #2dd4bf; /* teal-400 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a; /* Hátteret sötétebbé tettem */
+            background-image: linear-gradient(135deg, #0f172a 25%, #1f2937 50%, #0f2a71 75%);
+            background-size: 400% 400%;
+            animation: gradient-animation 20s ease infinite;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .btn-answer {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 2px solid transparent;
+        }
+        .btn-answer:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: var(--quiz-color);
+        }
+
+        .correct-answer {
+            animation: pulse-correct 1s forwards;
+            background-color: #16a34a !important; /* zöld */
+        }
+        @keyframes pulse-correct {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(22, 163, 74, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(22, 163, 74, 1); }
+            100% { transform: scale(1); box-shadow: 0 0 0 rgba(22, 163, 74, 0); }
+        }
+
+        .incorrect-answer {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            background-color: #dc2626 !important; /* piros */
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .game-over-animation {
+            animation: gameOver 2s ease-in-out forwards;
+        }
+        @keyframes gameOver {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.95) rotate(-5deg); opacity: 0.5; }
+            100% { transform: scale(0.8) rotate(0); opacity: 0; }
+        }
+
+        /* Új animáció a pontszám növeléséhez */
+        .score-pulse {
+            animation: score-pulse 0.5s ease-in-out;
+        }
+        @keyframes score-pulse {
+            0% { transform: scale(1); color: inherit; }
+            50% { transform: scale(1.2); color: #2dd4bf; }
+            100% { transform: scale(1); color: inherit; }
+        }
+
+        .loader {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #timer-bar {
+            height: 8px;
+            background-color: #16a34a; /* zöld */
+            transition: width 0.5s linear, background-color 0.5s ease-in-out;
+            border-radius: 9999px;
+        }
+
+        .timer-warning {
+            background-color: #dc2626 !important; /* piros */
+            animation: pulse-timer 1s infinite;
+        }
+
+        @keyframes pulse-timer {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="bg-gray-800 bg-opacity-80 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-700">
+        <!-- Időzítő és joker gomb -->
+        <div class="flex items-center justify-between mb-4">
+            <div id="timer-display" class="w-full h-2 bg-gray-600 rounded-full overflow-hidden">
+                <div id="timer-bar" class="w-full"></div>
+            </div>
+            <button id="joker-btn" class="ml-4 py-2 px-4 bg-gray-700 text-sm font-bold text-white rounded-lg shadow-md transition-all duration-300 hover:bg-teal-500">
+                50:50
+            </button>
+        </div>
+        <div class="flex items-center justify-between mb-6 text-sm text-gray-400">
+            <span id="score-display" class="font-medium">Pontszám: 0 🎯</span>
+            <span id="question-counter" class="font-medium">Kérdés: 1/0 📝</span>
+        </div>
+
+        <div id="quiz-content" class="animate-fade-in">
+            <h2 id="question-text" class="text-2xl font-extrabold mb-8 text-center text-teal-400 leading-snug"></h2>
+            <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- A válasz gombok a JavaScript által kerülnek ide -->
+            </div>
+        </div>
+
+        <div id="end-screen" class="text-center hidden animate-fade-in">
+            <h2 class="text-3xl font-extrabold text-teal-400 mb-4">Kvíz vége!</h2>
+            <p id="final-score" class="text-xl mb-6 font-medium"></p>
+            
+            <div id="name-input-section" class="mb-6">
+                <p class="mb-2">Add meg a neved a ranglistához:</p>
+                <input type="text" id="player-name" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Pl.: ProGamer3000">
+                <button id="save-score-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4">Pontszám mentése</button>
+            </div>
+            
+            <button id="restart-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300">Újra játszom</button>
+        </div>
+
+        <div id="leaderboard-screen" class="hidden animate-fade-in mt-6">
+            <h3 class="text-2xl font-extrabold text-teal-400 mb-4 text-center">Ranglista 🏆</h3>
+            <ul id="leaderboard-list" class="space-y-2">
+                <!-- A ranglista elemei a JavaScript által kerülnek ide -->
+                <div id="loader" class="text-center hidden">
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
+                        <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-gray-400">Ranglista betöltése...</p>
+                </div>
+            </ul>
+            <button id="leaderboard-restart-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-6">Újra játszom</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Firebase beállítások és inicializálás
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        let userId = null;
+        let authReady = false;
+
+        // Kérdések és válaszok
+        const questions = [
+            {
+                question: "Hogyan hívják a Counter-Strike: Global Offensive híres olasz térképét?",
+                answers: ["Dust II", "Mirage", "Inferno", "Cache"],
+                correct: "Inferno"
+            },
+            {
+                question: "Melyik fegyver a leghíresebb a 'no-scope' lövéseiről?",
+                answers: ["AK-47", "AWP", "M4A4", "Desert Eagle"],
+                correct: "AWP"
+            },
+            {
+                question: "Melyik játékos látható a képen?",
+                image: "https://placehold.co/400x200/525252/fff?text=s1mple",
+                answers: ["s1mple", "ZywOo", "dev1ce", "NiKo"],
+                correct: "s1mple"
+            },
+            {
+                question: "Melyik játékos látható a képen?",
+                image: "https://img-cdn.hltv.org/playerbodyshot/yAqXqbDzYSFWZUNvMhdI07.png?ixlib=java-2.1.0&w=400&s=ad758e9a7138ef56ca6cd71dbccb90c0",
+                answers: ["coldzera", "dev1ce", "dupreeh", "shox"],
+                correct: "dev1ce"
+            },
+            {
+                question: "Hány másodperc áll a Counter-Terroristák rendelkezésére a bomba hatástalanítására (alapértelmezett idő)?",
+                answers: ["5 másodperc", "10 másodperc", "7 másodperc", "12 másodperc"],
+                correct: "7 másodperc"
+            },
+            {
+                question: "Melyik a leggyakrabban használt gránát a sarokból való 'push'-okhoz?",
+                answers: ["Flashbang", "Decoy", "Molotov", "Smoke"],
+                correct: "Smoke"
+            },
+            {
+                question: "Mi a neve a két kezdőpisztolynak a Terrorista csapatnál?",
+                answers: ["USP-S és Glock-18", "Glock-18 és P250", "Glock-18 és Tec-9", "Glock-18 és P2000"],
+                correct: "Glock-18 és P250"
+            },
+            {
+                question: "Hogyan nevezik a játékbeli valutát, amit győzelemért és ölésért kapnak?",
+                answers: ["Dollár", "Érme", "Kredit", "Pénz"],
+                correct: "Pénz"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let jokerUsed = false;
+        let timer = null;
+        const timeLimit = 15; // 15 másodperc
+
+        const quizContent = document.getElementById('quiz-content');
+        const endScreen = document.getElementById('end-screen');
+        const leaderboardScreen = document.getElementById('leaderboard-screen');
+        const questionText = document.getElementById('question-text');
+        const answerButtonsContainer = document.getElementById('answer-buttons');
+        const scoreDisplay = document.getElementById('score-display');
+        const questionCounter = document.getElementById('question-counter');
+        const restartBtn = document.getElementById('restart-btn');
+        const leaderboardRestartBtn = document.getElementById('leaderboard-restart-btn');
+        const finalScore = document.getElementById('final-score');
+        const saveScoreBtn = document.getElementById('save-score-btn');
+        const playerNameInput = document.getElementById('player-name');
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const loader = document.getElementById('loader');
+        const jokerBtn = document.getElementById('joker-btn');
+        const timerBar = document.getElementById('timer-bar');
+
+        // Hanghatások inicializálása
+        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+
+        // Különböző hangok
+        const correctSound = () => synth.triggerAttackRelease("C6", "8n");
+        const incorrectSound = () => synth.triggerAttackRelease("F#2", "8n");
+        const gameOverSound = () => synth.triggerAttackRelease(["C3", "G#2"], "1s");
+        const tickSound = () => synth.triggerAttackRelease("C4", "16n");
+
+        // Függvény a kvíz indításához
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedAnswer = null;
+            jokerUsed = false;
+            jokerBtn.disabled = false;
+            jokerBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'hover:bg-teal-500');
+            jokerBtn.classList.add('hover:bg-teal-500');
+            
+            quizContent.classList.remove('hidden');
+            endScreen.classList.add('hidden');
+            leaderboardScreen.classList.add('hidden');
+            playerNameInput.value = '';
+            scoreDisplay.textContent = `Pontszám: ${score} 🎯`;
+            showQuestion();
+        }
+
+        // Időzítő indítása
+        function startTimer() {
+            let timeRemaining = timeLimit;
+            timerBar.style.width = '100%';
+            timerBar.style.backgroundColor = '#16a34a';
+            timerBar.classList.remove('timer-warning');
+
+            // Törli az előző időzítőt, ha van
+            if (timer) clearInterval(timer);
+
+            timer = setInterval(() => {
+                timeRemaining--;
+                const percentage = (timeRemaining / timeLimit) * 100;
+                timerBar.style.width = `${percentage}%`;
+
+                if (timeRemaining <= 5) {
+                    timerBar.classList.add('timer-warning');
+                    tickSound();
+                }
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timer);
+                    selectedAnswer = "time_out";
+                    handleAnswer(null, null); // Rossz válasz, idő lejárt
+                }
+            }, 1000);
+        }
+
+        // Függvény a kérdés megjelenítéséhez
+        function showQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                clearInterval(timer);
+                showFinalScore(true);
+                return;
+            }
+            
+            startTimer();
+
+            const currentQuestion = questions[currentQuestionIndex];
+            questionText.textContent = currentQuestion.question;
+            questionCounter.textContent = `Kérdés: ${currentQuestionIndex + 1}/${questions.length} 📝`;
+
+            const existingImage = document.getElementById('question-image');
+            if (existingImage) {
+                existingImage.remove();
+            }
+
+            if (currentQuestion.image) {
+                const img = document.createElement('img');
+                img.id = 'question-image';
+                img.src = currentQuestion.image;
+                img.alt = 'Játékos képe';
+                img.classList.add('w-full', 'h-auto', 'rounded-lg', 'mb-6');
+                questionText.insertAdjacentElement('beforebegin', img);
+            }
+
+            // Törli az előző gombokat
+            while (answerButtonsContainer.firstChild) {
+                answerButtonsContainer.removeChild(answerButtonsContainer.firstChild);
+            }
+
+            // Gombok létrehozása a válaszokhoz
+            currentQuestion.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.textContent = answer;
+                button.classList.add(
+                    'btn-answer',
+                    'bg-gray-700',
+                    'hover:bg-gray-600',
+                    'text-left',
+                    'text-white',
+                    'py-3',
+                    'px-4',
+                    'rounded-lg',
+                    'font-medium',
+                    'transition-all',
+                    'duration-300',
+                    'flex',
+                    'items-center',
+                    'w-full',
+                    'transform'
+                );
+                button.addEventListener('click', () => handleAnswer(button, answer));
+                answerButtonsContainer.appendChild(button);
+            });
+        }
+
+        // "50:50" joker funkció
+        jokerBtn.addEventListener('click', () => {
+            if (jokerUsed) return;
+
+            jokerUsed = true;
+            jokerBtn.disabled = true;
+            jokerBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            jokerBtn.classList.remove('hover:bg-teal-500');
+
+            const currentQuestion = questions[currentQuestionIndex];
+            const correctText = currentQuestion.correct;
+            const answerButtons = Array.from(answerButtonsContainer.children);
+            
+            const incorrectAnswers = answerButtons.filter(btn => btn.textContent !== correctText);
+
+            // Két rossz válasz véletlenszerű kiválasztása
+            for (let i = 0; i < 2; i++) {
+                if (incorrectAnswers.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * incorrectAnswers.length);
+                    incorrectAnswers[randomIndex].style.display = 'none';
+                    incorrectAnswers.splice(randomIndex, 1);
+                }
+            }
+        });
+
+        // Válasz kiválasztásának kezelése animációkkal
+        function handleAnswer(button, answer) {
+            clearInterval(timer);
+            
+            // Csak egyszer válaszolhat
+            if (selectedAnswer !== null) return;
+            selectedAnswer = answer;
+            
+            const isTimeout = selectedAnswer === "time_out";
+            const currentQuestion = questions[currentQuestionIndex];
+            const isCorrect = answer === currentQuestion.correct;
+
+            // Letiltja az összes gombot
+            document.querySelectorAll('.btn-answer').forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-gray-600', 'hover:text-white');
+            });
+            
+            // A "time_out" nem igényel gomb animációt
+            if (!isTimeout) {
+                // Animáció és szín hozzáadása a helyes/helytelen válaszhoz
+                if (isCorrect) {
+                    correctSound();
+                    button.classList.add('correct-answer');
+                    score++;
+                    scoreDisplay.textContent = `Pontszám: ${score} 🎯`;
+                    // Animáció elindítása a pontszámnál
+                    scoreDisplay.classList.add('score-pulse');
+                    setTimeout(() => {
+                        scoreDisplay.classList.remove('score-pulse');
+                    }, 500); // 0.5 másodperc után törli az osztályt
+                    
+                    // Vár a válasz animáció befejezésére, majd lép tovább
+                    setTimeout(() => {
+                        selectedAnswer = null;
+                        currentQuestionIndex++;
+                        showQuestion();
+                    }, 1500); // 1.5 másodperc után lép a következő kérdésre
+                } else {
+                    incorrectSound();
+                    button.classList.add('incorrect-answer');
+                    const correctButton = Array.from(answerButtonsContainer.children).find(btn => btn.textContent === currentQuestion.correct);
+                    if (correctButton) {
+                        correctButton.classList.add('correct-answer');
+                    }
+                    
+                    // Játék vége a rossz válasz után
+                    setTimeout(() => {
+                        gameOverSound();
+                        quizContent.classList.add('game-over-animation');
+                        setTimeout(() => {
+                            showFinalScore(false); // Játék vége hibás válasz miatt
+                        }, 1000); // Vár az animációra
+                    }, 500); // Vár a gomb animációjára
+                }
+            } else {
+                gameOverSound();
+                quizContent.classList.add('game-over-animation');
+                setTimeout(() => {
+                    showFinalScore(false); // Játék vége idő lejárta miatt
+                }, 1000);
+            }
+        }
+
+        // Végleges pontszám kijelzése
+        function showFinalScore(isGameComplete) {
+            quizContent.classList.add('hidden');
+            quizContent.classList.remove('game-over-animation'); // Töröljük az animációt a következő játékhoz
+            endScreen.classList.remove('hidden');
+            
+            if (isGameComplete) {
+                finalScore.textContent = `Gratulálunk, végigjátszottad a kvízt! A végső pontszámod: ${score} a ${questions.length}-ból! 🎉`;
+            } else {
+                finalScore.textContent = `Game Over! A végső pontszámod: ${score}. 😭`;
+            }
+        }
+        
+        // Pontszám mentése Firestore-ba
+        saveScoreBtn.addEventListener('click', async () => {
+            // Megakadályozzuk a többszörös mentést
+            saveScoreBtn.disabled = true;
+            saveScoreBtn.textContent = 'Mentés...';
+            saveScoreBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const playerName = playerNameInput.value.trim() || 'Névtelen játékos';
+            const newScore = {
+                name: playerName,
+                score: score,
+                userId: userId,
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
+                await addDoc(scoresCollection, newScore);
+                console.log("Pontszám sikeresen mentve.");
+                showLeaderboard();
+            } catch (e) {
+                console.error("Hiba a pontszám mentésekor: ", e);
+                let highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
+                highScores.push({ name: playerName, score: score, date: new Date().toISOString() });
+                highScores.sort((a, b) => b.score - a.score);
+                highScores = highScores.slice(0, 10);
+                localStorage.setItem('cs_high_scores', JSON.stringify(highScores));
+                showLeaderboard(true);
+            } finally {
+                // Mindig visszaállítjuk a gombot, függetlenül az eredménytől
+                saveScoreBtn.disabled = false;
+                saveScoreBtn.textContent = 'Pontszám mentése';
+                saveScoreBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        // Ranglista megjelenítése
+        function showLeaderboard(useLocalStorage = false) {
+            endScreen.classList.add('hidden');
+            leaderboardScreen.classList.remove('hidden');
+            loader.classList.remove('hidden');
+            leaderboardList.innerHTML = '';
+            
+            if (useLocalStorage) {
+                 const highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
+                 renderLeaderboard(highScores, true);
+                 return;
+            }
+
+            // Ranglista valós idejű betöltése a Firestore-ból
+            const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
+            const q = query(scoresCollection, orderBy('score', 'desc'), limit(10));
+            
+            onSnapshot(q, (snapshot) => {
+                loader.classList.add('hidden');
+                const highScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderLeaderboard(highScores);
+            }, (error) => {
+                console.error("Hiba a ranglista betöltésekor: ", error);
+                loader.classList.add('hidden');
+                // Hiba esetén visszaállás a lokális tárolásra
+                showLeaderboard(true);
+            });
+        }
+        
+        function renderLeaderboard(highScores, isLocal = false) {
+            leaderboardList.innerHTML = '';
+            if (highScores.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'Még nincsenek pontszámok. Légy te az első!';
+                li.classList.add('text-center', 'text-gray-500');
+                leaderboardList.appendChild(li);
+                return;
+            }
+            
+            highScores.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.classList.add('flex', 'justify-between', 'bg-gray-700', 'p-3', 'rounded-lg', 'shadow-sm', 'border-l-4', 'border-teal-500');
+                const rank = index + 1;
+                let emoji = '';
+                if (rank === 1) emoji = '🥇';
+                else if (rank === 2) emoji = '🥈';
+                else if (rank === 3) emoji = '🥉';
+                
+                let nameToDisplay = entry.name;
+                let userIdToDisplay = isLocal ? '' : ` (${entry.userId.slice(0, 8)}...)`;
+                
+                li.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="font-bold text-teal-300 w-6">#${rank}. ${emoji}</span>
+                        <span class="font-medium">${nameToDisplay}${userIdToDisplay}</span>
+                    </div>
+                    <span class="text-right text-gray-400 font-bold">${entry.score} pont</span>
+                `;
+                leaderboardList.appendChild(li);
+            });
+        }
+
+        // Újraindítás gombok
+        restartBtn.addEventListener('click', startQuiz);
+        leaderboardRestartBtn.addEventListener('click', startQuiz);
+
+        // Firebase hitelesítés
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                authReady = true;
+            } else {
+                try {
+                    if (initialAuthToken) {
+                        const userCredential = await signInWithCustomToken(auth, initialAuthToken);
+                        userId = userCredential.user.uid;
+                    } else {
+                        const userCredential = await signInAnonymously(auth);
+                        userId = userCredential.user.uid;
+                    }
+                    authReady = true;
+                } catch (error) {
+                    console.error("Hitelesítési hiba: ", error);
+                    authReady = true;
+                }
+            }
+            
+            if (authReady) {
+                 startQuiz();
+            }
+        });
+    </script>
+</body>
+</html>
