@@ -14,7 +14,7 @@
         }
         body {
             font-family: 'Inter', sans-serif;
-            background: #0f172a; /* Hátteret sötétebbé tettem */
+            background: #0f172a;
             background-image: linear-gradient(135deg, #0f172a 25%, #1f2937 50%, #0f2a71 75%);
             background-size: 400% 400%;
             animation: gradient-animation 20s ease infinite;
@@ -66,7 +66,6 @@
             100% { transform: scale(0.8) rotate(0); opacity: 0; }
         }
 
-        /* Új animáció a pontszám növeléséhez */
         .score-pulse {
             animation: score-pulse 0.5s ease-in-out;
         }
@@ -158,6 +157,28 @@
             100% { transform: translateY(100vh) rotate(720deg); opacity: 1; }
         }
 
+        /* Modális ablak stílusa */
+        #modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #modal-content {
+            background-color: #1f2937;
+            color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 90%;
+            text-align: center;
+            position: relative;
+        }
     </style>
 </head>
 <body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
@@ -222,18 +243,10 @@
                 <div class="flex space-x-2">
                     <button id="global-lb-btn" class="lb-btn py-2 px-3 text-sm font-bold rounded-lg transition-all duration-300 bg-teal-600 text-white">Globális</button>
                     <button id="joker-free-lb-btn" class="lb-btn py-2 px-3 text-sm font-bold rounded-lg transition-all duration-300 bg-gray-700 text-white">Joker-mentes</button>
-                    <button id="weekly-lb-btn" class="lb-btn py-2 px-3 text-sm font-bold rounded-lg transition-all duration-300 bg-gray-700 text-white">Heti</button>
                 </div>
             </div>
             
-            <div class="mb-4 text-sm text-gray-400 text-center">
-                <p>Azonosítód: <span id="user-id-display" class="font-mono text-teal-400 cursor-pointer" title="Kattints a másoláshoz"></span></p>
-                <p class="mt-2 text-white">Keress rá egy barátodra:</p>
-                <div class="flex mt-1">
-                    <input type="text" id="friend-id-input" class="w-full p-2 rounded-l-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Írd be a barát azonosítóját">
-                    <button id="search-friend-btn" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-r-lg shadow-md">Keresés</button>
-                </div>
-            </div>
+            <div id="status-message" class="text-center text-sm font-semibold text-yellow-400 mb-4"></div>
 
             <ul id="leaderboard-list" class="space-y-2">
                 <!-- Leaderboard items will be generated here -->
@@ -247,23 +260,60 @@
             <button id="leaderboard-restart-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-6">Újra játszom</button>
         </div>
     </div>
+    
+    <!-- Modális ablak -->
+    <div id="modal-container" style="display: none;" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div id="modal-content" class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <p id="modal-message" class="text-center text-gray-200 mb-4"></p>
+            <div class="flex justify-center">
+                <button id="modal-close-btn" class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700 transition">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        // Firebase configuration and initialization
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // Import the Supabase client
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.44.2/+esm';
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        // --- Konfiguráció: CSERÉLD KI EZEKET A SAJÁT SUPABASE-ADATAIDRA! ---
+        const supabaseUrl = 'https://badqobyvbfuhpxkoomhu.supabase.co'; // Pl.: https://your-project-id.supabase.co
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhZHFvYnl2YmZ1aHB4a29vbWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjEyNDUsImV4cCI6MjA3MzMzNzI0NX0.FTiQfMgEZQryLscrBi4bvGQwtZY_KqTT3wcOu9vTcZY'; // Pl.: eyJhbGciOi...
         
-        let userId = null;
-        let authReady = false;
+        let supabase;
+        let supabaseInitialized = false;
+
+        const modalContainer = document.getElementById('modal-container');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        function showModal(message) {
+            modalMessage.textContent = message;
+            modalContainer.style.display = 'flex';
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            modalContainer.style.display = 'none';
+        });
+
+        // Try to initialize Supabase
+        try {
+            if (supabaseUrl === 'https://badqobyvbfuhpxkoomhu.supabase.co' || supabaseKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhZHFvYnl2YmZ1aHB4a29vbWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjEyNDUsImV4cCI6MjA3MzMzNzI0NX0.FTiQfMgEZQryLscrBi4bvGQwtZY_KqTT3wcOu9vTcZY') {
+                const message = "Figyelem: A Supabase nincs inicializálva! Kérlek, helyettesítsd a helyőrzőket a saját URL-eddel és kulcsoddal a kódban a teljes funkcionalitásért.";
+                console.warn(message);
+                showModal(message);
+                supabaseInitialized = false;
+            } else {
+                supabase = createClient(supabaseUrl, supabaseKey);
+                supabaseInitialized = true;
+            }
+        } catch (e) {
+            console.error("Supabase inicializálási hiba: ", e);
+            showModal("Supabase inicializálási hiba. Kérlek, ellenőrizd a konzolt a részletekért.");
+            supabaseInitialized = false;
+        }
+        
+        // A user ID is not required for an anonymous leaderboard, but we can generate a temporary one
+        const userId = 'player-' + crypto.randomUUID();
 
         let questions = [];
         let questionsLoaded = false;
@@ -310,10 +360,7 @@
         const viewLeaderboardBtn = document.getElementById('view-leaderboard-btn');
         const globalLbBtn = document.getElementById('global-lb-btn');
         const jokerFreeLbBtn = document.getElementById('joker-free-lb-btn');
-        const weeklyLbBtn = document.getElementById('weekly-lb-btn');
-        const userIdDisplay = document.getElementById('user-id-display');
-        const friendIdInput = document.getElementById('friend-id-input');
-        const searchFriendBtn = document.getElementById('search-friend-btn');
+        const statusMessage = document.getElementById('status-message');
 
         // Initialize sound effects
         const synth = new Tone.PolySynth(Tone.Synth).toDestination();
@@ -374,6 +421,13 @@
             leaderboardScreen.classList.add('hidden');
             playerNameInput.value = '';
             scoreDisplay.textContent = `Pontszám: ${score} 🎯`;
+            
+            statusMessage.textContent = '';
+            
+            if (!supabaseInitialized) {
+                 statusMessage.textContent = 'Jelenleg offline módban van. A ranglista helyi tárhelyre mentődik.';
+            }
+            
             showQuestion();
         }
 
@@ -617,7 +671,7 @@
             }, 3000);
         }
 
-        // Save score to Firestore
+        // Save score to Supabase or LocalStorage
         saveScoreBtn.addEventListener('click', async () => {
             // Prevent multiple saves
             saveScoreBtn.disabled = true;
@@ -628,37 +682,53 @@
             const newScore = {
                 name: playerName,
                 score: score,
-                userId: userId,
-                jokersUsed: usedJokersThisGame,
-                timestamp: serverTimestamp()
+                user_id: userId,
+                jokers_used: usedJokersThisGame
             };
             
-            try {
-                const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
-                await addDoc(scoresCollection, newScore);
-                console.log("Score successfully saved.");
-                showLeaderboard('global');
-            } catch (e) {
-                console.error("Error saving score: ", e);
-                let highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
-                const localScore = {
-                    name: playerName,
-                    score: score,
-                    jokersUsed: usedJokersThisGame,
-                    date: new Date().toISOString()
-                };
-                highScores.push(localScore);
-                highScores.sort((a, b) => b.score - a.score);
-                highScores = highScores.slice(0, 10);
-                localStorage.setItem('cs_high_scores', JSON.stringify(highScores));
+            if (supabaseInitialized) {
+                try {
+                    const { data, error } = await supabase
+                        .from('high_scores')
+                        .insert([newScore]);
+
+                    if (error) {
+                         throw error;
+                    }
+                    console.log("Score successfully saved to Supabase:", data);
+                    showLeaderboard('global');
+                } catch (e) {
+                    console.error("Error saving score to Supabase: ", e);
+                    // Fallback to local storage on Supabase save error
+                    saveToLocalStorage(playerName);
+                    showLeaderboard('global', true);
+                }
+            } else {
+                // Save to local storage when Supabase is not available
+                saveToLocalStorage(playerName);
                 showLeaderboard('global', true);
-            } finally {
-                // Always reset button regardless of the outcome
-                saveScoreBtn.disabled = false;
-                saveScoreBtn.textContent = 'Pontszám mentése';
-                saveScoreBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
+            
+            // Always reset button regardless of the outcome
+            saveScoreBtn.disabled = false;
+            saveScoreBtn.textContent = 'Pontszám mentése';
+            saveScoreBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         });
+
+        function saveToLocalStorage(playerName) {
+            let highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
+            const localScore = {
+                name: playerName,
+                score: score,
+                jokersUsed: usedJokersThisGame,
+                date: new Date().toISOString()
+            };
+            highScores.push(localScore);
+            highScores.sort((a, b) => b.score - a.score);
+            highScores = highScores.slice(0, 10);
+            localStorage.setItem('cs_high_scores', JSON.stringify(highScores));
+            statusMessage.textContent = 'A pontszám sikeresen mentve a helyi ranglistára!';
+        }
 
         // Event listeners for leaderboard buttons
         viewLeaderboardBtn.addEventListener('click', () => showLeaderboard('global'));
@@ -669,24 +739,6 @@
         jokerFreeLbBtn.addEventListener('click', () => {
             setActiveButton(jokerFreeLbBtn);
             showLeaderboard('joker-free');
-        });
-        weeklyLbBtn.addEventListener('click', () => {
-            setActiveButton(weeklyLbBtn);
-            showLeaderboard('weekly');
-        });
-        searchFriendBtn.addEventListener('click', () => {
-            const friendId = friendIdInput.value.trim();
-            if (friendId) {
-                setActiveButton(null); // Deactivate all other buttons
-                showLeaderboard('friend', false, friendId);
-            }
-        });
-        userIdDisplay.addEventListener('click', () => {
-            navigator.clipboard.writeText(userId).then(() => {
-                alert('Azonosító a vágólapra másolva!');
-            }).catch(err => {
-                console.error('Hiba a másolásnál: ', err);
-            });
         });
         
         function setActiveButton(button) {
@@ -700,103 +752,54 @@
             }
         }
 
-
         // Display leaderboard
-        async function showLeaderboard(type, useLocalStorage = false, friendId = null) {
+        async function showLeaderboard(type, useLocalStorage = false) {
             endScreen.classList.add('hidden');
             leaderboardScreen.classList.remove('hidden');
             loader.classList.remove('hidden');
             leaderboardList.innerHTML = '';
             
-            if (useLocalStorage) {
+            if (useLocalStorage || !supabaseInitialized) {
                  const highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
                  renderLeaderboard(highScores, true);
+                 loader.classList.add('hidden');
                  return;
             }
             
-            const scoresCollection = collection(db, `artifacts/${appId}/public/data/high_scores`);
-            let q;
+            let query = supabase.from('high_scores').select('*');
             
             if (type === 'global') {
-                q = query(scoresCollection, orderBy('score', 'desc'), limit(10));
-                
-                 onSnapshot(q, (snapshot) => {
-                    loader.classList.add('hidden');
-                    const highScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderLeaderboard(highScores);
-                }, (error) => {
-                    console.error("Error fetching global leaderboard: ", error);
-                    loader.classList.add('hidden');
-                    // Fallback to local storage on error
-                    showLeaderboard(type, true);
-                });
-
+                query = query.order('score', { ascending: false }).limit(10);
             } else if (type === 'joker-free') {
-                // Fetch a larger set and filter client-side to avoid index requirement
-                q = query(scoresCollection, orderBy('score', 'desc'), limit(100));
-                
-                onSnapshot(q, (snapshot) => {
-                    loader.classList.add('hidden');
-                    const allScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    const filteredScores = allScores.filter(score => 
-                        !score.jokersUsed['50'] && !score.jokersUsed['time'] && !score.jokersUsed['skip']
-                    );
-                    const topTen = filteredScores.slice(0, 10);
-                    renderLeaderboard(topTen);
-                }, (error) => {
-                    console.error("Error fetching joker-free leaderboard: ", error);
-                    loader.classList.add('hidden');
-                    showLeaderboard(type, true);
-                });
-
-            } else if (type === 'weekly') {
-                // Fetch by timestamp and filter/sort client-side
-                q = query(scoresCollection, orderBy('timestamp', 'desc'), limit(100));
-                
-                 onSnapshot(q, (snapshot) => {
-                    loader.classList.add('hidden');
-                    const allScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    const now = new Date();
-                    const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-                    
-                    const filteredScores = allScores.filter(score => {
-                        return score.timestamp && score.timestamp.toDate() >= oneWeekAgo;
-                    });
-                    
-                    filteredScores.sort((a, b) => b.score - a.score);
-                    const topTen = filteredScores.slice(0, 10);
-                    renderLeaderboard(topTen);
-                }, (error) => {
-                    console.error("Error fetching weekly leaderboard: ", error);
-                    loader.classList.add('hidden');
-                    showLeaderboard(type, true);
-                });
-            } else if (type === 'friend') {
-                if (!friendId) return;
-                q = query(scoresCollection, 
-                    where('userId', '==', friendId),
-                    orderBy('score', 'desc'),
-                    limit(10)
-                );
-
-                 onSnapshot(q, (snapshot) => {
-                    loader.classList.add('hidden');
-                    const highScores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderLeaderboard(highScores);
-                }, (error) => {
-                    console.error("Error fetching friend leaderboard: ", error);
-                    loader.classList.add('hidden');
-                    // Note: No local storage fallback for friend search as it's specific to Firestore.
-                    const li = document.createElement('li');
-                    li.textContent = 'Hiba történt a barát ranglista betöltésekor.';
-                    li.classList.add('text-center', 'text-red-500');
-                    leaderboardList.appendChild(li);
-                });
+                query = query
+                    .order('score', { ascending: false })
+                    .limit(10)
+                    .eq('jokers_used->50', false)
+                    .eq('jokers_used->time', false)
+                    .eq('jokers_used->skip', false);
+            }
+            
+            try {
+                const { data, error } = await query;
+                loader.classList.add('hidden');
+                if (error) throw error;
+                renderLeaderboard(data);
+            } catch (e) {
+                console.error("Hiba a ranglista lekérdezésekor: ", e);
+                loader.classList.add('hidden');
+                // Fallback to local storage on Supabase error
+                showLeaderboard(type, true);
             }
         }
         
         function renderLeaderboard(highScores, isLocal = false) {
             leaderboardList.innerHTML = '';
+            
+            const liUserId = document.createElement('li');
+            liUserId.className = 'flex justify-center p-3 rounded-lg bg-gray-700 mb-4';
+            liUserId.innerHTML = `<span class="text-sm text-gray-400">Azonosítód: <span class="text-white font-bold">${userId}</span></span>`;
+            leaderboardList.appendChild(liUserId);
+
             if (highScores.length === 0) {
                 const li = document.createElement('li');
                 li.textContent = 'Még nincsenek pontszámok. Légy te az első!';
@@ -817,14 +820,15 @@
                 let nameToDisplay = entry.name;
                 
                 let jokerIcons = '';
-                if (entry.jokersUsed) {
-                    if (entry.jokersUsed['50']) {
+                // Check if entry.jokers_used exists and is an object
+                if (entry.jokers_used && typeof entry.jokers_used === 'object') {
+                    if (entry.jokers_used['50']) {
                         jokerIcons += '<i class="fa-solid fa-divide joker-icon" title="50:50"></i>';
                     }
-                    if (entry.jokersUsed['time']) {
+                    if (entry.jokers_used['time']) {
                         jokerIcons += '<i class="fa-solid fa-clock joker-icon" title="Időpótló"></i>';
                     }
-                    if (entry.jokersUsed['skip']) {
+                    if (entry.jokers_used['skip']) {
                         jokerIcons += '<i class="fa-solid fa-forward joker-icon" title="Kihagyás"></i>';
                     }
                 }
@@ -845,33 +849,8 @@
         restartBtn.addEventListener('click', startQuiz);
         leaderboardRestartBtn.addEventListener('click', startQuiz);
 
-        // Firebase authentication
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                userIdDisplay.textContent = userId;
-                authReady = true;
-            } else {
-                try {
-                    if (initialAuthToken) {
-                        const userCredential = await signInWithCustomToken(auth, initialAuthToken);
-                        userId = userCredential.user.uid;
-                    } else {
-                        const userCredential = await signInAnonymously(auth);
-                        userId = userCredential.user.uid;
-                    }
-                    userIdDisplay.textContent = userId;
-                    authReady = true;
-                } catch (error) {
-                    console.error("Authentication error: ", error);
-                    authReady = true;
-                }
-            }
-            
-            if (authReady) {
-                 startQuiz();
-            }
-        });
+        // Initial setup
+        startQuiz();
     </script>
 </body>
 </html>
