@@ -249,8 +249,8 @@
                 <button id="save-score-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4">Pontszám mentése</button>
             </div>
             
-            <button id="restart-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300">Újra játszom</button>
-            <button id="view-leaderboard-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4">Ranglista megtekintése</button>
+            <button id="restart-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4 hidden">Újra játszom</button>
+            <button id="view-leaderboard-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4 hidden">Ranglista megtekintése</button>
         </div>
 
         <div id="leaderboard-screen" class="hidden animate-fade-in mt-6">
@@ -295,7 +295,7 @@
         // 1. A Supabase felületén a Project Settings -> API menüben találsz egy "Project URL" és egy "Public API Key" értéket.
         // 2. Másold át ezeket a megfelelő változókba. Ügyelj arra, hogy ne másolj extra szóközöket vagy karaktereket!
         const supabaseUrl = 'https://badqobyvbfuhpxkoomhu.supabase.co'; // Pl.: https://your-project-id.supabase.co
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhZHFvYnl2YmZ1aHB4a29vbWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjEyNDUsImV4cCI6MjA3MzMzNzI0NX0.FTiQfMgEZQryLscrBi4bvGQwtZY_KqTT3wcOu9vTcZY'; // Pl.: eyJhbGciOi...
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI' + 'cImJhZHFvYnl2YmZ1aHB4a29vbWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjEyNDUsImV4cCI6MjA3MzMzNzI0NX0.FTiQfMgEZQryLscrBi4bvGQwtZY_KqTT3wcOu9vTcZY'; // Pl.: eyJhbGciOi...
         
         let supabase;
         let supabaseInitialized = false;
@@ -315,7 +315,7 @@
 
         // Try to initialize Supabase
         try {
-            if (supabaseUrl === 'https://badqobyvbfuhpxkoomhu.supabase.co' || supabaseKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhZHFvYnl2YmZ1aHB4a29vbWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjEyNDUsImV4cCI6MjA3MzMzNzI0NX0.FTiQfMgEZQryLscrBi4bvGQwtZY_KqTT3wcOu9vTcZY') {
+            if (supabaseUrl === 'https://badqobyvbfuhpxkoomhu.supabase.co' || supabaseKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI' + 'cImJhZHFvYnl2YmZ1aHB4a29vbWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjEyNDUsImV4cCI6MjA3MzMzNzI0NX0.FTiQfMgEZQryLscrBi4bvGQwtZY_KqTT3wcOu9vTcZY') {
                 const message = "Figyelem: A Supabase nincs inicializálva! Kérlek, helyettesítsd a helyőrzőket a saját URL-eddel és kulcsoddal a kódban a teljes funkcionalitásért.";
                 console.warn(message);
                 showModal(message);
@@ -616,7 +616,7 @@
             const currentQuestion = questions[currentQuestionIndex];
             const isCorrect = answer === currentQuestion.correct;
 
-            // Disable all buttons
+            // Disable all buttons, but not jokers
             document.querySelectorAll('.btn-answer').forEach(btn => {
                 btn.disabled = true;
                 btn.classList.remove('hover:bg-gray-600', 'hover:text-white');
@@ -673,6 +673,7 @@
                         gameOverSound();
                         quizContent.classList.add('game-over-animation');
                         setTimeout(() => {
+                            updateJokerButtonsForEndGame();
                             showFinalScore(false);
                         }, 1000);
                     }, 500);
@@ -687,12 +688,22 @@
             }
         }
 
+        // Disable all joker buttons
+        function updateJokerButtonsForEndGame() {
+            joker50Btn.disabled = true;
+            jokerTimeBtn.disabled = true;
+            jokerSkipBtn.disabled = true;
+        }
+
         // Display final score
         function showFinalScore(isGameComplete) {
             quizContent.classList.add('hidden');
             quizContent.classList.remove('game-over-animation'); // Clear animation for next game
             endScreen.classList.remove('hidden');
             
+            restartBtn.classList.add('hidden');
+            viewLeaderboardBtn.classList.add('hidden');
+
             if (isGameComplete) {
                 finalScore.textContent = `Gratulálunk, végigjátszottad a kvízt! A végső pontszámod: ${score} a ${questions.length}-ból! 🎉`;
                 if (score === questions.length) {
@@ -759,6 +770,9 @@
                 showLeaderboard('global', true);
             }
             
+            restartBtn.classList.remove('hidden');
+            viewLeaderboardBtn.classList.remove('hidden');
+
             // Always reset button regardless of the outcome
             saveScoreBtn.disabled = false;
             saveScoreBtn.textContent = 'Pontszám mentése';
