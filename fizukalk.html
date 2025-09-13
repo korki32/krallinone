@@ -813,34 +813,60 @@
                 shiftInputs.classList.toggle('disabled', isSpecial);
                 [startTimeInput, endTimeInput].forEach(el => el.classList.toggle('disabled-input', isSpecial));
             });
+            
+            // Kijavított és robusztusabb függvény az órák számításához
+            const getShiftHoursInInterval = (shiftStart, shiftEnd, intervalStart, intervalEnd) => {
+                const normalizeTime = (hour) => (hour < 0 ? hour + 24 : hour);
 
-            // A getShiftHoursInInterval függvény javítása
-            const getShiftHoursInInterval = (startHour, endHour, intervalStart, intervalEnd) => {
-                let hours = 0;
-                let shiftStart = startHour * 60;
-                let shiftEnd = endHour * 60;
-                if (shiftEnd <= shiftStart) shiftEnd += 24 * 60;
+                const getHours = (start, end) => {
+                    if (end < start) {
+                        return (24 - start) + end;
+                    }
+                    return end - start;
+                };
 
-                let intervalStartMinutes = intervalStart * 60;
-                let intervalEndMinutes = intervalEnd * 60;
-                if (intervalEndMinutes <= intervalStartMinutes) intervalEndMinutes += 24 * 60;
+                const getIntersection = (interval1, interval2) => {
+                    const start = Math.max(interval1.start, interval2.start);
+                    const end = Math.min(interval1.end, interval2.end);
+                    return end > start ? end - start : 0;
+                };
 
-                const maxStart = Math.max(shiftStart, intervalStartMinutes);
-                const minEnd = Math.min(shiftEnd, intervalEndMinutes);
+                // Normalizáljuk az összes időt 0-24 tartományba
+                shiftStart = normalizeTime(shiftStart);
+                shiftEnd = normalizeTime(shiftEnd);
+                intervalStart = normalizeTime(intervalStart);
+                intervalEnd = normalizeTime(intervalEnd);
 
-                if (minEnd > maxStart) {
-                    hours = (minEnd - maxStart) / 60;
+                let totalHours = 0;
+
+                // Műszak intervallum(ok) létrehozása (ha átnyúlik a napon)
+                const shiftIntervals = [];
+                if (shiftEnd <= shiftStart) {
+                    shiftIntervals.push({ start: shiftStart, end: 24 });
+                    shiftIntervals.push({ start: 0, end: shiftEnd });
+                } else {
+                    shiftIntervals.push({ start: shiftStart, end: shiftEnd });
                 }
 
-                // Különleges eset, amikor az interval átnyúlik a napon (pl. 22-6), és a műszak is
-                if (intervalEnd <= intervalStart && shiftEnd > 24 * 60) {
-                    const part1 = Math.max(0, Math.min(shiftEnd - 24 * 60, intervalEndMinutes) - Math.max(shiftStart - 24 * 60, 0));
-                    const part2 = Math.max(0, Math.min(shiftEnd, intervalEndMinutes + 24 * 60) - Math.max(shiftStart, intervalStartMinutes));
-                    hours = (part1 + part2) / 60;
+                // Pótlék intervallum(ok) létrehozása (ha átnyúlik a napon)
+                const intervalIntervals = [];
+                if (intervalEnd <= intervalStart) {
+                    intervalIntervals.push({ start: intervalStart, end: 24 });
+                    intervalIntervals.push({ start: 0, end: intervalEnd });
+                } else {
+                    intervalIntervals.push({ start: intervalStart, end: intervalEnd });
                 }
 
-                return hours;
+                // Kiszámítjuk az átfedést az összes lehetséges intervallum-kombinációra
+                shiftIntervals.forEach(sInterval => {
+                    intervalIntervals.forEach(iInterval => {
+                        totalHours += getIntersection(sInterval, iInterval);
+                    });
+                });
+
+                return totalHours;
             };
+
 
             const calculate = () => {
                 let totalHours = 0,
