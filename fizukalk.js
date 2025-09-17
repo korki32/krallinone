@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const personalDeductionCheckbox = document.getElementById('personalDeduction');
     const retiredEmployeeCheckbox = document.getElementById('retiredEmployee');
     const mother4plusCheckbox = document.getElementById('mother4plus');
-    const calculateBtn = document.getElementById('calculateBtn');
     const totalHoursEl = document.getElementById('totalHours');
     const baseBruttoEl = document.getElementById('baseBrutto');
     const nightBreakdownEl = document.getElementById('nightBreakdown');
@@ -237,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         benefitCounter++;
         createBenefitField(benefitCounter, '', 0);
         saveSettings();
+        calculate();
     });
 
     benefitsContainer.addEventListener('click', (e) => {
@@ -315,14 +315,17 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('calculatorSettings', JSON.stringify(settings));
     };
 
-    // Eseménykezelők a beállítások mezőkhöz
+    // Eseménykezelők a beállítások mezőkhöz (valós idejű számításhoz)
     [...settingsInputs, ...settingsCheckboxes].forEach(input => {
         input.addEventListener('change', () => {
             saveSettings();
             calculate();
         });
     });
-    benefitsContainer.addEventListener('input', saveSettings);
+    benefitsContainer.addEventListener('input', () => {
+        saveSettings();
+        calculate();
+    });
 
     const getMonthName = (date) => {
         return date.toLocaleString('hu-HU', {
@@ -476,6 +479,20 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedDays = savedData ? JSON.parse(savedData) : {};
     };
 
+    // ÚJ: Animációs funkció a nettó fizetéshez
+    const animateValue = (element, start, end, duration) => {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            element.textContent = formatCurrency(Math.floor(progress * (end - start) + start));
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    };
+
     // FONTOS: A calculate függvény logika
     const calculate = () => {
         const hourlyRate = parseFloat(hourlyRateInput.value) || 0;
@@ -618,15 +635,14 @@ document.addEventListener('DOMContentLoaded', () => {
             let tbJarulék = totalBrutto * 0.185;
 
             // Kedvezmények
+            const maxExempt = 576601; // 2024-es átlagbér
             if (isUnder25) {
-                const maxExempt = 576601; // 2024-es átlagbér
                 const exemption = Math.min(totalBrutto, maxExempt);
                 szjaSavings += exemption * 0.15;
             }
             if (isUnder30mother) {
-                // A logic is complex, just add the benefit based on a max value
-                const maxExempt = 576601;
-                szjaSavings += Math.min(totalBrutto, maxExempt) * 0.15;
+                const exemption = Math.min(totalBrutto, maxExempt);
+                szjaSavings += exemption * 0.15;
             }
             if (isMarried) {
                 szjaSavings += 5000;
@@ -673,7 +689,11 @@ document.addEventListener('DOMContentLoaded', () => {
         vacationHoursEl.textContent = `${totalVacationHours.toFixed(2)} óra (${formatCurrency(vacationPay)})`;
         totalBonusEl.textContent = formatCurrency(totalBonus);
         totalBenefitsEl.textContent = formatCurrency(totalBenefits);
-        nettoOutputEl.textContent = formatCurrency(netto);
+
+        // ÚJ: Animáció a nettó érték frissítéséhez
+        const currentNetto = parseFloat(nettoOutputEl.textContent.replace(/[^\d]/g, '')) || 0;
+        animateValue(nettoOutputEl, currentNetto, netto, 500); // 500ms animáció
+
         totalSavingsEl.textContent = formatCurrency(totalSavings);
 
         // Megtakarítások részletező
@@ -701,16 +721,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateChart(totalBrutto, szja, tbJarulék, totalBenefits, totalBonus, isEKHO);
     };
 
+    // ÚJ: Modernizált D3.js diagram
     const updateChart = (totalBrutto, szja, tbJarulék, totalBenefits, totalBonus, isEKHO) => {
         const data = [];
         if (totalBrutto > 0) {
             if (isEKHO) {
                 data.push({
-                    category: 'EKHO (15%)',
+                    category: 'EKHO',
                     value: totalBrutto * 0.15
                 });
                 data.push({
-                    category: 'TB (13%)',
+                    category: 'TB',
                     value: totalBrutto * 0.13
                 });
                 data.push({
@@ -774,16 +795,22 @@ document.addEventListener('DOMContentLoaded', () => {
             .nice()
             .range([innerHeight, 0]);
 
+        // Modern színskála definiálása
+        const color = d3.scaleOrdinal()
+            .domain(['Nettó', 'Adó (SZJA)', 'Járulék (TB)', 'EKHO', 'Juttatások', 'Pótlékok'])
+            .range(['#4ade80', '#f87171', '#60a5fa', '#f87171', '#fbbf24', '#a78bfa']);
+
         const tooltip = d3.select("#tooltip");
 
         svg.selectAll(".bar")
-            .data(data)
+            .data(data, d => d.category)
             .join("rect")
-            .attr("class", "bar")
+            .attr("class", d => `bar bar-${d.category.toLowerCase().replace(/[^\w]/g, '')}`)
             .attr("x", d => x(d.category))
             .attr("y", innerHeight)
             .attr("width", x.bandwidth())
             .attr("height", 0)
+            .style("fill", d => color(d.category))
             .on("mouseover", (event, d) => {
                 tooltip.style("opacity", 1)
                     .html(`<strong>${d.category}</strong><br>${formatCurrency(d.value)}`)
@@ -807,6 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .attr("class", "axis")
             .call(d3.axisLeft(y).tickFormat(d3.format(".2s")));
     };
+
 
     prevBtn.addEventListener('click', () => {
         monthChangeDirection = -1;
@@ -923,9 +951,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar();
         calculate();
     });
-
-    // Eseménykezelők a számítás indításához és a mentéshez
-    calculateBtn.addEventListener('click', calculate);
 
     // Kezdeti renderelés és adatok betöltése
     loadSettings();
