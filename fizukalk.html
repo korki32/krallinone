@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Műszak és Fizetés Kalkulátor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="fizukalk.css">
+</head>
+<body class="flex flex-col items-center justify-start py-8 px-4">
+    <canvas id="futuristic-canvas"></canvas>
+    <div class="container glass-panel rounded-2xl">
+        <div class="header">
+            <h1 class="text-3xl font-bold text-white">Fizetéskalkulátor</h1>
+        </div>
+        <div class="main-content">
+            <div class="calendar-container">
+                <div class="flex items-center justify-between mb-4">
+                    <button id="prevBtn" class="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h2 id="currentMonth" class="text-2xl font-bold text-white"></h2>
+                    <button id="nextBtn" class="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-400 text-sm">
+                    <div class="p-2">H</div>
+                    <div class="p-2">K</div>
+                    <div class="p-2">Sze</div>
+                    <div class="p-2">Cs</div>
+                    <div class="p-2">P</div>
+                    <div class="p-2">Szo</div>
+                    <div class="p-2">V</div>
+                </div>
+                <div id="calendarDays" class="grid grid-cols-7 gap-1 text-center mt-2"></div>
+            </div>
+            <div class="controls-container">
+                <h2 class="text-2xl font-bold text-white mb-6">Beállítások</h2>
+                <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <div>
+                        <label for="hourlyRate" class="block text-gray-400 font-medium mb-1 text-sm">Alap órabér (Ft)</label>
+                        <input type="number" id="hourlyRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="vacationHourlyRate" class="block text-gray-400 font-medium mb-1 text-sm">Szabadság órabére (Ft)</label>
+                        <input type="number" id="vacationHourlyRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-medium mb-1 text-sm">Éjszakai pótlék (%)</label>
+                        <input type="number" id="nightRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="nightStart" class="block text-gray-400 font-medium mb-1 text-sm">Éjszakai pótlék (kezdő óra)</label>
+                        <input type="number" id="nightStart" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="nightEnd" class="block text-gray-400 font-medium mb-1 text-sm">Éjszakai pótlék (befejező óra)</label>
+                        <input type="number" id="nightEnd" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-medium mb-1 text-sm">Délutáni pótlék (%)</label>
+                        <input type="number" id="eveningRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="eveningStart" class="block text-gray-400 font-medium mb-1 text-sm">Délutáni pótlék (kezdő óra)</label>
+                        <input type="number" id="eveningStart" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="eveningEnd" class="block text-gray-400 font-medium mb-1 text-sm">Délutáni pótlék (befejező óra)</label>
+                        <input type="number" id="eveningEnd" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-medium mb-1 text-sm">Hétvégi pótlék (%)</label>
+                        <input type="number" id="weekendRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="weekendOption" class="block text-gray-400 font-medium mb-1 text-sm">Hétvégi pótlék napjai</label>
+                        <select id="weekendOption" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="all">Szombat és Vasárnap</option>
+                            <option value="saturday">Szombat</option>
+                            <option value="sunday">Vasárnap</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-medium mb-1 text-sm">Túlóra pótlék (%)</label>
+                        <input type="number" id="overtimeRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <hr class="my-4 border-gray-600">
+                    <h3 class="text-xl font-bold text-white mb-2">Juttatások</h3>
+                    <div id="benefits-container" class="space-y-4">
+                    </div>
+                    <button id="addBenefitBtn" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        Új juttatás hozzáadása
+                    </button>
+                    <hr class="my-4 border-gray-600">
+                    <h3 class="text-xl font-bold text-white mb-2">Adó- és Járulékkedvezmények</h3>
+                    <div class="space-y-2 text-gray-300">
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="ekho" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>EKHO adózás</span>
+                            </label>
+                            <button class="info-icon" data-info="ekho">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="under25" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>25 év alatti adómentesség</span>
+                            </label>
+                            <button class="info-icon" data-info="under25">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="under30mother" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>30 év alatti anyuka</span>
+                            </label>
+                            <button class="info-icon" data-info="under30mother">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="married" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>Friss házasok</span>
+                            </label>
+                            <button class="info-icon" data-info="married">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="personalDeduction" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>Személyi kedvezmény</span>
+                            </label>
+                            <button class="info-icon" data-info="personalDeduction">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="retiredEmployee" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>Nyugdíjas munkavállaló</span>
+                            </label>
+                            <button class="info-icon" data-info="retiredEmployee">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="mother4plus" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>4+ gyermeket nevelő anyák</span>
+                            </label>
+                            <button class="info-icon" data-info="mother4plus">i</button>
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200 mt-4">
+                        Számítás indítása
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="results-container">
+            <h2 class="text-2xl font-bold text-white mb-6">Összesítés</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Összes munkaóra:</p>
+                    <p id="totalHours" class="text-xl font-bold text-white mt-1">0 óra</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Alap bruttó:</p>
+                    <p id="baseBrutto" class="text-xl font-bold text-white mt-1">0 Ft</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Éjszakai pótlék:</p>
+                    <p id="nightBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Délutáni pótlék:</p>
+                    <p id="eveningBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Hétvégi pótlék:</p>
+                    <p id="weekendBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Túlóra pótlék:</p>
+                    <p id="overtimeBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Szabadságidő:</p>
+                    <p id="vacationHours" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Összes bónusz:</p>
+                    <p id="totalBonus" class="text-xl font-bold text-white mt-1">0 Ft</p>
+                </div>
+                <div id="totalBenefits-container" class="bg-gray-800 p-4 rounded-lg hidden">
+                    <p class="text-gray-400 font-medium">Összes juttatás:</p>
+                    <p id="totalBenefits" class="text-xl font-bold text-white mt-1">0 Ft</p>
+                </div>
+                <div class="bg-purple-600 text-white p-4 rounded-lg col-span-1 md:col-span-2 lg:col-span-3 text-center highlight-card">
+                    <p class="font-medium">Várható Nettó Fizetés:</p>
+                    <p id="nettoOutput" class="text-3xl font-bold mt-1">0 Ft</p>
+                </div>
+            </div>
+            <div id="savings-breakdown-container" class="mt-8 bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-xl font-bold text-white mb-4">Megtakarítási részletező</h3>
+                <div id="savings-list" class="space-y-2">
+                    <p class="text-gray-400" id="savings-placeholder">Jelölj be kedvezményeket a részletekhez.</p>
+                </div>
+                <div class="mt-4 border-t border-gray-700 pt-4">
+                    <p class="font-medium text-gray-400">Teljes megtakarítás:</p>
+                    <p id="totalSavings" class="text-2xl font-bold text-green-400 mt-1">0 Ft</p>
+                </div>
+            </div>
+            <div id="chart-panel" class="mt-8 bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-xl font-bold text-white mb-4">Bruttó Fizetés Megoszlása</h3>
+                <div id="chart-container"></div>
+            </div>
+        </div>
+        <div class="mt-8 pt-4 border-t border-gray-700 text-center text-xs text-gray-500">
+            <p>&copy; 2024 Korki32</p>
+        </div>
+    </div>
+    <div id="shiftModal" class="modal">
+        <div class="modal-content text-white">
+            <button class="close-btn">&times;</button>
+            <h3 class="text-xl font-bold mb-4">Munkaidő megadása</h3>
+            <div id="shift-inputs" class="space-y-4">
+                <div class="mb-4">
+                    <label for="startTime" class="block text-gray-400 font-medium mb-1">Kezdő óra</label>
+                    <input type="time" id="startTime" class="w-full p-3 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div class="mb-4">
+                    <label for="endTime" class="block text-gray-400 font-medium mb-1">Befejező óra</label>
+                    <input type="time" id="endTime" class="w-full p-3 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            </div>
+            <div class="mb-4 flex flex-col space-y-2">
+                <div class="flex items-center justify-between overtime-container">
+                    <label for="overtimeCheckbox" class="flex items-center">
+                        <input type="checkbox" id="overtimeCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
+                        <span class="font-medium">Túlóra</span>
+                    </label>
+                    <input type="number" id="overtimeHoursInput" value="8" class="w-24 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                </div>
+                <div class="flex items-center justify-between vacation-container">
+                    <label for="vacationCheckbox" class="flex items-center">
+                        <input type="checkbox" id="vacationCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
+                        <span class="font-medium">Szabadság</span>
+                    </label>
+                    <input type="number" id="vacationHoursInput" value="8" class="w-24 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                </div>
+            </div>
+            <div class="flex justify-between space-x-2">
+                <button id="saveShiftBtn" class="w-full bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200">Mentés</button>
+                <button id="cancelShiftBtn" class="w-full bg-red-600 text-white font-bold p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">Törlés</button>
+            </div>
+        </div>
+    </div>
+    <div id="pdfConfirmModal" class="modal">
+        <div class="modal-content text-white text-center">
+            <button class="close-btn">&times;</button>
+            <h3 class="text-xl font-bold mb-4">Adatok mentése</h3>
+            <p class="mb-6">Szeretnéd elmenteni a havi adatokat PDF-be, mielőtt új hónapra váltasz?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="saveAndContinueBtn" class="bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200">Igen, mentés</button>
+                <button id="continueWithoutSavingBtn" class="bg-red-600 text-white font-bold p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">Nem, folytatás</button>
+            </div>
+        </div>
+    </div>
+    <div id="messageBox" class="message-box text-white">
+        <p id="messageText" class="text-lg font-medium mb-4"></p>
+        <button id="closeMessageBtn" class="bg-purple-600 px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors duration-200">OK</button>
+    </div>
+    <div id="tooltip" class="tooltip"></div>
+    <script src="fizukalk.js"></script>
+</body>
+</html>
