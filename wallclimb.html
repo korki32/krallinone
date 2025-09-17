@@ -3,80 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Longjump Plugin - Korki32</title>
-    <link rel="stylesheet" href="csoldalak.css">
+    <title>WallClimb Plugin - Korki32</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* General body styling for dark theme and particle container */
+        body {
+            background-color: #111827;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Heading font from Google Fonts */
+        h1, h2 {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Animated background container for falling particles */
+        #bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Styles for the individual falling particles (bullets/shards) */
+        .particle {
+            position: absolute;
+            background-color: rgba(129, 140, 248, 0.4);
+            border-radius: 50%;
+            opacity: 0;
+            animation: fall linear infinite;
+        }
+
+        /* Keyframes for the falling animation */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) translateX(0);
+                opacity: 0;
+            }
+        }
+
+        /* Button and navigation hover animations */
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .shimmer-button {
+            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%);
+            background-size: 200% 100%;
+            transition: background-position 0.5s ease;
+        }
+
+        .shimmer-button:hover {
+            background-position: -100% 0;
+        }
+
+        .pulsing-version {
+            animation: pulse-effect 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-effect {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Custom styles for video iframe */
+        .video-container iframe {
+            border: none;
+            border-radius: 0.75rem;
+        }
+
+    </style>
 </head>
-<body>
-    <nav class="plugin-nav">
-        <ul>
-            <li><a href="longjump.html">Longjump</a></li>
-            <li><a href="wallclimb.html">WallClimb</a></li>
-            <li><a href="selloursouls.html">Sell Our Souls</a></li>
-            <li><a href="alca.html">Álca</a></li>
-            <li><a href="halloween.html">S1MPLA Halloween Környezet</a></li>
-            <li><a href="cs.html">Vissza a főoldalra</a></li>
-        </ul>
-    </nav>
+<body class="text-gray-200 font-sans">
 
-    <header>
-        <div class="header-content">
-            <h1>WallClimb Plugin</h1>
-            <span class="version">Verzió: 1.0 - Utolsó frissítés: 2023.10.11</span>
-        </div>
-    </header>
+    <!-- Dinamikus háttér animáció -->
+    <div id="bg-animation"></div>
 
-    <main class="post">
-        <section class="post-content">
-            <h2>Leírás</h2>
-            <p><strong>Mi ez?</strong><br>
-            Ez egy egyszerű, de nagyon hasznos plugin CS1.6 szerverekre! 10 HP-ért cserébe a játékosok falramászás képességét szerezhetik meg.</p>
-            <p><strong>Funkciók:</strong><br>
-            - 10 HP-ért vásárolható falramászás<br>
+    <!-- Fő Konténer -->
+    <div class="container mx-auto p-4 md:p-8 space-y-8 max-w-4xl relative z-10">
 
-            <h2>Szükséges modulok</h2>
-            <ul>
-                <li>Fakemeta_util</li>
-                <li>Fun</li>
+        <!-- Navigáció -->
+        <nav class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-3 shadow-lg hover-lift transition-all">
+            <ul class="flex flex-wrap justify-center sm:justify-between text-sm sm:text-base font-semibold space-y-2 sm:space-y-0 sm:space-x-4">
+                <li><a href="longjump.html" class="block py-2 px-4 rounded-md transition-all text-indigo-300 hover:text-white hover:bg-indigo-600">Longjump</a></li>
+                <li><a href="wallclimb.html" class="block py-2 px-4 rounded-md transition-all text-indigo-300 hover:text-white hover:bg-indigo-600">WallClimb</a></li>
+                <li><a href="selloursouls.html" class="block py-2 px-4 rounded-md transition-all text-indigo-300 hover:text-white hover:bg-indigo-600">Sell Our Souls</a></li>
+                <li><a href="alca.html" class="block py-2 px-4 rounded-md transition-all text-indigo-300 hover:text-white hover:bg-indigo-600">Álca</a></li>
+                <li><a href="halloween.html" class="block py-2 px-4 rounded-md transition-all text-indigo-300 hover:text-white hover:bg-indigo-600">S1MPLA Halloween Környezet</a></li>
+                <li><a href="cs.html" class="block py-2 px-4 rounded-md transition-all text-indigo-300 hover:text-white hover:bg-indigo-600">Vissza a főoldalra</a></li>
             </ul>
+        </nav>
 
-            <h2>CVAR-ok</h2>
-            <ul>
-                <li><code>wallclimb_cost</code> - Hány HP-ba kerüljön a falramászás? (default: 10)</li>
-            </ul>
+        <!-- Fejléc -->
+        <header class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-6 shadow-lg text-center hover-lift transition-all">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-indigo-400 mb-2 font-['Orbitron']">WallClimb Plugin</h1>
+            <span class="text-xs md:text-sm text-gray-400 block font-light pulsing-version">Verzió: 1.0 - Utolsó frissítés: 2023.10.11</span>
+        </header>
 
-            <h2>Parancsok</h2>
-            <ul>
-                <li><code>/bwc</code> - Rövidített parancs a falramászás megvásárláshoz</li>
-            </ul>
+        <!-- Fő Tartalom -->
+        <main class="space-y-8">
+            <section class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-6 shadow-lg hover-lift transition-all">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-300 font-['Orbitron']">Leírás</h2>
+                <p class="mb-4"><strong>Mi ez?</strong><br>
+                Ez egy egyszerű, de nagyon hasznos plugin CS1.6 szerverekre! 10 HP-ért cserébe a játékosok falramászás képességét szerezhetik meg.</p>
+                <p><strong>Funkciók:</strong><br>
+                - 10 HP-ért vásárolható falramászás</p>
+            </section>
 
-             <h2>Telepítés</h2>
-            <ul>
-                <li><code>falramaszas.sma</code> ---> cstrike/addons/amxmodx/scripting</li>
-                <li><code>falramaszas.amxx</code> ---> cstrike/addons/amxmodx/plugins</li>
-            </ul>
+            <section class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-6 shadow-lg hover-lift transition-all">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-300 font-['Orbitron']">Szükséges modulok</h2>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Fakemeta_util</li>
+                    <li>Fun</li>
+                </ul>
+            </section>
 
-            <h2>Videó bemutató</h2>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/EQtWMCX1ZBM" frameborder="0" allowfullscreen></iframe>
+            <section class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-6 shadow-lg hover-lift transition-all">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-300 font-['Orbitron']">CVAR-ok</h2>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><code>wallclimb_cost</code> - Hány HP-ba kerüljön a falramászás? (default: 10)</li>
+                </ul>
+            </section>
+
+            <section class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-6 shadow-lg hover-lift transition-all">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-300 font-['Orbitron']">Parancsok</h2>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><code>/bwc</code> - Rövidített parancs a falramászás megvásárláshoz</li>
+                </ul>
+            </section>
+
+             <section class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-6 shadow-lg hover-lift transition-all">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-300 font-['Orbitron']">Telepítés</h2>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><code>falramaszas.sma</code> ---> cstrike/addons/amxmodx/scripting</li>
+                    <li><code>falramaszas.amxx</code> ---> cstrike/addons/amxmodx/plugins</li>
+                </ul>
+            </section>
+            
+            <!-- Videó és Letöltés szekció -->
+            <section class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-6 shadow-lg hover-lift transition-all">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-300 font-['Orbitron']">Videó bemutató</h2>
+                <div class="video-container relative" style="padding-top: 56.25%;">
+                    <iframe class="absolute top-0 left-0 w-full h-full rounded-lg" src="https://www.youtube.com/embed/EQtWMCX1ZBM" allowfullscreen></iframe>
+                </div>
+            </section>
+
+            <div class="flex justify-center">
+                <a href="https://github.com/korki32/Wall-Climb-cs1.6-plugin-hungary" class="download-button bg-indigo-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-all shimmer-button overflow-hidden relative" download>
+                    Letöltés
+                </a>
             </div>
-            <div class="download-section">
-            <a href="https://github.com/korki32/Wall-Climb-cs1.6-plugin-hungary" class="download-button" download>Letöltés</a>
-        </div>
-        </section>
-    </main>
+        </main>
+        
+        <!-- Lábléc -->
+        <footer class="bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl p-6 shadow-lg text-center mt-8 hover-lift transition-all">
+            <p class="mb-4">&copy; 2024 Korki32. Minden jog fenntartva.</p>
+            <div class="flex justify-center space-x-6">
+                <a href="https://steamcommunity.com/id/korkika32/" target="_blank" title="Steam" class="transition-transform hover:scale-110">
+                    <img src="https://placehold.co/40x40/1B2838/FFFFFF?text=Steam" alt="Steam" class="rounded-full">
+                </a>
+                <a href="https://github.com/korki32" target="_blank" title="GitHub" class="transition-transform hover:scale-110">
+                    <img src="https://placehold.co/40x40/1B2838/FFFFFF?text=GitHub" alt="GitHub" class="rounded-full">
+                </a>
+            </div>
+        </footer>
 
-    <footer>
-    <p>&copy; 2024 Korki32. Minden jog fenntartva.</p>
-    <div class="social-icons">
-        <a href="https://steamcommunity.com/id/korkika32/" target="_blank" title="Steam">
-            <img src="images/icons/steam.png" alt="Steam">
-        </a>
-        <a href="https://github.com/korki32" target="_blank" title="GitHub">
-            <img src="images/icons/github.png" alt="GitHub">
-        </a>
     </div>
-</footer>
 
-    <script src="csoldalak.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('bg-animation');
+            const numberOfParticles = 20;
+
+            const createParticle = () => {
+                const particle = document.createElement('span');
+                const size = Math.random() * 5 + 2;
+                const duration = Math.random() * 10 + 5;
+                const delay = Math.random() * 10;
+                const startX = Math.random() * 100;
+
+                particle.classList.add('particle');
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${startX}vw`;
+                particle.style.animationDuration = `${duration}s`;
+                particle.style.animationDelay = `-${delay}s`;
+                
+                container.appendChild(particle);
+
+                // Remove particle after animation to prevent memory leak
+                particle.addEventListener('animationend', () => {
+                    particle.remove();
+                });
+            };
+
+            // Initial particle creation
+            for (let i = 0; i < numberOfParticles; i++) {
+                createParticle();
+            }
+
+            // Continuously create new particles
+            setInterval(createParticle, 500);
+        });
+    </script>
+
 </body>
 </html>
