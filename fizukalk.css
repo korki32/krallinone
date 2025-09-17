@@ -211,13 +211,20 @@ body {
     border: 1px solid #4b5563;
 }
 
+/* Modern színpaletta a diagramhoz */
+.bar-netto { fill: #4ade80; } /* Zöld */
+.bar-ado { fill: #f87171; }   /* Piros */
+.bar-jarulek { fill: #60a5fa; } /* Kék */
+.bar-juttatas { fill: #fbbf24; } /* Narancs */
+.bar-potlek { fill: #a78bfa; }  /* Lila */
+
+/* Általános animációk a bárokhoz */
 .bar {
-    fill: #6d28d9;
     transition: fill 0.3s ease;
 }
 
 .bar:hover {
-    fill: #8b5cf6;
+    filter: brightness(1.2);
 }
 
 .axis text {
