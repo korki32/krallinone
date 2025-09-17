@@ -4,92 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WallClimb Plugin - Korki32</title>
+    <link rel="stylesheet" href="csoldalak.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        /* General body styling for dark theme and particle container */
-        body {
-            background-color: #111827;
-            font-family: 'Inter', sans-serif;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Heading font from Google Fonts */
-        h1, h2 {
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        /* Animated background container for falling particles */
-        #bg-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        /* Styles for the individual falling particles (bullets/shards) */
-        .particle {
-            position: absolute;
-            background-color: rgba(129, 140, 248, 0.4);
-            border-radius: 50%;
-            opacity: 0;
-            animation: fall linear infinite;
-        }
-
-        /* Keyframes for the falling animation */
-        @keyframes fall {
-            0% {
-                transform: translateY(-10vh) translateX(0);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(110vh) translateX(0);
-                opacity: 0;
-            }
-        }
-
-        /* Button and navigation hover animations */
-        .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        .shimmer-button {
-            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%);
-            background-size: 200% 100%;
-            transition: background-position 0.5s ease;
-        }
-
-        .shimmer-button:hover {
-            background-position: -100% 0;
-        }
-
-        .pulsing-version {
-            animation: pulse-effect 2s infinite ease-in-out;
-        }
-
-        @keyframes pulse-effect {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        /* Custom styles for video iframe */
-        .video-container iframe {
-            border: none;
-            border-radius: 0.75rem;
-        }
-
-    </style>
 </head>
 <body class="text-gray-200 font-sans">
 
@@ -187,42 +104,6 @@
 
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const container = document.getElementById('bg-animation');
-            const numberOfParticles = 20;
-
-            const createParticle = () => {
-                const particle = document.createElement('span');
-                const size = Math.random() * 5 + 2;
-                const duration = Math.random() * 10 + 5;
-                const delay = Math.random() * 10;
-                const startX = Math.random() * 100;
-
-                particle.classList.add('particle');
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.left = `${startX}vw`;
-                particle.style.animationDuration = `${duration}s`;
-                particle.style.animationDelay = `-${delay}s`;
-                
-                container.appendChild(particle);
-
-                // Remove particle after animation to prevent memory leak
-                particle.addEventListener('animationend', () => {
-                    particle.remove();
-                });
-            };
-
-            // Initial particle creation
-            for (let i = 0; i < numberOfParticles; i++) {
-                createParticle();
-            }
-
-            // Continuously create new particles
-            setInterval(createParticle, 500);
-        });
-    </script>
-
+    <script src="csoldalak.js"></script>
 </body>
 </html>
