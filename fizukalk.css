@@ -1,0 +1,246 @@
+body {
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #0d1117;
+}
+
+.glass-panel {
+    background-color: rgba(24, 30, 41, 0.85);
+    backdrop-filter: blur(12px);
+    position: relative;
+    z-index: 10;
+    border: 1px solid #374151;
+}
+
+#futuristic-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+}
+
+/* Custom styles to override Tailwind for the new theme */
+.container {
+    width: 100%;
+    max-width: 60rem;
+    padding: 2rem;
+    display: grid;
+    gap: 2rem;
+    grid-template-areas: "header" "main" "results";
+}
+
+@media (min-width: 1024px) {
+    .container {
+        grid-template-areas: "header header" "main main" "results results";
+    }
+}
+
+.header {
+    grid-area: header;
+}
+
+.main-content {
+    grid-area: main;
+}
+
+.results-container {
+    grid-area: results;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        flex-direction: row;
+    }
+}
+
+.calendar-container {
+    flex: 1;
+}
+
+.controls-container {
+    flex: 1;
+}
+
+.day {
+    min-height: 3.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+    font-size: 0.875rem;
+    color: #d1d5db;
+}
+
+.day:hover:not(.empty-day) {
+    transform: scale(1.05);
+}
+
+/* Vizuális módosítások a felhasználó kérése alapján */
+.day.selected {
+    background-color: #1e40af;
+    font-weight: 600;
+    color: white;
+}
+
+.day.vacation {
+    background-color: #f59e0b;
+    font-weight: 600;
+    color: white;
+}
+
+.day.overtime {
+    background-color: #dc2626;
+    font-weight: 600;
+    color: white;
+}
+
+.day span.hours {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: rgba(31, 41, 55, 0.95);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 24rem;
+    border: 1px solid #4b5563;
+    position: relative;
+    /* Hozzáadva a bezárás gomb pozícionálásához */
+}
+
+/* Stílusok a bezárás gombhoz */
+.close-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #9ca3af;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-weight: bold;
+}
+
+.close-btn:hover {
+    color: #e5e7eb;
+}
+
+.message-box {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 110;
+    background-color: #1f2937;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    border: 1px solid #4b5563;
+}
+
+.info-icon {
+    cursor: help;
+    color: #9ca3af;
+    margin-left: 0.5rem;
+    font-size: 1rem;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.disabled-input {
+    background-color: #4b5563;
+    cursor: not-allowed;
+}
+
+/* Stílusok a D3.js diagramhoz */
+#chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.tooltip {
+    position: absolute;
+    background: #1f2937;
+    padding: 8px 12px;
+    border-radius: 6px;
+    pointer-events: none;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 200;
+    border: 1px solid #4b5563;
+}
+
+.bar {
+    fill: #6d28d9;
+    transition: fill 0.3s ease;
+}
+
+.bar:hover {
+    fill: #8b5cf6;
+}
+
+.axis text {
+    fill: #9ca3af;
+}
+
+/* Új stílusok az animációhoz és a kiemeléshez */
+.highlight-card {
+    background: linear-gradient(135deg, #1f2937, #374151);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #4b5563;
+    animation: pulse-border 2s infinite cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+@keyframes pulse-border {
+    0% {
+        box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(109, 40, 217, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(109, 40, 217, 0);
+    }
+}
