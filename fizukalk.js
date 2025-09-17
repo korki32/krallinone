@@ -250,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Funkció a beállítások betöltéséhez a localStorage-ból
     const loadSettings = () => {
         const settings = JSON.parse(localStorage.getItem('calculatorSettings'));
         if (settings) {
@@ -264,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     checkbox.checked = settings[checkbox.id];
                 }
             });
-            // Juttatások betöltése
             if (settings.benefits) {
                 benefits = settings.benefits;
                 Object.keys(benefits).forEach(id => {
@@ -274,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Funkció a beállítások mentéséhez a localStorage-ba
     const saveSettings = () => {
         const settings = {};
         settingsInputs.forEach(input => {
@@ -283,7 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsCheckboxes.forEach(checkbox => {
             settings[checkbox.id] = checkbox.checked;
         });
-        // Juttatások mentése
         const currentBenefits = {};
         document.querySelectorAll('.benefit-field').forEach(div => {
             const id = div.dataset.id;
@@ -299,94 +295,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Animációs függvény
     function animateValue(obj, start, end) {
-        let current = start;
+        const duration = 700;
         const range = end - start;
-        const increment = end > start ? 1 : -1;
-        const step = Math.abs(range / 100);
-        let lastTimestamp = null;
-    
-        function stepAnimate(timestamp) {
-            if (!lastTimestamp) lastTimestamp = timestamp;
-            const elapsed = timestamp - lastTimestamp;
-            lastTimestamp = timestamp;
-    
-            if (Math.abs(current - end) < step) {
-                current = end;
-                obj.textContent = formatCurrency(current);
-                return;
-            }
-    
-            current += increment * step * (elapsed / 16); // 60fps-re optimalizálva
-    
-            if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
-                current = end;
-            }
+        const startTime = performance.now();
+        let lastTimestamp = startTime;
+
+        function step(timestamp) {
+            const progress = timestamp - startTime;
+            const percentage = Math.min(progress / duration, 1);
+            const easing = (t) => t * (2 - t); // Simple quadratic ease-out
+            const easedPercentage = easing(percentage);
+            const current = start + range * easedPercentage;
             
             obj.textContent = formatCurrency(current);
-    
-            if (current !== end) {
-                requestAnimationFrame(stepAnimate);
+
+            if (percentage < 1) {
+                requestAnimationFrame(step);
+            } else {
+                obj.textContent = formatCurrency(end);
             }
         }
-        requestAnimationFrame(stepAnimate);
+
+        requestAnimationFrame(step);
     }
     
-    // Kezdeti állapot a számlálóknak
-    const updateDisplay = (id, value, isHours = false) => {
+    const updateDisplay = (id, value) => {
         const element = document.getElementById(id);
-        const start = parseFloat(element.textContent.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
-        const formattedValue = isHours ? `${value} óra` : formatCurrency(value);
-        if (isHours) {
-            element.textContent = formattedValue;
-        } else {
+        if (element) {
+            const start = parseFloat(element.textContent.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
             animateValue(element, start, value);
+        }
+    };
+
+    const updateHoursDisplay = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = `${value} óra`;
         }
     };
     
     const updateBreakdownDisplay = (id, hours, amount) => {
         const element = document.getElementById(id);
-        const start = parseFloat(element.textContent.split('(')[1]?.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
-        element.textContent = `${hours} óra (${formatCurrency(start)})`;
-        const tempSpan = document.createElement('span');
-        element.appendChild(tempSpan);
-        animateValue(tempSpan, start, amount);
-        tempSpan.style.display = 'none';
-        element.innerHTML = `${hours} óra (<span id="${id}-amount"></span>)`;
-        animateValue(document.getElementById(`${id}-amount`), start, amount);
+        if (element) {
+            const textContent = `${hours} óra `;
+            const amountSpan = document.createElement('span');
+            amountSpan.id = `${id}-amount`;
+            amountSpan.textContent = formatCurrency(0);
+            element.innerHTML = textContent;
+            element.appendChild(amountSpan);
+            animateValue(amountSpan, 0, amount);
+        }
     };
     
     // A D3.js diagram frissítő függvénye
     const chartContainer = document.getElementById('chart-container');
     const margin = { top: 20, right: 20, bottom: 80, left: 60 };
-    const width = chartContainer.offsetWidth - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    let chartWidth, chartHeight;
+
+    const setupChart = () => {
+        chartWidth = chartContainer.offsetWidth - margin.left - margin.right;
+        chartHeight = 400 - margin.top - margin.bottom;
+
+        d3.select("#chart-container svg").remove();
+
+        const svg = d3.select("#chart-container")
+            .append("svg")
+            .attr("width", chartWidth + margin.left + margin.right)
+            .attr("height", chartHeight + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+        
+        return svg;
+    };
+
+    let svg = setupChart();
     const tooltip = d3.select("#tooltip");
 
-    const svg = d3.select("#chart-container")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-    
     const updateChart = (data) => {
+        svg = setupChart(); // Re-create SVG on update to handle resize correctly
+        
+        if (!data || data.length === 0 || d3.sum(data, d => d.value) === 0) {
+            d3.select("#chart-container").append("p").attr("class", "text-center text-gray-400 mt-4").text("Nincs elegendő adat a diagram megjelenítéséhez.");
+            return;
+        }
+
         // Skálák
         const x = d3.scaleBand()
-            .range([0, width])
+            .range([0, chartWidth])
             .domain(data.map(d => d.label))
             .padding(0.2);
     
         const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.value)])
-            .range([height, 0]);
+            .domain([0, d3.max(data, d => d.value) * 1.1])
+            .range([chartHeight, 0]);
     
         // Tengelyek
-        svg.selectAll(".x-axis").remove();
-        svg.selectAll(".y-axis").remove();
-    
         svg.append("g")
             .attr("class", "x-axis")
-            .attr("transform", `translate(0,${height})`)
+            .attr("transform", `translate(0,${chartHeight})`)
             .call(d3.axisBottom(x))
             .selectAll("text")
             .style("text-anchor", "end")
@@ -398,28 +404,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .attr("class", "y-axis")
             .call(d3.axisLeft(y).tickFormat(d3.format(".2s")));
 
-        // Sávok frissítése
-        const bars = svg.selectAll(".bar")
-            .data(data, d => d.label);
-
-        bars.enter()
+        // Sávok
+        svg.selectAll(".bar")
+            .data(data)
+            .enter()
             .append("rect")
             .attr("class", "bar")
             .attr("x", d => x(d.label))
-            .attr("y", height)
             .attr("width", x.bandwidth())
-            .attr("height", 0)
-            .attr("fill", "#6d28d9")
-            .merge(bars)
-            .transition()
-            .duration(750)
-            .attr("x", d => x(d.label))
             .attr("y", d => y(d.value))
-            .attr("width", x.bandwidth())
-            .attr("height", d => height - y(d.value));
-
-        // Interakció
-        svg.selectAll(".bar")
+            .attr("height", d => chartHeight - y(d.value))
+            .attr("fill", "#6d28d9")
             .on("mouseover", (event, d) => {
                 tooltip.style("opacity", 1)
                     .html(`${d.label}<br>${formatCurrency(d.value)}`);
@@ -536,21 +531,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isEKHO) {
             SZJA_RATE = 0;
             TB_RATE = 0;
-            // EKHO adó + hozzájárulás 
             const EKHO_RATE = 0.13;
             const PENSION_RATE = 0.09;
             const HEALTH_RATE = 0.04;
             let ekhoTax = totalBrutto * EKHO_RATE;
-            let ekhoContribution = totalBrutto * PENSION_RATE;
+            let ekhoContribution = totalBrutto * (PENSION_RATE + HEALTH_RATE);
             let totalDeductions = ekhoTax + ekhoContribution;
             let netto = totalBrutto - totalDeductions;
-            updateDisplay('totalHours', totalHours + overtimeHours + vacationHours, true);
+            updateHoursDisplay('totalHours', totalHours + overtimeHours + vacationHours);
             updateDisplay('baseBrutto', baseBrutto);
-            updateDisplay('nightBreakdown', nightHours, nightBonus);
-            updateDisplay('eveningBreakdown', eveningHours, eveningBonus);
-            updateDisplay('weekendBreakdown', weekendHours, weekendBonus);
-            updateDisplay('overtimeBreakdown', overtimeHours, overtimeBonus);
-            updateDisplay('vacationHours', vacationHours, vacationPay);
+            updateBreakdownDisplay('nightBreakdown', nightHours, nightBonus);
+            updateBreakdownDisplay('eveningBreakdown', eveningHours, eveningBonus);
+            updateBreakdownDisplay('weekendBreakdown', weekendHours, weekendBonus);
+            updateBreakdownDisplay('overtimeBreakdown', overtimeHours, overtimeBonus);
+            updateDisplay('vacationHours', vacationPay);
+            updateHoursDisplay('vacationHours', vacationHours);
             updateDisplay('totalBonus', totalBonus);
             updateDisplay('totalBenefits', totalBenefits);
             updateDisplay('nettoOutput', netto);
@@ -593,40 +588,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const netto = totalBrutto - deductions;
     
-        updateDisplay('totalHours', totalHours + overtimeHours + vacationHours, true);
+        updateHoursDisplay('totalHours', totalHours + overtimeHours + vacationHours);
         updateDisplay('baseBrutto', baseBrutto);
-        updateDisplay('nightBreakdown', nightHours, nightBonus);
-        updateDisplay('eveningBreakdown', eveningHours, eveningBonus);
-        updateDisplay('weekendBreakdown', weekendHours, weekendBonus);
-        updateDisplay('overtimeBreakdown', overtimeHours, overtimeBonus);
-        updateDisplay('vacationHours', vacationHours, vacationPay);
+        updateBreakdownDisplay('nightBreakdown', nightHours, nightBonus);
+        updateBreakdownDisplay('eveningBreakdown', eveningHours, eveningBonus);
+        updateBreakdownDisplay('weekendBreakdown', weekendHours, weekendBonus);
+        updateBreakdownDisplay('overtimeBreakdown', overtimeHours, overtimeBonus);
+        updateHoursDisplay('vacationHours', vacationHours);
         updateDisplay('totalBonus', totalBonus);
         updateDisplay('totalBenefits', totalBenefits);
         updateDisplay('totalSavings', savings);
         updateDisplay('nettoOutput', netto);
         
-        updateSavingsList(isUnder25, isUnder30mother, isMarried, isPersonalDeduction, isRetiredEmployee, isMother4plus);
+        updateSavingsList(isUnder25, isUnder30mother, isMarried, isPersonalDeduction, isRetiredEmployee, isMother4plus, baseBrutto);
     
-        // Csak akkor frissítsük a diagramot, ha van adat
-        if (totalBrutto > 0) {
-            updateChart(chartData);
-        } else {
-            // Töröljük a diagramot, ha nincs adat
-            d3.select("#chart-container svg").remove();
-            const placeholder = d3.select("#chart-container").append("p").text("Nincs elegendő adat a diagram megjelenítéséhez.");
-        }
+        updateChart(chartData);
     };
     
-    // Részletező lista frissítése
-    const updateSavingsList = (isUnder25, isUnder30mother, isMarried, isPersonalDeduction, isRetiredEmployee, isMother4plus) => {
-        const savingsList = [
-            ...(isUnder25 ? [{ text: '25 év alatti adómentesség', value: (parseFloat(baseBruttoEl.textContent.replace(/[^0-9]/g,'')) || 0) * 0.15 }] : []),
-            ...(isUnder30mother ? [{ text: '30 év alatti anyuka', value: (parseFloat(baseBruttoEl.textContent.replace(/[^0-9]/g,'')) || 0) * 0.15 }] : []),
-            ...(isMother4plus ? [{ text: '4+ gyermeket nevelő anyák', value: (parseFloat(baseBruttoEl.textContent.replace(/[^0-9]/g,'')) || 0) * 0.15 }] : []),
-            ...(isPersonalDeduction ? [{ text: 'Személyi kedvezmény', value: 13335 }] : []),
-            ...(isMarried ? [{ text: 'Friss házasok', value: 5000 }] : []),
-            ...(isRetiredEmployee ? [{ text: 'Nyugdíjas munkavállaló', value: (parseFloat(baseBruttoEl.textContent.replace(/[^0-9]/g,'')) || 0) * 0.185 }] : [])
-        ];
+    const updateSavingsList = (isUnder25, isUnder30mother, isMarried, isPersonalDeduction, isRetiredEmployee, isMother4plus, baseBrutto) => {
+        const savingsList = [];
+        if (isUnder25) savingsList.push({ text: '25 év alatti adómentesség', value: baseBrutto * 0.15 });
+        if (isUnder30mother) savingsList.push({ text: '30 év alatti anyuka', value: baseBrutto * 0.15 });
+        if (isMother4plus) savingsList.push({ text: '4+ gyermeket nevelő anyák', value: baseBrutto * 0.15 });
+        if (isPersonalDeduction) savingsList.push({ text: 'Személyi kedvezmény', value: 13335 });
+        if (isMarried) savingsList.push({ text: 'Friss házasok', value: 5000 });
+        if (isRetiredEmployee) savingsList.push({ text: 'Nyugdíjas munkavállaló', value: baseBrutto * 0.185 });
     
         savingsListEl.innerHTML = '';
         if (savingsList.length === 0) {
@@ -641,12 +627,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Funkció a havi adatok mentéséhez a localStorage-ba
     const saveMonthlyData = () => {
         localStorage.setItem(`monthlyData-${currentDate.getFullYear()}-${currentDate.getMonth()}`, JSON.stringify(selectedDays));
     };
 
-    // Funkció a havi adatok betöltéséhez a localStorage-ból
     const loadMonthlyData = () => {
         const data = localStorage.getItem(`monthlyData-${currentDate.getFullYear()}-${currentDate.getMonth()}`);
         if (data) {
@@ -656,7 +640,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // A naptár renderelő függvénye
     const renderCalendar = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -703,7 +686,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dayEl.addEventListener('click', () => {
                 activeDate = dateStr;
                 
-                // Módosítás a modal felugró ablakhoz, az overtime és vacation bemeneti mezők megjelenítése
                 if (dayData && dayData.isOvertime) {
                     overtimeCheckbox.checked = true;
                     vacationCheckbox.checked = false;
@@ -745,7 +727,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // Eseménykezelők a navigációs gombokhoz
     const handleMonthChange = (direction) => {
         const hasData = Object.keys(selectedDays).length > 0;
         if (hasData && monthChangeDirection !== direction) {
@@ -767,32 +748,27 @@ document.addEventListener('DOMContentLoaded', () => {
         calculate();
     };
 
-    // Event listener a PDF mentési megerősítő ablak bezárásához
     closePdfModalBtn.addEventListener('click', () => {
         pdfConfirmModal.style.display = 'none';
-        monthChangeDirection = 0; // Reset
+        monthChangeDirection = 0;
     });
 
     prevBtn.addEventListener('click', () => handleMonthChange(-1));
     nextBtn.addEventListener('click', () => handleMonthChange(1));
 
-    // Event listener a PDF mentés gombhoz
     saveAndContinueBtn.addEventListener('click', () => {
-        // Implementáld a PDF mentési logikát itt
         generatePDF();
         pdfConfirmModal.style.display = 'none';
         changeMonth(monthChangeDirection);
-        monthChangeDirection = 0; // Reset
+        monthChangeDirection = 0;
     });
 
-    // Event listener a folytatás mentés nélkül gombhoz
     continueWithoutSavingBtn.addEventListener('click', () => {
         pdfConfirmModal.style.display = 'none';
         changeMonth(monthChangeDirection);
-        monthChangeDirection = 0; // Reset
+        monthChangeDirection = 0;
     });
 
-    // PDF generáló függvény
     const generatePDF = () => {
         const content = document.querySelector('.container');
         html2canvas(content, {
@@ -878,7 +854,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (end < start) end.setDate(end.getDate() + 1);
             shiftData.workHours = (end - start) / (1000 * 60 * 60);
 
-            // Éjszakai és délutáni órák számítása
             const nightStartHour = parseFloat(nightStartInput.value);
             const nightEndHour = parseFloat(nightEndInput.value);
             const eveningStartHour = parseFloat(eveningStartInput.value);
@@ -915,7 +890,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedDays[activeDate] = shiftData;
         }
         shiftModal.style.display = 'none';
-        saveMonthlyData(); // Munkaórák mentése
+        saveMonthlyData();
         renderCalendar();
         calculate();
     });
@@ -923,15 +898,13 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelShiftBtn.addEventListener('click', () => {
         if (activeDate) delete selectedDays[activeDate];
         shiftModal.style.display = 'none';
-        saveMonthlyData(); // Módosítás mentése
+        saveMonthlyData();
         renderCalendar();
         calculate();
     });
 
-    // Eseménykezelők a számítás indításához és a mentéshez
     calculateBtn.addEventListener('click', calculate);
 
-    // Kezdeti renderelés és adatok betöltése
     loadSettings();
     loadMonthlyData();
     renderCalendar();
