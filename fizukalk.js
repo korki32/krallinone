@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const personalDeductionCheckbox = document.getElementById('personalDeduction');
     const retiredEmployeeCheckbox = document.getElementById('retiredEmployee');
     const mother4plusCheckbox = document.getElementById('mother4plus');
+    const calculateBtn = document.getElementById('calculateBtn');
     const totalHoursEl = document.getElementById('totalHours');
     const baseBruttoEl = document.getElementById('baseBrutto');
     const nightBreakdownEl = document.getElementById('nightBreakdown');
@@ -236,7 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
         benefitCounter++;
         createBenefitField(benefitCounter, '', 0);
         saveSettings();
-        calculate();
     });
 
     benefitsContainer.addEventListener('click', (e) => {
@@ -265,26 +265,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             // Juttatások betöltése
-            benefits = settings.benefits || {};
-            Object.keys(benefits).forEach(id => {
-                createBenefitField(id, benefits[id].name, benefits[id].value);
-            });
-            // Frissítjük a számlálót, hogy ne legyen ID ütközés
-            if (Object.keys(benefits).length > 0) {
-                benefitCounter = Math.max(...Object.keys(benefits).map(id => parseInt(id)))
+            if (settings.benefits) {
+                benefits = settings.benefits;
+                Object.keys(benefits).forEach(id => {
+                    createBenefitField(id, benefits[id].name, benefits[id].value);
+                });
             }
-        } else {
-            // Alapértelmezett értékek, ha még nincs mentve semmi
-            hourlyRateInput.value = 1500;
-            vacationHourlyRateInput.value = 1500;
-            nightRateInput.value = 25;
-            nightStartInput.value = 22;
-            nightEndInput.value = 6;
-            eveningRateInput.value = 15;
-            eveningStartInput.value = 18;
-            eveningEndInput.value = 22;
-            weekendRateInput.value = 50;
-            overtimeRateInput.value = 50;
         }
     };
 
@@ -297,214 +283,168 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsCheckboxes.forEach(checkbox => {
             settings[checkbox.id] = checkbox.checked;
         });
-
         // Juttatások mentése
-        const benefitFields = document.querySelectorAll('.benefit-field');
-        const benefitsToSave = {};
-        benefitFields.forEach(field => {
-            const id = field.dataset.id;
-            const name = field.querySelector(`[id="benefitName-${id}"]`).value;
-            const value = parseFloat(field.querySelector(`[id="benefitValue-${id}"]`).value) || 0;
-            benefitsToSave[id] = {
-                name,
-                value
-            };
+        const currentBenefits = {};
+        document.querySelectorAll('.benefit-field').forEach(div => {
+            const id = div.dataset.id;
+            const name = div.querySelector('input[type="text"]').value;
+            const value = parseFloat(div.querySelector('input[type="number"]').value) || 0;
+            currentBenefits[id] = { name, value };
         });
-        settings.benefits = benefitsToSave;
-
+        settings.benefits = currentBenefits;
         localStorage.setItem('calculatorSettings', JSON.stringify(settings));
     };
 
-    // Eseménykezelők a beállítások mezőkhöz (valós idejű számításhoz)
-    [...settingsInputs, ...settingsCheckboxes].forEach(input => {
-        input.addEventListener('change', () => {
-            saveSettings();
-            calculate();
-        });
-    });
-    benefitsContainer.addEventListener('input', () => {
-        saveSettings();
-        calculate();
-    });
+    // --- Animációk, Diagram és Számítások ---
 
-    const getMonthName = (date) => {
-        return date.toLocaleString('hu-HU', {
-            month: 'long',
-            year: 'numeric'
-        });
-    };
-
-    const isWeekend = (date) => {
-        const day = date.getDay();
-        return day === 0 || day === 6;
-    };
-
-    const getWeekNumber = (d) => {
-        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        return weekNo;
-    };
-
-    const renderCalendar = () => {
-        calendarDaysEl.innerHTML = '';
-        currentMonthEl.textContent = getMonthName(currentDate);
-
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-
-        const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
-
-        for (let i = 0; i < firstDayOfWeek; i++) {
-            const emptyDiv = document.createElement('div');
-            emptyDiv.classList.add('day', 'empty-day');
-            calendarDaysEl.appendChild(emptyDiv);
-        }
-
-        for (let day = 1; day <= lastDay.getDate(); day++) {
-            const date = new Date(year, month, day);
-            const dateStr = date.toISOString().split('T')[0];
-            const dayDiv = document.createElement('div');
-            dayDiv.classList.add('day', 'relative', 'rounded-lg', 'transition-colors', 'duration-200', 'ease-in-out');
-            dayDiv.dataset.date = dateStr;
-
-            const dayName = date.toLocaleDateString('hu-HU', {
-                weekday: 'short'
-            }).charAt(0).toUpperCase() + date.toLocaleDateString('hu-HU', {
-                weekday: 'short'
-            }).slice(1, -1);
-            const dayNum = date.getDate();
-
-            let classesToAdd = ['bg-gray-800', 'hover:bg-gray-700'];
-
-            const shiftData = selectedDays[dateStr];
-            if (shiftData) {
-                if (shiftData.isVacation) {
-                    classesToAdd = ['vacation', 'hover:bg-yellow-600'];
-                } else if (shiftData.isOvertime) {
-                    classesToAdd = ['overtime', 'hover:bg-red-500'];
-                } else {
-                    classesToAdd = ['selected', 'hover:bg-blue-600'];
-                }
+    // Animációs függvény
+    function animateValue(obj, start, end) {
+        let current = start;
+        const range = end - start;
+        const increment = end > start ? 1 : -1;
+        const step = Math.abs(range / 100);
+        let lastTimestamp = null;
+    
+        function stepAnimate(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const elapsed = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+    
+            if (Math.abs(current - end) < step) {
+                current = end;
+                obj.textContent = formatCurrency(current);
+                return;
             }
+    
+            current += increment * step * (elapsed / 16); // 60fps-re optimalizálva
+    
+            if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                current = end;
+            }
+            
+            obj.textContent = formatCurrency(current);
+    
+            if (current !== end) {
+                requestAnimationFrame(stepAnimate);
+            }
+        }
+        requestAnimationFrame(stepAnimate);
+    }
+    
+    // Kezdeti állapot a számlálóknak
+    const updateDisplay = (id, value, isHours = false) => {
+        const element = document.getElementById(id);
+        const start = parseFloat(element.textContent.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+        const formattedValue = isHours ? `${value} óra` : formatCurrency(value);
+        if (isHours) {
+            element.textContent = formattedValue;
+        } else {
+            animateValue(element, start, value);
+        }
+    };
+    
+    const updateBreakdownDisplay = (id, hours, amount) => {
+        const element = document.getElementById(id);
+        const start = parseFloat(element.textContent.split('(')[1]?.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+        element.textContent = `${hours} óra (${formatCurrency(start)})`;
+        const tempSpan = document.createElement('span');
+        element.appendChild(tempSpan);
+        animateValue(tempSpan, start, amount);
+        tempSpan.style.display = 'none';
+        element.innerHTML = `${hours} óra (<span id="${id}-amount"></span>)`;
+        animateValue(document.getElementById(`${id}-amount`), start, amount);
+    };
+    
+    // A D3.js diagram frissítő függvénye
+    const chartContainer = document.getElementById('chart-container');
+    const margin = { top: 20, right: 20, bottom: 80, left: 60 };
+    const width = chartContainer.offsetWidth - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+    const tooltip = d3.select("#tooltip");
 
-            dayDiv.classList.add(...classesToAdd);
+    const svg = d3.select("#chart-container")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+    const updateChart = (data) => {
+        // Skálák
+        const x = d3.scaleBand()
+            .range([0, width])
+            .domain(data.map(d => d.label))
+            .padding(0.2);
+    
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.value)])
+            .range([height, 0]);
+    
+        // Tengelyek
+        svg.selectAll(".x-axis").remove();
+        svg.selectAll(".y-axis").remove();
+    
+        svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", "rotate(-45)");
+    
+        svg.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(y).tickFormat(d3.format(".2s")));
 
-            dayDiv.innerHTML = `
-                <span class="font-medium">${dayNum}</span>
-                ${shiftData && shiftData.isVacation ? '<span class="text-xs text-white mt-1">SZABADSÁG</span>' : ''}
-                ${shiftData && shiftData.isOvertime ? '<span class="text-xs text-white mt-1">TÚLÓRA</span>' : ''}
-                ${shiftData && !shiftData.isVacation && !shiftData.isOvertime ? '<span class="hours text-xs text-gray-400 mt-1">' + (shiftData.workHours + (shiftData.breakHours || 0)) + ' óra</span>' : ''}
-            `;
+        // Sávok frissítése
+        const bars = svg.selectAll(".bar")
+            .data(data, d => d.label);
 
-            dayDiv.addEventListener('click', () => {
-                openShiftModal(dateStr);
+        bars.enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.label))
+            .attr("y", height)
+            .attr("width", x.bandwidth())
+            .attr("height", 0)
+            .attr("fill", "#6d28d9")
+            .merge(bars)
+            .transition()
+            .duration(750)
+            .attr("x", d => x(d.label))
+            .attr("y", d => y(d.value))
+            .attr("width", x.bandwidth())
+            .attr("height", d => height - y(d.value));
+
+        // Interakció
+        svg.selectAll(".bar")
+            .on("mouseover", (event, d) => {
+                tooltip.style("opacity", 1)
+                    .html(`${d.label}<br>${formatCurrency(d.value)}`);
+            })
+            .on("mousemove", (event) => {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 10) + "px");
+            })
+            .on("mouseout", () => {
+                tooltip.style("opacity", 0);
             });
-
-            calendarDaysEl.appendChild(dayDiv);
-        }
     };
-
-    const openShiftModal = (dateStr) => {
-        activeDate = dateStr;
-        const shiftData = selectedDays[dateStr] || {};
-
-        startTimeInput.value = shiftData.startTime || '';
-        endTimeInput.value = shiftData.endTime || '';
-        overtimeCheckbox.checked = shiftData.isOvertime || false;
-        vacationCheckbox.checked = shiftData.isVacation || false;
-        overtimeHoursInput.value = shiftData.overtimeHours || 8;
-        vacationHoursInput.value = shiftData.vacationHours || 8;
-
-        // Szabályok alkalmazása a beviteli mezőkre
-        const toggleInputs = () => {
-            const isVacation = vacationCheckbox.checked;
-            const isOvertime = overtimeCheckbox.checked;
-
-            startTimeInput.disabled = isVacation;
-            endTimeInput.disabled = isVacation;
-            overtimeCheckbox.disabled = isVacation;
-            vacationCheckbox.disabled = isOvertime;
-            overtimeHoursInput.disabled = !isOvertime;
-            vacationHoursInput.disabled = !isVacation;
-
-            if (isVacation) {
-                startTimeInput.classList.add('disabled-input');
-                endTimeInput.classList.add('disabled-input');
-                overtimeCheckbox.closest('div').classList.add('disabled');
-            } else {
-                startTimeInput.classList.remove('disabled-input');
-                endTimeInput.classList.remove('disabled-input');
-                overtimeCheckbox.closest('div').classList.remove('disabled');
-            }
-
-            if (isOvertime) {
-                vacationCheckbox.closest('div').classList.add('disabled');
-            } else {
-                vacationCheckbox.closest('div').classList.remove('disabled');
-            }
-
-            if (!isOvertime) {
-                overtimeHoursInput.classList.add('disabled-input');
-            } else {
-                overtimeHoursInput.classList.remove('disabled-input');
-            }
-
-            if (!isVacation) {
-                vacationHoursInput.classList.add('disabled-input');
-            } else {
-                vacationHoursInput.classList.remove('disabled-input');
-            }
-        };
-
-        overtimeCheckbox.addEventListener('change', toggleInputs);
-        vacationCheckbox.addEventListener('change', toggleInputs);
-
-        toggleInputs();
-
-        shiftModal.style.display = 'flex';
-    };
-
-    const saveMonthlyData = () => {
-        const monthKey = currentDate.toISOString().slice(0, 7);
-        localStorage.setItem(`selectedDays-${monthKey}`, JSON.stringify(selectedDays));
-    };
-
-    const loadMonthlyData = () => {
-        const monthKey = currentDate.toISOString().slice(0, 7);
-        const savedData = localStorage.getItem(`selectedDays-${monthKey}`);
-        selectedDays = savedData ? JSON.parse(savedData) : {};
-    };
-
-    // ÚJ: Animációs funkció a nettó fizetéshez
-    const animateValue = (element, start, end, duration) => {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            element.textContent = formatCurrency(Math.floor(progress * (end - start) + start));
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            }
-        };
-        window.requestAnimationFrame(step);
-    };
-
-    // FONTOS: A calculate függvény logika
+    
+    // A fő számítási logika
     const calculate = () => {
         const hourlyRate = parseFloat(hourlyRateInput.value) || 0;
-        const vacationHourlyRate = parseFloat(vacationHourlyRateInput.value) || hourlyRate;
-        const nightRate = parseFloat(nightRateInput.value) / 100 || 0;
-        const nightStart = parseFloat(nightStartInput.value);
-        const nightEnd = parseFloat(nightEndInput.value);
-        const eveningRate = parseFloat(eveningRateInput.value) / 100 || 0;
-        const eveningStart = parseFloat(eveningStartInput.value);
-        const eveningEnd = parseFloat(eveningEndInput.value);
-        const weekendRate = parseFloat(weekendRateInput.value) / 100 || 0;
-        const overtimeRate = parseFloat(overtimeRateInput.value) / 100 || 0;
+        const vacationHourlyRate = parseFloat(vacationHourlyRateInput.value) || 0;
+        const nightRate = (parseFloat(nightRateInput.value) || 0) / 100;
+        const nightStart = parseFloat(nightStartInput.value) || 0;
+        const nightEnd = parseFloat(nightEndInput.value) || 0;
+        const eveningRate = (parseFloat(eveningRateInput.value) || 0) / 100;
+        const eveningStart = parseFloat(eveningStartInput.value) || 0;
+        const eveningEnd = parseFloat(eveningEndInput.value) || 0;
+        const weekendRate = (parseFloat(weekendRateInput.value) || 0) / 100;
+        const overtimeRate = (parseFloat(overtimeRateInput.value) || 0) / 100;
         const weekendOption = weekendOptionSelect.value;
         const isEKHO = ekhoCheckbox.checked;
         const isUnder25 = under25Checkbox.checked;
@@ -513,412 +453,406 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPersonalDeduction = personalDeductionCheckbox.checked;
         const isRetiredEmployee = retiredEmployeeCheckbox.checked;
         const isMother4plus = mother4plusCheckbox.checked;
-
+    
+        if (hourlyRate <= 0) {
+            updateDisplay('nettoOutput', 0);
+            return;
+        }
+    
         let totalHours = 0;
         let baseBrutto = 0;
         let nightHours = 0;
         let eveningHours = 0;
         let weekendHours = 0;
         let overtimeHours = 0;
-        let totalVacationHours = 0;
-        let nightPay = 0;
-        let eveningPay = 0;
-        let weekendPay = 0;
-        let overtimePay = 0;
+        let vacationHours = 0;
+        let nightBonus = 0;
+        let eveningBonus = 0;
+        let weekendBonus = 0;
+        let overtimeBonus = 0;
         let vacationPay = 0;
-
-        const dateKeys = Object.keys(selectedDays);
-        dateKeys.forEach(dateStr => {
-            const shiftData = selectedDays[dateStr];
-            if (!shiftData) return;
-
-            const date = new Date(dateStr);
-            const dayOfWeek = date.getDay();
-
-            if (shiftData.isVacation) {
-                const hours = parseFloat(shiftData.vacationHours) || 0;
-                totalVacationHours += hours;
-                vacationPay += hours * vacationHourlyRate;
-                totalHours += hours;
-                return;
-            }
-
-            if (shiftData.isOvertime) {
-                const hours = parseFloat(shiftData.overtimeHours) || 0;
-                overtimeHours += hours;
-                overtimePay += hours * hourlyRate * (1 + overtimeRate);
-                totalHours += hours;
-                return;
-            }
-
-            const start = new Date(`${dateStr}T${shiftData.startTime}`);
-            const end = new Date(`${dateStr}T${shiftData.endTime}`);
-            if (end < start) end.setDate(end.getDate() + 1);
-
-            let current = new Date(start);
-            while (current < end) {
-                let nextHour = new Date(current);
-                nextHour.setHours(current.getHours() + 1);
-                if (nextHour > end) nextHour = end;
-
-                const hour = current.getHours();
-                const minutes = (nextHour - current) / (1000 * 60);
-                const hourFraction = minutes / 60;
-
-                baseBrutto += hourlyRate * hourFraction;
-
-                let isNight = false;
-                let isEvening = false;
-                if (nightEnd < nightStart) {
-                    if (hour >= nightStart || hour < nightEnd) {
-                        isNight = true;
-                    }
-                } else if (hour >= nightStart && hour < nightEnd) {
-                    isNight = true;
+        let totalBonus = 0;
+    
+        Object.values(selectedDays).forEach(day => {
+            if (day.isVacation) {
+                vacationHours += day.vacationHours;
+                vacationPay += day.vacationHours * vacationHourlyRate;
+            } else if (day.isOvertime) {
+                overtimeHours += day.overtimeHours;
+            } else {
+                totalHours += day.workHours;
+                
+                const dayNightHours = day.nightHours;
+                const dayEveningHours = day.eveningHours;
+                const isWeekend = day.isWeekend;
+    
+                nightHours += dayNightHours;
+                eveningHours += dayEveningHours;
+    
+                if (isWeekend && (weekendOption === 'all' || (weekendOption === 'saturday' && day.dayOfWeek === 6) || (weekendOption === 'sunday' && day.dayOfWeek === 0))) {
+                    weekendHours += day.workHours;
                 }
-
-                if (eveningEnd < eveningStart) {
-                    if (hour >= eveningStart || hour < eveningEnd) {
-                        isEvening = true;
-                    }
-                } else if (hour >= eveningStart && hour < eveningEnd) {
-                    isEvening = true;
-                }
-
-                if (isNight) {
-                    nightHours += hourFraction;
-                    nightPay += hourlyRate * nightRate * hourFraction;
-                }
-
-                if (isEvening) {
-                    eveningHours += hourFraction;
-                    eveningPay += hourlyRate * eveningRate * hourFraction;
-                }
-
-                if (isWeekend(current) && ((weekendOption === 'all') || (weekendOption === 'saturday' && current.getDay() === 6) || (weekendOption === 'sunday' && current.getDay() === 0))) {
-                    weekendHours += hourFraction;
-                    weekendPay += hourlyRate * weekendRate * hourFraction;
-                }
-
-                totalHours += hourFraction;
-                current = nextHour;
             }
         });
-
-        // Juttatások számítása
-        const totalBenefits = Object.values(benefits).reduce((sum, b) => sum + (b.value || 0), 0);
-        if (totalBenefits > 0) {
-            totalBenefitsContainer.style.display = 'block';
-        } else {
-            totalBenefitsContainer.style.display = 'none';
-        }
-
-        // Fizetési adatok
-        const totalBrutto = baseBrutto + nightPay + eveningPay + weekendPay + overtimePay + vacationPay;
-        const totalBonus = nightPay + eveningPay + weekendPay + overtimePay;
-
-        // Adó és járulékok számítása
-        let netto = totalBrutto;
-        let totalSavings = 0;
-        let szjaSavings = 0;
-        let tbSavings = 0;
-        const savingsDetails = [];
-
-        // EKHO adózás
-        if (isEKHO) {
-            const ekhoPay = totalBrutto * 0.15;
-            const tbPay = totalBrutto * 0.13;
-            netto = totalBrutto - ekhoPay - tbPay;
-        } else {
-            // Normál adózás
-            let szja = totalBrutto * 0.15;
-            let tbJarulék = totalBrutto * 0.185;
-
-            // Kedvezmények
-            const maxExempt = 576601; // 2024-es átlagbér
-            if (isUnder25) {
-                const exemption = Math.min(totalBrutto, maxExempt);
-                szjaSavings += exemption * 0.15;
-            }
-            if (isUnder30mother) {
-                const exemption = Math.min(totalBrutto, maxExempt);
-                szjaSavings += exemption * 0.15;
-            }
-            if (isMarried) {
-                szjaSavings += 5000;
-            }
-            if (isPersonalDeduction) {
-                szjaSavings += 77700;
-            }
-
-            if (isMother4plus) {
-                szjaSavings = totalBrutto * 0.15;
-            }
-
-            szja -= szjaSavings;
-            if (szja < 0) szja = 0;
-
-            if (isRetiredEmployee) {
-                tbJarulék = 0;
-            }
-            
-            // Járulék kedvezmény (ha van)
-            if (isEKHO) {
-                tbJarulék = totalBrutto * 0.13;
-            }
-            if (isRetiredEmployee) {
-                tbJarulék = 0;
-            }
-
-            tbSavings = (totalBrutto * 0.185) - tbJarulék;
-
-            netto = totalBrutto - szja - tbJarulék;
-            totalSavings = szjaSavings + tbSavings;
-        }
+    
+        baseBrutto = totalHours * hourlyRate;
+        nightBonus = nightHours * hourlyRate * nightRate;
+        eveningBonus = eveningHours * hourlyRate * eveningRate;
+        weekendBonus = weekendHours * hourlyRate * weekendRate;
+        overtimeBonus = overtimeHours * hourlyRate * overtimeRate;
+    
+        totalBonus = nightBonus + eveningBonus + weekendBonus + overtimeBonus + vacationPay;
         
-        // Juttatások hozzáadása a nettóhoz
-        netto += totalBenefits;
+        let totalBenefits = 0;
+        document.querySelectorAll('.benefit-field').forEach(div => {
+            const value = parseFloat(div.querySelector('input[type="number"]').value) || 0;
+            totalBenefits += value;
+        });
 
-        // Eredmények kiírása
-        totalHoursEl.textContent = `${(totalHours).toFixed(2)} óra`;
-        baseBruttoEl.textContent = formatCurrency(baseBrutto);
-        nightBreakdownEl.textContent = `${nightHours.toFixed(2)} óra (${formatCurrency(nightPay)})`;
-        eveningBreakdownEl.textContent = `${eveningHours.toFixed(2)} óra (${formatCurrency(eveningPay)})`;
-        weekendBreakdownEl.textContent = `${weekendHours.toFixed(2)} óra (${formatCurrency(weekendPay)})`;
-        overtimeBreakdownEl.textContent = `${overtimeHours.toFixed(2)} óra (${formatCurrency(overtimePay)})`;
-        vacationHoursEl.textContent = `${totalVacationHours.toFixed(2)} óra (${formatCurrency(vacationPay)})`;
-        totalBonusEl.textContent = formatCurrency(totalBonus);
-        totalBenefitsEl.textContent = formatCurrency(totalBenefits);
+        // Diagram adatok előkészítése
+        const chartData = [
+            { label: 'Alap bér', value: baseBrutto },
+            { label: 'Éjszakai pótlék', value: nightBonus },
+            { label: 'Délutáni pótlék', value: eveningBonus },
+            { label: 'Hétvégi pótlék', value: weekendBonus },
+            { label: 'Túlóra pótlék', value: overtimeBonus },
+            { label: 'Szabadságdíj', value: vacationPay }
+        ];
 
-        // ÚJ: Animáció a nettó érték frissítéséhez
-        const currentNetto = parseFloat(nettoOutputEl.textContent.replace(/[^\d]/g, '')) || 0;
-        animateValue(nettoOutputEl, currentNetto, netto, 500); // 500ms animáció
+        if (totalBenefits > 0) {
+            chartData.push({ label: 'Juttatások', value: totalBenefits });
+            totalBenefitsContainer.classList.remove('hidden');
+        } else {
+            totalBenefitsContainer.classList.add('hidden');
+        }
 
-        totalSavingsEl.textContent = formatCurrency(totalSavings);
+        const totalBrutto = baseBrutto + totalBonus + totalBenefits;
+    
+        let taxBase = totalBrutto;
+        
+        let SZJA_RATE = 0.15;
+        let TB_RATE = 0.185;
+    
+        if (isEKHO) {
+            SZJA_RATE = 0;
+            TB_RATE = 0;
+            // EKHO adó + hozzájárulás 
+            const EKHO_RATE = 0.13;
+            const PENSION_RATE = 0.09;
+            const HEALTH_RATE = 0.04;
+            let ekhoTax = totalBrutto * EKHO_RATE;
+            let ekhoContribution = totalBrutto * PENSION_RATE;
+            let totalDeductions = ekhoTax + ekhoContribution;
+            let netto = totalBrutto - totalDeductions;
+            updateDisplay('totalHours', totalHours + overtimeHours + vacationHours, true);
+            updateDisplay('baseBrutto', baseBrutto);
+            updateDisplay('nightBreakdown', nightHours, nightBonus);
+            updateDisplay('eveningBreakdown', eveningHours, eveningBonus);
+            updateDisplay('weekendBreakdown', weekendHours, weekendBonus);
+            updateDisplay('overtimeBreakdown', overtimeHours, overtimeBonus);
+            updateDisplay('vacationHours', vacationHours, vacationPay);
+            updateDisplay('totalBonus', totalBonus);
+            updateDisplay('totalBenefits', totalBenefits);
+            updateDisplay('nettoOutput', netto);
+            updateChart(chartData);
+            return;
+        }
 
-        // Megtakarítások részletező
+        if (isUnder25 || isUnder30mother || isMother4plus) {
+            let limit = 576601; // 2024-es átlagkereset * 12
+            let deduction = Math.min(taxBase, limit);
+            taxBase -= deduction;
+        }
+    
+        let personalDeduction = 0;
+        if (isPersonalDeduction) {
+            personalDeduction = 13335;
+        }
+    
+        let marriedDeduction = 0;
+        if (isMarried) {
+            marriedDeduction = 5000;
+        }
+    
+        let tax = (taxBase - personalDeduction - marriedDeduction) * SZJA_RATE;
+        if (tax < 0) tax = 0;
+    
+        let deductions = 0;
+        if (isRetiredEmployee) {
+            deductions = tax;
+        } else {
+            deductions = tax + (totalBrutto * TB_RATE);
+        }
+    
+        let savings = 0;
+        if (isUnder25) savings += totalBrutto * 0.15; // Egyszerűsített számítás
+        if (isUnder30mother) savings += totalBrutto * 0.15;
+        if (isMarried) savings += 5000;
+        if (isPersonalDeduction) savings += 13335;
+        if (isMother4plus) savings = totalBrutto * 0.15;
+    
+        const netto = totalBrutto - deductions;
+    
+        updateDisplay('totalHours', totalHours + overtimeHours + vacationHours, true);
+        updateDisplay('baseBrutto', baseBrutto);
+        updateDisplay('nightBreakdown', nightHours, nightBonus);
+        updateDisplay('eveningBreakdown', eveningHours, eveningBonus);
+        updateDisplay('weekendBreakdown', weekendHours, weekendBonus);
+        updateDisplay('overtimeBreakdown', overtimeHours, overtimeBonus);
+        updateDisplay('vacationHours', vacationHours, vacationPay);
+        updateDisplay('totalBonus', totalBonus);
+        updateDisplay('totalBenefits', totalBenefits);
+        updateDisplay('totalSavings', savings);
+        updateDisplay('nettoOutput', netto);
+        
+        updateSavingsList(isUnder25, isUnder30mother, isMarried, isPersonalDeduction, isRetiredEmployee, isMother4plus);
+    
+        // Csak akkor frissítsük a diagramot, ha van adat
+        if (totalBrutto > 0) {
+            updateChart(chartData);
+        } else {
+            // Töröljük a diagramot, ha nincs adat
+            d3.select("#chart-container svg").remove();
+            const placeholder = d3.select("#chart-container").append("p").text("Nincs elegendő adat a diagram megjelenítéséhez.");
+        }
+    };
+    
+    // Részletező lista frissítése
+    const updateSavingsList = (isUnder25, isUnder30mother, isMarried, isPersonalDeduction, isRetiredEmployee, isMother4plus) => {
+        const savingsList = [
+            ...(isUnder25 ? [{ text: '25 év alatti adómentesség', value: (parseFloat(baseBruttoEl.textContent.replace(/[^0-9]/g,'')) || 0) * 0.15 }] : []),
+            ...(isUnder30mother ? [{ text: '30 év alatti anyuka', value: (parseFloat(baseBruttoEl.textContent.replace(/[^0-9]/g,'')) || 0) * 0.15 }] : []),
+            ...(isMother4plus ? [{ text: '4+ gyermeket nevelő anyák', value: (parseFloat(baseBruttoEl.textContent.replace(/[^0-9]/g,'')) || 0) * 0.15 }] : []),
+            ...(isPersonalDeduction ? [{ text: 'Személyi kedvezmény', value: 13335 }] : []),
+            ...(isMarried ? [{ text: 'Friss házasok', value: 5000 }] : []),
+            ...(isRetiredEmployee ? [{ text: 'Nyugdíjas munkavállaló', value: (parseFloat(baseBruttoEl.textContent.replace(/[^0-9]/g,'')) || 0) * 0.185 }] : [])
+        ];
+    
         savingsListEl.innerHTML = '';
-        if (isUnder25) savingsDetails.push(`25 év alatti adómentesség: ${formatCurrency(Math.min(totalBrutto, 576601) * 0.15)}`);
-        if (isUnder30mother) savingsDetails.push(`30 év alatti anyuka kedvezmény: ${formatCurrency(Math.min(totalBrutto, 576601) * 0.15)}`);
-        if (isMarried) savingsDetails.push(`Friss házasok kedvezménye: ${formatCurrency(5000)}`);
-        if (isPersonalDeduction) savingsDetails.push(`Személyi kedvezmény: ${formatCurrency(77700)}`);
-        if (isMother4plus) savingsDetails.push(`4+ gyermeket nevelő anyák adómentessége: ${formatCurrency(totalBrutto * 0.15)}`);
-        if (isRetiredEmployee) savingsDetails.push(`Nyugdíjas munkavállaló járulék-mentessége: ${formatCurrency(totalBrutto * 0.185)}`);
-
-        if (savingsDetails.length > 0) {
-            savingsDetails.forEach(detail => {
+        if (savingsList.length === 0) {
+            savingsListEl.innerHTML = '<p class="text-gray-400" id="savings-placeholder">Jelölj be kedvezményeket a részletekhez.</p>';
+        } else {
+            savingsList.forEach(item => {
                 const p = document.createElement('p');
-                p.classList.add('text-gray-300');
-                p.textContent = detail;
+                p.classList.add('text-sm', 'text-gray-300');
+                p.textContent = `${item.text}: ${formatCurrency(item.value)}`;
                 savingsListEl.appendChild(p);
             });
-            savingsPlaceholderEl.style.display = 'none';
+        }
+    };
+
+    // Funkció a havi adatok mentéséhez a localStorage-ba
+    const saveMonthlyData = () => {
+        localStorage.setItem(`monthlyData-${currentDate.getFullYear()}-${currentDate.getMonth()}`, JSON.stringify(selectedDays));
+    };
+
+    // Funkció a havi adatok betöltéséhez a localStorage-ból
+    const loadMonthlyData = () => {
+        const data = localStorage.getItem(`monthlyData-${currentDate.getFullYear()}-${currentDate.getMonth()}`);
+        if (data) {
+            selectedDays = JSON.parse(data);
         } else {
-            savingsPlaceholderEl.style.display = 'block';
+            selectedDays = {};
         }
-
-        // Grafikon
-        updateChart(totalBrutto, szja, tbJarulék, totalBenefits, totalBonus, isEKHO);
     };
 
-    // ÚJ: Modernizált D3.js diagram
-    const updateChart = (totalBrutto, szja, tbJarulék, totalBenefits, totalBonus, isEKHO) => {
-        const data = [];
-        if (totalBrutto > 0) {
-            if (isEKHO) {
-                data.push({
-                    category: 'EKHO',
-                    value: totalBrutto * 0.15
-                });
-                data.push({
-                    category: 'TB',
-                    value: totalBrutto * 0.13
-                });
-                data.push({
-                    category: 'Nettó',
-                    value: totalBrutto - (totalBrutto * 0.15) - (totalBrutto * 0.13)
-                });
-            } else {
-                data.push({
-                    category: 'Adó (SZJA)',
-                    value: szja
-                });
-                data.push({
-                    category: 'Járulék (TB)',
-                    value: tbJarulék
-                });
-                data.push({
-                    category: 'Nettó',
-                    value: totalBrutto - szja - tbJarulék
-                });
-            }
-        }
-        if (totalBenefits > 0) {
-            data.push({
-                category: 'Juttatások',
-                value: totalBenefits
-            });
-        }
-        if (totalBonus > 0) {
-            data.push({
-                category: 'Pótlékok',
-                value: totalBonus
-            });
+    // A naptár renderelő függvénye
+    const renderCalendar = () => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+
+        currentMonthEl.textContent = `${year}. ${new Intl.DateTimeFormat('hu-HU', { month: 'long' }).format(currentDate)}`;
+        calendarDaysEl.innerHTML = '';
+
+        let startDay = (firstDay.getDay() + 6) % 7;
+        for (let i = 0; i < startDay; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.classList.add('empty-day');
+            calendarDaysEl.appendChild(emptyDay);
         }
 
-        const margin = {
-            top: 20,
-            right: 20,
-            bottom: 30,
-            left: 50
-        };
-        const chartContainer = d3.select("#chart-container");
-        const svgWidth = chartContainer.node().getBoundingClientRect().width;
-        const svgHeight = 300;
-        const innerWidth = svgWidth - margin.left - margin.right;
-        const innerHeight = svgHeight - margin.top - margin.bottom;
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dayEl = document.createElement('div');
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const dayData = selectedDays[dateStr];
 
-        chartContainer.select("svg").remove();
-        const svg = chartContainer.append("svg")
-            .attr("width", svgWidth)
-            .attr("height", svgHeight)
-            .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
+            dayEl.dataset.date = dateStr;
+            dayEl.dataset.dayOfWeek = new Date(dateStr).getDay();
+            dayEl.classList.add('day', 'bg-gray-800', 'rounded-lg', 'shadow-md', 'transition-transform');
 
-        const x = d3.scaleBand()
-            .domain(data.map(d => d.category))
-            .range([0, innerWidth])
-            .padding(0.1);
-
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.value)])
-            .nice()
-            .range([innerHeight, 0]);
-
-        // Modern színskála definiálása
-        const color = d3.scaleOrdinal()
-            .domain(['Nettó', 'Adó (SZJA)', 'Járulék (TB)', 'EKHO', 'Juttatások', 'Pótlékok'])
-            .range(['#4ade80', '#f87171', '#60a5fa', '#f87171', '#fbbf24', '#a78bfa']);
-
-        const tooltip = d3.select("#tooltip");
-
-        svg.selectAll(".bar")
-            .data(data, d => d.category)
-            .join("rect")
-            .attr("class", d => `bar bar-${d.category.toLowerCase().replace(/[^\w]/g, '')}`)
-            .attr("x", d => x(d.category))
-            .attr("y", innerHeight)
-            .attr("width", x.bandwidth())
-            .attr("height", 0)
-            .style("fill", d => color(d.category))
-            .on("mouseover", (event, d) => {
-                tooltip.style("opacity", 1)
-                    .html(`<strong>${d.category}</strong><br>${formatCurrency(d.value)}`)
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 20) + "px");
-            })
-            .on("mouseout", () => {
-                tooltip.style("opacity", 0);
-            })
-            .transition()
-            .duration(500)
-            .attr("y", d => y(d.value))
-            .attr("height", d => innerHeight - y(d.value));
-
-        svg.append("g")
-            .attr("class", "axis")
-            .attr("transform", `translate(0,${innerHeight})`)
-            .call(d3.axisBottom(x));
-
-        svg.append("g")
-            .attr("class", "axis")
-            .call(d3.axisLeft(y).tickFormat(d3.format(".2s")));
-    };
-
-
-    prevBtn.addEventListener('click', () => {
-        monthChangeDirection = -1;
-        pdfConfirmModal.style.display = 'flex';
-    });
-
-    nextBtn.addEventListener('click', () => {
-        monthChangeDirection = 1;
-        pdfConfirmModal.style.display = 'flex';
-    });
-
-    const exportToPdf = async () => {
-        const {
-            jsPDF
-        } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const content = document.querySelector('.container');
-        const scale = 2;
-
-        const options = {
-            scale: scale,
-            useCORS: true,
-            onclone: (document) => {
-                // Ensure the canvas background is rendered
-                const canvas = document.getElementById('futuristic-canvas');
-                if (canvas) {
-                    canvas.style.display = 'none'; // Hide the canvas for the PDF
+            let content = `<span class="font-bold">${i}</span>`;
+            if (dayData) {
+                if (dayData.isOvertime) {
+                    dayEl.classList.add('overtime');
+                    content += `<span class="hours">${dayData.overtimeHours} túlóra</span>`;
+                } else if (dayData.isVacation) {
+                    dayEl.classList.add('vacation');
+                    content += `<span class="hours">${dayData.vacationHours} szabadság</span>`;
+                } else {
+                    dayEl.classList.add('selected');
+                    content += `<span class="hours">${dayData.workHours} óra</span>`;
                 }
+            } else {
+                content += '<span class="hours">0 óra</span>';
             }
-        };
+            dayEl.innerHTML = content;
 
-        const canvas = await html2canvas(content, options);
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = 210; // A4 width in mm
-        const pageHeight = 297; // A4 height in mm
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-            position = heightLeft - imgHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
+            dayEl.addEventListener('click', () => {
+                activeDate = dateStr;
+                
+                // Módosítás a modal felugró ablakhoz, az overtime és vacation bemeneti mezők megjelenítése
+                if (dayData && dayData.isOvertime) {
+                    overtimeCheckbox.checked = true;
+                    vacationCheckbox.checked = false;
+                    overtimeHoursInput.value = dayData.overtimeHours;
+                    overtimeHoursInput.disabled = false;
+                    vacationHoursInput.disabled = true;
+                    startTimeInput.disabled = true;
+                    endTimeInput.disabled = true;
+                } else if (dayData && dayData.isVacation) {
+                    vacationCheckbox.checked = true;
+                    overtimeCheckbox.checked = false;
+                    vacationHoursInput.value = dayData.vacationHours;
+                    vacationHoursInput.disabled = false;
+                    overtimeHoursInput.disabled = true;
+                    startTimeInput.disabled = true;
+                    endTimeInput.disabled = true;
+                } else if (dayData && dayData.startTime && dayData.endTime) {
+                    startTimeInput.value = dayData.startTime;
+                    endTimeInput.value = dayData.endTime;
+                    overtimeCheckbox.checked = false;
+                    vacationCheckbox.checked = false;
+                    overtimeHoursInput.disabled = true;
+                    vacationHoursInput.disabled = true;
+                    startTimeInput.disabled = false;
+                    endTimeInput.disabled = false;
+                } else {
+                    startTimeInput.value = '';
+                    endTimeInput.value = '';
+                    overtimeCheckbox.checked = false;
+                    vacationCheckbox.checked = false;
+                    overtimeHoursInput.disabled = true;
+                    vacationHoursInput.disabled = true;
+                    startTimeInput.disabled = false;
+                    endTimeInput.disabled = false;
+                }
+                shiftModal.style.display = 'flex';
+            });
+            calendarDaysEl.appendChild(dayEl);
         }
-
-        const monthName = getMonthName(currentDate).replace(' ', '_');
-        pdf.save(`fizetes_osszesito_${monthName}.pdf`);
     };
-
-    saveAndContinueBtn.addEventListener('click', async () => {
-        await exportToPdf();
-        pdfConfirmModal.style.display = 'none';
-        changeMonth();
-    });
-
-    continueWithoutSavingBtn.addEventListener('click', () => {
-        pdfConfirmModal.style.display = 'none';
-        changeMonth();
-    });
-
-    const changeMonth = () => {
-        const newMonth = currentDate.getMonth() + monthChangeDirection;
-        const newYear = currentDate.getFullYear();
-        currentDate = new Date(newYear, newMonth, 1);
+    
+    // Eseménykezelők a navigációs gombokhoz
+    const handleMonthChange = (direction) => {
+        const hasData = Object.keys(selectedDays).length > 0;
+        if (hasData && monthChangeDirection !== direction) {
+            pdfConfirmModal.style.display = 'flex';
+            monthChangeDirection = direction;
+        } else {
+            changeMonth(direction);
+        }
+    };
+    
+    const changeMonth = (direction) => {
+        if (direction === -1) {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+        } else {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+        }
         loadMonthlyData();
         renderCalendar();
         calculate();
     };
 
-    const closeButtons = document.querySelectorAll('.close-btn');
-    closeButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const modal = e.target.closest('.modal');
-            if (modal) {
-                modal.style.display = 'none';
+    // Event listener a PDF mentési megerősítő ablak bezárásához
+    closePdfModalBtn.addEventListener('click', () => {
+        pdfConfirmModal.style.display = 'none';
+        monthChangeDirection = 0; // Reset
+    });
+
+    prevBtn.addEventListener('click', () => handleMonthChange(-1));
+    nextBtn.addEventListener('click', () => handleMonthChange(1));
+
+    // Event listener a PDF mentés gombhoz
+    saveAndContinueBtn.addEventListener('click', () => {
+        // Implementáld a PDF mentési logikát itt
+        generatePDF();
+        pdfConfirmModal.style.display = 'none';
+        changeMonth(monthChangeDirection);
+        monthChangeDirection = 0; // Reset
+    });
+
+    // Event listener a folytatás mentés nélkül gombhoz
+    continueWithoutSavingBtn.addEventListener('click', () => {
+        pdfConfirmModal.style.display = 'none';
+        changeMonth(monthChangeDirection);
+        monthChangeDirection = 0; // Reset
+    });
+
+    // PDF generáló függvény
+    const generatePDF = () => {
+        const content = document.querySelector('.container');
+        html2canvas(content, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#0d1117'
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
             }
+            pdf.save(`fizetes_kalkulator_${currentDate.getFullYear()}_${currentDate.getMonth() + 1}.pdf`);
         });
+    };
+
+    // Modal eseménykezelők
+    overtimeCheckbox.addEventListener('change', () => {
+        overtimeHoursInput.disabled = !overtimeCheckbox.checked;
+        if (overtimeCheckbox.checked) {
+            vacationCheckbox.checked = false;
+            vacationHoursInput.disabled = true;
+            startTimeInput.disabled = true;
+            endTimeInput.disabled = true;
+        } else if (!vacationCheckbox.checked) {
+            startTimeInput.disabled = false;
+            endTimeInput.disabled = false;
+        }
+    });
+
+    vacationCheckbox.addEventListener('change', () => {
+        vacationHoursInput.disabled = !vacationCheckbox.checked;
+        if (vacationCheckbox.checked) {
+            overtimeCheckbox.checked = false;
+            overtimeHoursInput.disabled = true;
+            startTimeInput.disabled = true;
+            endTimeInput.disabled = true;
+        } else if (!overtimeCheckbox.checked) {
+            startTimeInput.disabled = false;
+            endTimeInput.disabled = false;
+        }
     });
 
     saveShiftBtn.addEventListener('click', () => {
+        if (!activeDate) return;
+    
         const shiftData = {
             isOvertime: overtimeCheckbox.checked,
             isVacation: vacationCheckbox.checked,
@@ -928,12 +862,54 @@ document.addEventListener('DOMContentLoaded', () => {
             vacationHours: parseFloat(vacationHoursInput.value) || 0
         };
 
-        const start = new Date(`2000-01-01T${shiftData.startTime}`);
-        const end = new Date(`2000-01-01T${shiftData.endTime}`);
-        if (end < start) end.setDate(end.getDate() + 1);
-        const workHours = (end - start) / (1000 * 60 * 60);
+        if (shiftData.isOvertime) {
+            delete shiftData.startTime;
+            delete shiftData.endTime;
+            delete shiftData.vacationHours;
+        } else if (shiftData.isVacation) {
+            delete shiftData.startTime;
+            delete shiftData.endTime;
+            delete shiftData.overtimeHours;
+        } else {
+            delete shiftData.overtimeHours;
+            delete shiftData.vacationHours;
+            const start = new Date(`2000-01-01T${shiftData.startTime}`);
+            const end = new Date(`2000-01-01T${shiftData.endTime}`);
+            if (end < start) end.setDate(end.getDate() + 1);
+            shiftData.workHours = (end - start) / (1000 * 60 * 60);
 
-        if (!shiftData.isOvertime && !shiftData.isVacation && workHours <= 0) {
+            // Éjszakai és délutáni órák számítása
+            const nightStartHour = parseFloat(nightStartInput.value);
+            const nightEndHour = parseFloat(nightEndInput.value);
+            const eveningStartHour = parseFloat(eveningStartInput.value);
+            const eveningEndHour = parseFloat(eveningEndInput.value);
+            
+            let nightHours = 0;
+            let eveningHours = 0;
+
+            const shiftStart = start.getHours() + start.getMinutes() / 60;
+            const shiftEnd = end.getHours() + end.getMinutes() / 60;
+
+            const calculateOverlap = (shiftStart, shiftEnd, periodStart, periodEnd) => {
+                if (shiftEnd < shiftStart) shiftEnd += 24;
+                if (periodEnd < periodStart) periodEnd += 24;
+            
+                const overlapStart = Math.max(shiftStart, periodStart);
+                const overlapEnd = Math.min(shiftEnd, periodEnd);
+                
+                return Math.max(0, overlapEnd - overlapStart);
+            };
+
+            nightHours = calculateOverlap(shiftStart, shiftEnd, nightStartHour, nightEndHour);
+            eveningHours = calculateOverlap(shiftStart, shiftEnd, eveningStartHour, eveningEndHour);
+
+            shiftData.nightHours = nightHours;
+            shiftData.eveningHours = eveningHours;
+            shiftData.isWeekend = (new Date(activeDate).getDay() === 6 || new Date(activeDate).getDay() === 0);
+            shiftData.dayOfWeek = new Date(activeDate).getDay();
+        }
+    
+        if (!shiftData.isOvertime && !shiftData.isVacation && (shiftData.workHours <= 0 || isNaN(shiftData.workHours))) {
             delete selectedDays[activeDate];
         } else {
             selectedDays[activeDate] = shiftData;
@@ -951,6 +927,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar();
         calculate();
     });
+
+    // Eseménykezelők a számítás indításához és a mentéshez
+    calculateBtn.addEventListener('click', calculate);
 
     // Kezdeti renderelés és adatok betöltése
     loadSettings();
