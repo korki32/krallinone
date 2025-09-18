@@ -4,65 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WAV Vágó és Konverter</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --bg-color: #0d1117;
-            --container-bg: rgba(22, 27, 34, 0.8);
-            --border-color: rgba(48, 54, 61, 0.5);
-            --text-color: #c9d1d9;
-            --primary-color: #58a6ff;
-            --secondary-color: #79c0ff;
-            --button-bg: #21262d;
-            --button-hover: #30363d;
-            --canvas-bg: #161b22;
-        }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
             font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-            overflow-y: auto;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(180deg, #071025 0%, #071025 100%);
+            color: #c9d1d9;
         }
 
-        .container {
+        /* Canvas háttér */
+        #futuristic-canvas {
+            position: fixed;
+            inset: 0;
             width: 100%;
-            max-width: 900px;
-            background-color: var(--container-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 1.5rem;
-            backdrop-filter: blur(10px);
+            height: 100%;
+            z-index: -2;
+            display: block;
+        }
+        
+        /* Fő doboz stílusa */
+        .glass-panel {
+            background-color: rgba(24, 30, 41, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(48, 54, 61, 0.5);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            padding: 2.5rem;
-            position: relative;
-            z-index: 10;
         }
 
         .title {
             font-family: 'Orbitron', sans-serif;
-            color: var(--primary-color);
-            text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
-        }
-
-        .card {
-            background-color: var(--container-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            color: #22c55e;
+            text-shadow: 0 0 5px #22c55e, 0 0 10px #22c55e;
         }
 
         #waveformCanvas {
             width: 100%;
             height: 200px;
-            background-color: var(--canvas-bg);
+            background-color: #161b22;
             border-radius: 0.5rem;
             cursor: ew-resize;
+            touch-action: none;
         }
 
         .slider-container {
@@ -70,86 +56,147 @@
         }
 
         .slider-label {
-            color: var(--secondary-color);
+            color: #22c55e;
             font-size: 0.875rem;
         }
 
         .button {
-            border: 1px solid var(--border-color);
-            background-color: var(--button-bg);
-            color: var(--text-color);
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            background-color: #21262d;
+            color: #c9d1d9;
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
             transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
         }
         .button:hover {
-            background-color: var(--button-hover);
+            background-color: #30363d;
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(88, 166, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.2);
         }
         .button:active {
             transform: translateY(0);
         }
+
+        .file-input {
+            width: 100%;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        .file-input::file-selector-button {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 0;
+            font-weight: 600;
+            background-color: #22c55e;
+            color: white;
+            transition: background-color 0.2s ease;
+        }
+        .file-input::file-selector-button:hover {
+            background-color: #16a34a;
+        }
+        
+        .card {
+            background-color: rgba(24, 30, 41, 0.85);
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .copy-btn {
+            background-color: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: transform .18s ease, background-color .18s ease;
+            box-shadow: 0 6px 18px rgba(34,197,94,0.12);
+        }
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            background-color: #16a34a;
+        }
+        .select-input {
+            background-color: #21262d;
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            color: #c9d1d9;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
     </style>
 </head>
-<body>
+<body class="min-h-screen transition-colors duration-300">
+    <!-- Canvas a háttérhez -->
+    <canvas id="futuristic-canvas"></canvas>
 
-    <div class="container flex flex-col items-center p-8">
-        <h1 class="title text-4xl font-bold mb-4 text-center">WAV Vágó és Konverter</h1>
-        <p class="text-center text-gray-400 mb-8 max-w-lg">Vágj és konvertálj hangfájlokat a Counter-Strike 1.6-hoz. Egyszerű, gyors és professzionális.</p>
+    <!-- Fő tartalom -->
+    <main class="relative z-10 flex items-center justify-center min-h-screen p-6">
+        <div class="glass-panel rounded-3xl shadow-2xl w-full max-w-2xl p-8 relative overflow-hidden text-center">
+            <h1 class="title text-4xl font-bold mb-4 text-center">WAV Vágó és Konverter</h1>
+            <p class="text-center text-gray-400 mb-8 max-w-lg">Vágj és konvertálj hangfájlokat a Counter-Strike 1.6-hoz. Egyszerű, gyors és professzionális.</p>
 
-        <div class="w-full flex flex-col items-center">
-            <div class="w-full mb-6">
-                <input type="file" id="audioFileInput" accept="audio/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-color file:text-white hover:file:bg-primary-hover hover:cursor-pointer transition duration-300">
-            </div>
-
-            <div id="loadingMessage" class="hidden text-center text-gray-500 mb-4">
-                <div class="spinner-border animate-spin inline-block w-8 h-8 rounded-full border-4 border-gray-500 border-t-transparent"></div>
-                <p class="mt-2">Fájl betöltése...</p>
-            </div>
-
-            <div id="controls" class="hidden w-full flex flex-col items-center gap-4">
-                <canvas id="waveformCanvas" class="w-full h-48"></canvas>
-
-                <div class="w-full flex justify-between gap-4 flex-wrap">
-                    <div class="flex-1 slider-container">
-                        <label for="startTime" class="slider-label">Kezdés: <span id="startTimeLabel">0.00</span> s</label>
-                        <input type="range" id="startTime" min="0" max="100" value="0" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
-                    </div>
-                    <div class="flex-1 slider-container">
-                        <label for="endTime" class="slider-label">Vége: <span id="endTimeLabel">0.00</span> s</label>
-                        <input type="range" id="endTime" min="0" max="100" value="100" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
-                    </div>
+            <div class="w-full flex flex-col items-center">
+                <div class="w-full mb-6">
+                    <input type="file" id="audioFileInput" accept="audio/*" class="file-input">
                 </div>
 
-                <div class="w-full flex justify-between items-center mt-4">
-                    <div class="flex-1 flex flex-col pr-4">
-                        <label for="playbackSpeed" class="slider-label">Sebesség: <span id="speedLabel">1.00x</span></label>
-                        <input type="range" id="playbackSpeed" min="0.1" max="2.0" value="1.0" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                <div id="loadingMessage" class="hidden text-center text-gray-500 mb-4">
+                    <div class="spinner-border animate-spin inline-block w-8 h-8 rounded-full border-4 border-gray-500 border-t-transparent"></div>
+                    <p class="mt-2">Fájl betöltése...</p>
+                </div>
+                
+                <div id="statusMessage" class="hidden text-center text-gray-500 mb-4"></div>
+
+                <div id="controls" class="hidden w-full flex flex-col items-center gap-4">
+                    <canvas id="waveformCanvas"></canvas>
+
+                    <div class="w-full flex justify-between gap-4 flex-wrap">
+                        <div class="flex-1 slider-container">
+                            <label for="startTime" class="slider-label">Kezdés: <span id="startTimeLabel">0.00</span> s</label>
+                            <input type="range" id="startTime" min="0" max="100" value="0" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                        </div>
+                        <div class="flex-1 slider-container">
+                            <label for="endTime" class="slider-label">Vége: <span id="endTimeLabel">0.00</span> s</label>
+                            <input type="range" id="endTime" min="0" max="100" value="100" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                        </div>
                     </div>
-                    <div class="flex-1 flex flex-col pr-4">
-                        <label for="volumeControl" class="slider-label">Hangerő: <span id="volumeLabel">100%</span></label>
-                        <input type="range" id="volumeControl" min="0" max="1" value="1" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
-                    </div>
-                    <div class="flex-1 flex justify-end gap-4">
-                        <button id="addBtn" class="button">Hozzáadás</button>
-                        <button id="togglePlayBtn" class="button">Lejátszás</button>
+
+                    <div class="w-full flex justify-between items-center mt-4">
+                        <div class="flex-1 flex flex-col pr-4">
+                            <label for="playbackSpeed" class="slider-label">Sebesség: <span id="speedLabel">1.00x</span></label>
+                            <input type="range" id="playbackSpeed" min="0.1" max="2.0" value="1.0" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                        </div>
+                        <div class="flex-1 flex flex-col pr-4">
+                            <label for="volumeControl" class="slider-label">Hangerő: <span id="volumeLabel">100%</span></label>
+                            <input type="range" id="volumeControl" min="0" max="1" value="1" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                        </div>
+                        <div class="flex-1 flex justify-end gap-4">
+                            <button id="addBtn" class="button">Hozzáadás</button>
+                            <button id="togglePlayBtn" class="button">Lejátszás</button>
+                        </div>
                     </div>
                 </div>
+                
+                <div id="segmentList" class="hidden w-full mt-8">
+                    <h2 class="text-xl font-bold mb-4 text-gray-300">Kivágott szegmensek</h2>
+                    <div id="segmentsContainer" class="flex flex-col gap-4"></div>
+                </div>
+                
+                <div id="errorMessage" class="hidden mt-4 p-4 rounded-lg bg-red-900 text-red-300 w-full text-center"></div>
             </div>
             
-            <div id="segmentList" class="hidden w-full mt-8">
-                <h2 class="text-xl font-bold mb-4 text-gray-300">Kivágott szegmensek</h2>
-                <div id="segmentsContainer" class="flex flex-col gap-4"></div>
-            </div>
-            
-            <div id="errorMessage" class="hidden mt-4 p-4 rounded-lg bg-red-900 text-red-300 w-full text-center"></div>
+            <footer class="text-center text-gray-400 mt-8 text-sm">
+                <p>&copy; 2025 Korki32</p>
+            </footer>
         </div>
-    </div>
+    </main>
 
     <script>
         const audioFileInput = document.getElementById('audioFileInput');
         const waveformCanvas = document.getElementById('waveformCanvas');
+        const canvasCtx = waveformCanvas.getContext('2d');
         const startTimeSlider = document.getElementById('startTime');
         const endTimeSlider = document.getElementById('endTime');
         const startTimeLabel = document.getElementById('startTimeLabel');
@@ -158,6 +205,7 @@
         const addBtn = document.getElementById('addBtn');
         const controlsDiv = document.getElementById('controls');
         const loadingMessage = document.getElementById('loadingMessage');
+        const statusMessage = document.getElementById('statusMessage');
         const errorMessage = document.getElementById('errorMessage');
         const segmentListDiv = document.getElementById('segmentList');
         const segmentsContainer = document.getElementById('segmentsContainer');
@@ -165,6 +213,8 @@
         const speedLabel = document.getElementById('speedLabel');
         const volumeControl = document.getElementById('volumeControl');
         const volumeLabel = document.getElementById('volumeLabel');
+        const futuristicCanvas = document.getElementById('futuristic-canvas');
+        const futuristicCanvasCtx = futuristicCanvas.getContext('2d');
 
         let audioCtx;
         let audioBuffer;
@@ -172,15 +222,67 @@
         let currentPlayingSource;
         let playbackStartTime = 0;
         let playbackOffset = 0;
-        let playbackDuration = 0;
         let animationFrameId;
 
-        const canvasCtx = waveformCanvas.getContext('2d');
-        const desiredSampleRate = 8000;
         const desiredBitDepth = 16;
         let segments = [];
-        let zoomLevel = 1;
         
+        // Háttéranimáció
+        const matrixCharacters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%^&*()_+{}|:<>?-=[]\\;\'",./`~';
+        let streams = [];
+        const fontSize = 16;
+        let bgAnimationFrameId;
+
+        function initializeCanvas() {
+            futuristicCanvas.width = window.innerWidth;
+            futuristicCanvas.height = window.innerHeight;
+            const columns = Math.floor(futuristicCanvas.width / fontSize);
+            streams = [];
+            for (let i = 0; i < columns; i++) {
+                streams.push({
+                    x: i * fontSize,
+                    y: Math.random() * futuristicCanvas.height,
+                    speed: Math.random() * 5 + 1
+                });
+            }
+        }
+
+        function drawBackground() {
+            futuristicCanvasCtx.fillStyle = 'rgba(7, 16, 37, 0.05)';
+            futuristicCanvasCtx.fillRect(0, 0, futuristicCanvas.width, futuristicCanvas.height);
+            futuristicCanvasCtx.fillStyle = '#22c55e';
+            futuristicCanvasCtx.font = `${fontSize}px monospace`;
+            streams.forEach(stream => {
+                const char = matrixCharacters.charAt(Math.floor(Math.random() * matrixCharacters.length));
+                futuristicCanvasCtx.fillText(char, stream.x, stream.y);
+                if (stream.y > futuristicCanvas.height + 50) {
+                    stream.y = 0;
+                } else {
+                    stream.y += stream.speed;
+                }
+            });
+        }
+        
+        function animateBackground() {
+            drawBackground();
+            bgAnimationFrameId = requestAnimationFrame(animateBackground);
+        }
+
+        window.addEventListener('load', () => {
+            initializeCanvas();
+            animateBackground();
+        });
+
+        window.addEventListener('resize', () => {
+            cancelAnimationFrame(bgAnimationFrameId);
+            initializeCanvas();
+            animateBackground();
+            if (audioBuffer) {
+                drawWaveform();
+            }
+        });
+
+        // Fő logika
         audioFileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -214,19 +316,27 @@
         function resetUI() {
             controlsDiv.classList.add('hidden');
             errorMessage.classList.add('hidden');
+            statusMessage.classList.add('hidden');
             segmentListDiv.classList.add('hidden');
             segments = [];
             segmentsContainer.innerHTML = '';
-            canvasCtx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
-            cancelAnimationFrame(animationFrameId);
+            
             if (currentPlayingSource) {
                 currentPlayingSource.stop();
+                currentPlayingSource = null;
+                togglePlayBtn.textContent = 'Lejátszás';
+                cancelAnimationFrame(animationFrameId);
             }
         }
 
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.classList.remove('hidden');
+        }
+
+        function showStatus(message) {
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden');
         }
 
         function setupSliders() {
@@ -238,71 +348,89 @@
             endTimeLabel.textContent = duration.toFixed(2);
         }
 
-        function drawWaveform(playbackTime = -1) {
-            const duration = audioBuffer.duration;
-            const channelData = audioBuffer.getChannelData(0);
-            const width = waveformCanvas.width;
-            const height = waveformCanvas.height;
-            const step = Math.ceil(channelData.length / width);
-            const amp = height / 2;
-            const style = getComputedStyle(document.body);
-
-            canvasCtx.fillStyle = style.getPropertyValue('--canvas-bg');
-            canvasCtx.fillRect(0, 0, width, height);
+        // 2D hullámforma rajzolása
+        function drawWaveform() {
+            if (!audioBuffer) return;
             
-            canvasCtx.strokeStyle = style.getPropertyValue('--primary-color');
-            canvasCtx.lineWidth = 2;
+            waveformCanvas.width = waveformCanvas.offsetWidth;
+            waveformCanvas.height = waveformCanvas.offsetHeight;
+            
+            canvasCtx.fillStyle = '#161b22';
+            canvasCtx.fillRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+            
+            const data = audioBuffer.getChannelData(0);
+            const step = Math.ceil(data.length / waveformCanvas.width);
+            const amp = waveformCanvas.height / 2;
+            
+            canvasCtx.strokeStyle = '#22c55e';
+            canvasCtx.lineWidth = 1;
             canvasCtx.beginPath();
             
-            for (let i = 0; i < width; i++) {
+            // Rajzoljuk a fő hullámformát
+            for (let i = 0; i < waveformCanvas.width; i++) {
                 let min = 1.0;
                 let max = -1.0;
                 for (let j = 0; j < step; j++) {
-                    const datum = channelData[(i * step) + j];
+                    const datum = data[(i * step) + j];
                     if (datum < min) min = datum;
                     if (datum > max) max = datum;
                 }
-                canvasCtx.moveTo(i, amp + min * amp);
-                canvasCtx.lineTo(i, amp + max * amp);
+                canvasCtx.lineTo(i, (1 + min) * amp);
+            }
+            canvasCtx.stroke();
+            canvasCtx.beginPath();
+            for (let i = 0; i < waveformCanvas.width; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                for (let j = 0; j < step; j++) {
+                    const datum = data[(i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                canvasCtx.lineTo(i, Math.max(0, (1 + max) * amp));
             }
             canvasCtx.stroke();
             
-            // Draw selected range
-            const startX = (parseFloat(startTimeSlider.value) / duration) * width;
-            const endX = (parseFloat(endTimeSlider.value) / duration) * width;
-            
-            canvasCtx.fillStyle = 'rgba(88, 166, 255, 0.2)';
-            canvasCtx.fillRect(startX, 0, endX - startX, height);
-            
-            drawSliderLines();
-            
-            if (playbackTime > -1) {
-                const playbackX = (playbackTime / duration) * width;
-                canvasCtx.strokeStyle = '#e0aaff';
-                canvasCtx.lineWidth = 3;
-                canvasCtx.beginPath();
-                canvasCtx.moveTo(playbackX, 0);
-                canvasCtx.lineTo(playbackX, height);
-                canvasCtx.stroke();
-            }
+            // Kiemeljük a kijelölt részt
+            const startX = waveformCanvas.width * (parseFloat(startTimeSlider.value) / audioBuffer.duration);
+            const endX = waveformCanvas.width * (parseFloat(endTimeSlider.value) / audioBuffer.duration);
+
+            canvasCtx.fillStyle = 'rgba(34, 197, 94, 0.4)';
+            canvasCtx.fillRect(startX, 0, endX - startX, waveformCanvas.height);
         }
 
-        function drawSliderLines() {
-            const startX = (parseFloat(startTimeSlider.value) / audioBuffer.duration) * waveformCanvas.width;
-            const endX = (parseFloat(endTimeSlider.value) / audioBuffer.duration) * waveformCanvas.width;
+        // Hullámforma frissítése a lejátszási pozícióval
+        function updateWaveformAnimation() {
+            if (!currentPlayingSource || !audioBuffer) {
+                return;
+            }
 
-            canvasCtx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+            const elapsedTime = audioCtx.currentTime - playbackStartTime;
+            const currentPosition = playbackOffset + elapsedTime;
+            const progress = currentPosition / audioBuffer.duration;
+            const x = waveformCanvas.width * progress;
+
+            // Újrarajzoljuk a teljes canvas-t
+            drawWaveform();
+
+            // Lejátszási vonal
+            canvasCtx.strokeStyle = '#22c55e';
             canvasCtx.lineWidth = 2;
             canvasCtx.beginPath();
-            canvasCtx.moveTo(startX, 0);
-            canvasCtx.lineTo(startX, waveformCanvas.height);
+            canvasCtx.moveTo(x, 0);
+            canvasCtx.lineTo(x, waveformCanvas.height);
             canvasCtx.stroke();
-            
-            canvasCtx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+
+            // Vonal pulzálás
+            const pulse = Math.sin(Date.now() * 0.005) * 5;
+            canvasCtx.strokeStyle = `rgba(34, 197, 94, ${0.5 + Math.abs(pulse) / 10})`;
+            canvasCtx.lineWidth = 2 + Math.abs(pulse);
             canvasCtx.beginPath();
-            canvasCtx.moveTo(endX, 0);
-            canvasCtx.lineTo(endX, waveformCanvas.height);
+            canvasCtx.moveTo(x, 0);
+            canvasCtx.lineTo(x, waveformCanvas.height);
             canvasCtx.stroke();
+
+            animationFrameId = requestAnimationFrame(updateWaveformAnimation);
         }
 
         startTimeSlider.addEventListener('input', () => {
@@ -336,8 +464,8 @@
         togglePlayBtn.addEventListener('click', () => {
             if (currentPlayingSource) {
                 currentPlayingSource.stop();
-                togglePlayBtn.textContent = 'Lejátszás';
                 currentPlayingSource = null;
+                togglePlayBtn.textContent = 'Lejátszás';
                 cancelAnimationFrame(animationFrameId);
                 drawWaveform();
             } else {
@@ -357,6 +485,7 @@
         });
 
         function playSegment(start, end) {
+            // Ha éppen játszódik valami, állítsa le
             if (currentPlayingSource) {
                 currentPlayingSource.stop();
             }
@@ -364,7 +493,7 @@
             const duration = end - start;
             const source = audioCtx.createBufferSource();
             source.buffer = audioBuffer;
-            source.connect(gainNode); // Connect to gain node for volume control
+            source.connect(gainNode);
             source.playbackRate.value = parseFloat(playbackSpeedSlider.value);
             source.start(0, start, duration);
             currentPlayingSource = source;
@@ -372,9 +501,8 @@
             togglePlayBtn.textContent = 'Leállítás';
             playbackStartTime = audioCtx.currentTime;
             playbackOffset = start;
-            playbackDuration = duration;
             
-            animationFrameId = requestAnimationFrame(animatePlayback);
+            animationFrameId = requestAnimationFrame(updateWaveformAnimation);
 
             source.onended = () => {
                 currentPlayingSource = null;
@@ -383,21 +511,6 @@
                 drawWaveform();
             };
         }
-
-        function animatePlayback() {
-            if (!currentPlayingSource) {
-                return;
-            }
-            const elapsedTime = (audioCtx.currentTime - playbackStartTime) * currentPlayingSource.playbackRate.value;
-            const currentPosition = playbackOffset + elapsedTime;
-
-            if (currentPosition < playbackOffset + playbackDuration) {
-                drawWaveform(currentPosition);
-                animationFrameId = requestAnimationFrame(animatePlayback);
-            } else {
-                drawWaveform();
-            }
-        }
         
         function renderSegments() {
             segmentListDiv.classList.remove('hidden');
@@ -405,14 +518,20 @@
             
             segments.forEach((segment, index) => {
                 const segmentElement = document.createElement('div');
-                segmentElement.className = 'card p-4 flex justify-between items-center mb-2';
+                segmentElement.className = 'card p-4 flex flex-col md:flex-row justify-between items-center mb-2';
                 
                 const duration = (segment.end - segment.start).toFixed(2);
                 const text = `Szegmens ${index + 1}: ${segment.start.toFixed(2)}s - ${segment.end.toFixed(2)}s (${duration}s)`;
+                
                 segmentElement.innerHTML = `
-                    <span class="text-sm md:text-base">${text}</span>
-                    <div class="flex gap-2">
+                    <span class="text-sm md:text-base mb-2 md:mb-0">${text}</span>
+                    <div class="flex flex-col md:flex-row gap-2">
                         <button class="button play-segment-btn" data-start="${segment.start}" data-end="${segment.end}">Lejátszás</button>
+                        <select class="select-input" data-start="${segment.start}" data-end="${segment.end}">
+                            <option value="8000">8000 Hz (CS 1.6)</option>
+                            <option value="11025">11025 Hz</option>
+                            <option value="22050">22050 Hz</option>
+                        </select>
                         <button class="button download-segment-btn" data-start="${segment.start}" data-end="${segment.end}">Letöltés</button>
                     </div>
                 `;
@@ -436,37 +555,55 @@
                 button.addEventListener('click', (e) => {
                     const start = parseFloat(e.target.dataset.start);
                     const end = parseFloat(e.target.dataset.end);
-                    downloadSegment(start, end);
+                    const sampleRateSelect = e.target.closest('.card').querySelector('.select-input');
+                    const desiredSampleRate = parseInt(sampleRateSelect.value, 10);
+                    downloadSegment(start, end, desiredSampleRate);
                 });
             });
         }
         
-        function downloadSegment(start, end) {
+        async function downloadSegment(start, end, desiredSampleRate) {
+            showStatus('Feldolgozás és letöltés...');
+            
+            // Extract the desired segment
             const startSample = Math.floor(start * audioBuffer.sampleRate);
             const endSample = Math.floor(end * audioBuffer.sampleRate);
-            const trimmedBufferLength = endSample - startSample;
+            const trimmedBuffer = audioCtx.createBuffer(
+                audioBuffer.numberOfChannels,
+                endSample - startSample,
+                audioBuffer.sampleRate
+            );
 
-            const audioData = audioBuffer.getChannelData(0).subarray(startSample, endSample);
+            for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+                const channelData = audioBuffer.getChannelData(i).subarray(startSample, endSample);
+                trimmedBuffer.getChannelData(i).set(channelData);
+            }
 
-            // Resample to 8000 Hz if needed
-            const oldSampleRate = audioBuffer.sampleRate;
-            let resampledData = audioData;
-            if (oldSampleRate !== desiredSampleRate) {
-                const ratio = oldSampleRate / desiredSampleRate;
-                const newLength = Math.floor(trimmedBufferLength / ratio);
-                resampledData = new Float32Array(newLength);
-                for (let i = 0; i < newLength; i++) {
-                    const oldIndex = Math.floor(i * ratio);
-                    resampledData[i] = audioData[oldIndex];
+            // Resample to desired Hz using Web Audio API
+            const offlineCtx = new OfflineAudioContext(
+                trimmedBuffer.numberOfChannels,
+                trimmedBuffer.duration * desiredSampleRate,
+                desiredSampleRate
+            );
+            
+            const offlineSource = offlineCtx.createBufferSource();
+            offlineSource.buffer = trimmedBuffer;
+            offlineSource.connect(offlineCtx.destination);
+            offlineSource.start();
+
+            const resampledBuffer = await offlineCtx.startRendering();
+            
+            // Convert to 16-bit PCM and create WAV file
+            const pcm16Data = new Int16Array(resampledBuffer.length * resampledBuffer.numberOfChannels);
+            let offset = 0;
+            for (let i = 0; i < resampledBuffer.numberOfChannels; i++) {
+                const channelData = resampledBuffer.getChannelData(i);
+                for (let j = 0; j < channelData.length; j++) {
+                    const sample = Math.max(-1, Math.min(1, channelData[j])) * 0x7FFF;
+                    pcm16Data[offset++] = sample;
                 }
             }
             
-            // Convert to 16-bit PCM
-            const pcm16Data = new Int16Array(resampledData.length);
-            for (let i = 0; i < resampledData.length; i++) {
-                pcm16Data[i] = Math.max(-1, Math.min(1, resampledData[i])) * 0x7FFF;
-            }
-
             // Create WAV file
             const dataLength = pcm16Data.byteLength;
             const buffer = new ArrayBuffer(44 + dataLength);
@@ -481,10 +618,10 @@
             writeString(view, 12, 'fmt ');
             view.setUint32(16, 16, true);
             view.setUint16(20, 1, true); // PCM
-            view.setUint16(22, 1, true); // Mono
+            view.setUint16(22, resampledBuffer.numberOfChannels, true); // Number of channels
             view.setUint32(24, desiredSampleRate, true);
-            view.setUint32(28, desiredSampleRate * (desiredBitDepth / 8), true);
-            view.setUint16(32, desiredBitDepth / 8, true);
+            view.setUint32(28, desiredSampleRate * resampledBuffer.numberOfChannels * (desiredBitDepth / 8), true);
+            view.setUint16(32, resampledBuffer.numberOfChannels * (desiredBitDepth / 8), true);
             view.setUint16(34, desiredBitDepth, true);
 
             // data chunk
@@ -498,9 +635,11 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `cs_cut_audio_${start.toFixed(2)}-${end.toFixed(2)}.wav`;
+            a.download = `cs_cut_audio_${start.toFixed(2)}-${end.toFixed(2)}-${desiredSampleRate}Hz.wav`;
             a.click();
             URL.revokeObjectURL(url);
+            
+            statusMessage.classList.add('hidden');
         }
 
         function writeString(view, offset, string) {
