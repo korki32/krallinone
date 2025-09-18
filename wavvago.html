@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAV Vágó és Konverter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --container-bg: rgba(22, 27, 34, 0.8);
+            --border-color: rgba(48, 54, 61, 0.5);
+            --text-color: #c9d1d9;
+            --primary-color: #58a6ff;
+            --secondary-color: #79c0ff;
+            --button-bg: #21262d;
+            --button-hover: #30363d;
+            --canvas-bg: #161b22;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 2.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary-color);
+            text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
+        }
+
+        .card {
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        #waveformCanvas {
+            width: 100%;
+            height: 200px;
+            background-color: var(--canvas-bg);
+            border-radius: 0.5rem;
+            cursor: ew-resize;
+        }
+
+        .slider-container {
+            width: 100%;
+        }
+
+        .slider-label {
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+        }
+
+        .button {
+            border: 1px solid var(--border-color);
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+        }
+        .button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(88, 166, 255, 0.2);
+        }
+        .button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container flex flex-col items-center p-8">
+        <h1 class="title text-4xl font-bold mb-4 text-center">WAV Vágó és Konverter</h1>
+        <p class="text-center text-gray-400 mb-8 max-w-lg">Vágj és konvertálj hangfájlokat a Counter-Strike 1.6-hoz. Egyszerű, gyors és professzionális.</p>
+
+        <div class="w-full flex flex-col items-center">
+            <div class="w-full mb-6">
+                <input type="file" id="audioFileInput" accept="audio/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-color file:text-white hover:file:bg-primary-hover hover:cursor-pointer transition duration-300">
+            </div>
+
+            <div id="loadingMessage" class="hidden text-center text-gray-500 mb-4">
+                <div class="spinner-border animate-spin inline-block w-8 h-8 rounded-full border-4 border-gray-500 border-t-transparent"></div>
+                <p class="mt-2">Fájl betöltése...</p>
+            </div>
+
+            <div id="controls" class="hidden w-full flex flex-col items-center gap-4">
+                <canvas id="waveformCanvas" class="w-full h-48"></canvas>
+
+                <div class="w-full flex justify-between gap-4 flex-wrap">
+                    <div class="flex-1 slider-container">
+                        <label for="startTime" class="slider-label">Kezdés: <span id="startTimeLabel">0.00</span> s</label>
+                        <input type="range" id="startTime" min="0" max="100" value="0" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                    </div>
+                    <div class="flex-1 slider-container">
+                        <label for="endTime" class="slider-label">Vége: <span id="endTimeLabel">0.00</span> s</label>
+                        <input type="range" id="endTime" min="0" max="100" value="100" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                    </div>
+                </div>
+
+                <div class="w-full flex justify-between items-center mt-4">
+                    <div class="flex-1 flex flex-col pr-4">
+                        <label for="playbackSpeed" class="slider-label">Sebesség: <span id="speedLabel">1.00x</span></label>
+                        <input type="range" id="playbackSpeed" min="0.1" max="2.0" value="1.0" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                    </div>
+                    <div class="flex-1 flex flex-col pr-4">
+                        <label for="volumeControl" class="slider-label">Hangerő: <span id="volumeLabel">100%</span></label>
+                        <input type="range" id="volumeControl" min="0" max="1" value="1" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1">
+                    </div>
+                    <div class="flex-1 flex justify-end gap-4">
+                        <button id="addBtn" class="button">Hozzáadás</button>
+                        <button id="togglePlayBtn" class="button">Lejátszás</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="segmentList" class="hidden w-full mt-8">
+                <h2 class="text-xl font-bold mb-4 text-gray-300">Kivágott szegmensek</h2>
+                <div id="segmentsContainer" class="flex flex-col gap-4"></div>
+            </div>
+            
+            <div id="errorMessage" class="hidden mt-4 p-4 rounded-lg bg-red-900 text-red-300 w-full text-center"></div>
+        </div>
+    </div>
+
+    <script>
+        const audioFileInput = document.getElementById('audioFileInput');
+        const waveformCanvas = document.getElementById('waveformCanvas');
+        const startTimeSlider = document.getElementById('startTime');
+        const endTimeSlider = document.getElementById('endTime');
+        const startTimeLabel = document.getElementById('startTimeLabel');
+        const endTimeLabel = document.getElementById('endTimeLabel');
+        const togglePlayBtn = document.getElementById('togglePlayBtn');
+        const addBtn = document.getElementById('addBtn');
+        const controlsDiv = document.getElementById('controls');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const segmentListDiv = document.getElementById('segmentList');
+        const segmentsContainer = document.getElementById('segmentsContainer');
+        const playbackSpeedSlider = document.getElementById('playbackSpeed');
+        const speedLabel = document.getElementById('speedLabel');
+        const volumeControl = document.getElementById('volumeControl');
+        const volumeLabel = document.getElementById('volumeLabel');
+
+        let audioCtx;
+        let audioBuffer;
+        let gainNode;
+        let currentPlayingSource;
+        let playbackStartTime = 0;
+        let playbackOffset = 0;
+        let playbackDuration = 0;
+        let animationFrameId;
+
+        const canvasCtx = waveformCanvas.getContext('2d');
+        const desiredSampleRate = 8000;
+        const desiredBitDepth = 16;
+        let segments = [];
+        let zoomLevel = 1;
+        
+        audioFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            resetUI();
+            loadingMessage.classList.remove('hidden');
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    gainNode = audioCtx.createGain();
+                    gainNode.connect(audioCtx.destination);
+                    
+                    audioBuffer = await audioCtx.decodeAudioData(e.target.result);
+                    
+                    loadingMessage.classList.add('hidden');
+                    controlsDiv.classList.remove('hidden');
+                    
+                    setupSliders();
+                    drawWaveform();
+                } catch (error) {
+                    loadingMessage.classList.add('hidden');
+                    showError('Hiba történt a hangfájl betöltésekor. Lehetséges, hogy a fájl sérült vagy nem támogatott.');
+                    console.error('Audio decoding error:', error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+        
+        function resetUI() {
+            controlsDiv.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            segmentListDiv.classList.add('hidden');
+            segments = [];
+            segmentsContainer.innerHTML = '';
+            canvasCtx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+            cancelAnimationFrame(animationFrameId);
+            if (currentPlayingSource) {
+                currentPlayingSource.stop();
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        function setupSliders() {
+            const duration = audioBuffer.duration;
+            startTimeSlider.max = duration;
+            endTimeSlider.max = duration;
+            endTimeSlider.value = duration;
+            startTimeLabel.textContent = '0.00';
+            endTimeLabel.textContent = duration.toFixed(2);
+        }
+
+        function drawWaveform(playbackTime = -1) {
+            const duration = audioBuffer.duration;
+            const channelData = audioBuffer.getChannelData(0);
+            const width = waveformCanvas.width;
+            const height = waveformCanvas.height;
+            const step = Math.ceil(channelData.length / width);
+            const amp = height / 2;
+            const style = getComputedStyle(document.body);
+
+            canvasCtx.fillStyle = style.getPropertyValue('--canvas-bg');
+            canvasCtx.fillRect(0, 0, width, height);
+            
+            canvasCtx.strokeStyle = style.getPropertyValue('--primary-color');
+            canvasCtx.lineWidth = 2;
+            canvasCtx.beginPath();
+            
+            for (let i = 0; i < width; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                for (let j = 0; j < step; j++) {
+                    const datum = channelData[(i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                canvasCtx.moveTo(i, amp + min * amp);
+                canvasCtx.lineTo(i, amp + max * amp);
+            }
+            canvasCtx.stroke();
+            
+            // Draw selected range
+            const startX = (parseFloat(startTimeSlider.value) / duration) * width;
+            const endX = (parseFloat(endTimeSlider.value) / duration) * width;
+            
+            canvasCtx.fillStyle = 'rgba(88, 166, 255, 0.2)';
+            canvasCtx.fillRect(startX, 0, endX - startX, height);
+            
+            drawSliderLines();
+            
+            if (playbackTime > -1) {
+                const playbackX = (playbackTime / duration) * width;
+                canvasCtx.strokeStyle = '#e0aaff';
+                canvasCtx.lineWidth = 3;
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(playbackX, 0);
+                canvasCtx.lineTo(playbackX, height);
+                canvasCtx.stroke();
+            }
+        }
+
+        function drawSliderLines() {
+            const startX = (parseFloat(startTimeSlider.value) / audioBuffer.duration) * waveformCanvas.width;
+            const endX = (parseFloat(endTimeSlider.value) / audioBuffer.duration) * waveformCanvas.width;
+
+            canvasCtx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+            canvasCtx.lineWidth = 2;
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(startX, 0);
+            canvasCtx.lineTo(startX, waveformCanvas.height);
+            canvasCtx.stroke();
+            
+            canvasCtx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(endX, 0);
+            canvasCtx.lineTo(endX, waveformCanvas.height);
+            canvasCtx.stroke();
+        }
+
+        startTimeSlider.addEventListener('input', () => {
+            if (parseFloat(startTimeSlider.value) >= parseFloat(endTimeSlider.value)) {
+                startTimeSlider.value = parseFloat(endTimeSlider.value) - 0.01;
+            }
+            startTimeLabel.textContent = parseFloat(startTimeSlider.value).toFixed(2);
+            drawWaveform();
+        });
+
+        endTimeSlider.addEventListener('input', () => {
+            if (parseFloat(endTimeSlider.value) <= parseFloat(startTimeSlider.value)) {
+                endTimeSlider.value = parseFloat(startTimeSlider.value) + 0.01;
+            }
+            endTimeLabel.textContent = parseFloat(endTimeSlider.value).toFixed(2);
+            drawWaveform();
+        });
+
+        playbackSpeedSlider.addEventListener('input', () => {
+            speedLabel.textContent = `${parseFloat(playbackSpeedSlider.value).toFixed(2)}x`;
+            if (currentPlayingSource) {
+                currentPlayingSource.playbackRate.value = parseFloat(playbackSpeedSlider.value);
+            }
+        });
+
+        volumeControl.addEventListener('input', () => {
+            gainNode.gain.value = parseFloat(volumeControl.value);
+            volumeLabel.textContent = `${Math.round(parseFloat(volumeControl.value) * 100)}%`;
+        });
+        
+        togglePlayBtn.addEventListener('click', () => {
+            if (currentPlayingSource) {
+                currentPlayingSource.stop();
+                togglePlayBtn.textContent = 'Lejátszás';
+                currentPlayingSource = null;
+                cancelAnimationFrame(animationFrameId);
+                drawWaveform();
+            } else {
+                playSegment(parseFloat(startTimeSlider.value), parseFloat(endTimeSlider.value));
+            }
+        });
+
+        addBtn.addEventListener('click', () => {
+            const start = parseFloat(startTimeSlider.value);
+            const end = parseFloat(endTimeSlider.value);
+            if (end - start > 0.01) {
+                segments.push({ start: start, end: end, id: Date.now() });
+                renderSegments();
+            } else {
+                showError('A kivágott szegmens hossza túl rövid.');
+            }
+        });
+
+        function playSegment(start, end) {
+            if (currentPlayingSource) {
+                currentPlayingSource.stop();
+            }
+
+            const duration = end - start;
+            const source = audioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(gainNode); // Connect to gain node for volume control
+            source.playbackRate.value = parseFloat(playbackSpeedSlider.value);
+            source.start(0, start, duration);
+            currentPlayingSource = source;
+            
+            togglePlayBtn.textContent = 'Leállítás';
+            playbackStartTime = audioCtx.currentTime;
+            playbackOffset = start;
+            playbackDuration = duration;
+            
+            animationFrameId = requestAnimationFrame(animatePlayback);
+
+            source.onended = () => {
+                currentPlayingSource = null;
+                togglePlayBtn.textContent = 'Lejátszás';
+                cancelAnimationFrame(animationFrameId);
+                drawWaveform();
+            };
+        }
+
+        function animatePlayback() {
+            if (!currentPlayingSource) {
+                return;
+            }
+            const elapsedTime = (audioCtx.currentTime - playbackStartTime) * currentPlayingSource.playbackRate.value;
+            const currentPosition = playbackOffset + elapsedTime;
+
+            if (currentPosition < playbackOffset + playbackDuration) {
+                drawWaveform(currentPosition);
+                animationFrameId = requestAnimationFrame(animatePlayback);
+            } else {
+                drawWaveform();
+            }
+        }
+        
+        function renderSegments() {
+            segmentListDiv.classList.remove('hidden');
+            segmentsContainer.innerHTML = '';
+            
+            segments.forEach((segment, index) => {
+                const segmentElement = document.createElement('div');
+                segmentElement.className = 'card p-4 flex justify-between items-center mb-2';
+                
+                const duration = (segment.end - segment.start).toFixed(2);
+                const text = `Szegmens ${index + 1}: ${segment.start.toFixed(2)}s - ${segment.end.toFixed(2)}s (${duration}s)`;
+                segmentElement.innerHTML = `
+                    <span class="text-sm md:text-base">${text}</span>
+                    <div class="flex gap-2">
+                        <button class="button play-segment-btn" data-start="${segment.start}" data-end="${segment.end}">Lejátszás</button>
+                        <button class="button download-segment-btn" data-start="${segment.start}" data-end="${segment.end}">Letöltés</button>
+                    </div>
+                `;
+                
+                segmentsContainer.appendChild(segmentElement);
+            });
+            
+            attachSegmentListeners();
+        }
+        
+        function attachSegmentListeners() {
+            document.querySelectorAll('.play-segment-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const start = parseFloat(e.target.dataset.start);
+                    const end = parseFloat(e.target.dataset.end);
+                    playSegment(start, end);
+                });
+            });
+            
+            document.querySelectorAll('.download-segment-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const start = parseFloat(e.target.dataset.start);
+                    const end = parseFloat(e.target.dataset.end);
+                    downloadSegment(start, end);
+                });
+            });
+        }
+        
+        function downloadSegment(start, end) {
+            const startSample = Math.floor(start * audioBuffer.sampleRate);
+            const endSample = Math.floor(end * audioBuffer.sampleRate);
+            const trimmedBufferLength = endSample - startSample;
+
+            const audioData = audioBuffer.getChannelData(0).subarray(startSample, endSample);
+
+            // Resample to 8000 Hz if needed
+            const oldSampleRate = audioBuffer.sampleRate;
+            let resampledData = audioData;
+            if (oldSampleRate !== desiredSampleRate) {
+                const ratio = oldSampleRate / desiredSampleRate;
+                const newLength = Math.floor(trimmedBufferLength / ratio);
+                resampledData = new Float32Array(newLength);
+                for (let i = 0; i < newLength; i++) {
+                    const oldIndex = Math.floor(i * ratio);
+                    resampledData[i] = audioData[oldIndex];
+                }
+            }
+            
+            // Convert to 16-bit PCM
+            const pcm16Data = new Int16Array(resampledData.length);
+            for (let i = 0; i < resampledData.length; i++) {
+                pcm16Data[i] = Math.max(-1, Math.min(1, resampledData[i])) * 0x7FFF;
+            }
+
+            // Create WAV file
+            const dataLength = pcm16Data.byteLength;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+
+            // RIFF header
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataLength, true);
+            writeString(view, 8, 'WAVE');
+
+            // fmt chunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); // PCM
+            view.setUint16(22, 1, true); // Mono
+            view.setUint32(24, desiredSampleRate, true);
+            view.setUint32(28, desiredSampleRate * (desiredBitDepth / 8), true);
+            view.setUint16(32, desiredBitDepth / 8, true);
+            view.setUint16(34, desiredBitDepth, true);
+
+            // data chunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataLength, true);
+            for (let i = 0; i < pcm16Data.length; i++) {
+                view.setInt16(44 + i * 2, pcm16Data[i], true);
+            }
+
+            const blob = new Blob([view], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cs_cut_audio_${start.toFixed(2)}-${end.toFixed(2)}.wav`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+    </script>
+</body>
+</html>
