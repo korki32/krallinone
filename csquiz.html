@@ -101,7 +101,7 @@
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.02); opacity: 0.7; }
         }
-        
+
         .joker-button {
             position: relative;
             transition: transform 0.2s ease-in-out;
@@ -189,6 +189,12 @@
             transform: scale(0.8);
             transition: transform 0.5s ease-in-out;
         }
+        #result-message {
+            margin-top: 1rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            transition: all 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
@@ -246,7 +252,7 @@
                     <i class="fa-solid fa-heart heart-icon"></i>
                 </div>
             </div>
-            
+
             <div id="loading-screen" class="text-center p-8 hidden">
                 <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-teal-500" role="status">
                     <span class="!absolute !-m-px !h-px !-w-px !-overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]]">Loading...</span>
@@ -256,6 +262,7 @@
 
             <div id="quiz-content" class="animate-fade-in hidden">
                 <h2 id="question-text" class="text-2xl font-extrabold mb-8 text-center text-teal-400 leading-snug"></h2>
+                <div id="result-message" class="text-center text-xl font-bold mb-4 min-h-[1.5rem]"></div>
                 <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Answer buttons will be generated here -->
                 </div>
@@ -266,13 +273,13 @@
         <div id="end-screen" class="hidden animate-fade-in">
             <h2 class="text-3xl font-extrabold text-teal-400 mb-4">Kvíz vége!</h2>
             <p id="final-score" class="text-xl mb-6 font-medium"></p>
-            
+
             <div id="name-input-section" class="mb-6">
                 <p class="mb-2">Add meg a neved a ranglistához:</p>
                 <input type="text" id="player-name" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Pl.: ProGamer3000">
                 <button id="save-score-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4">Pontszám mentése</button>
             </div>
-            
+
             <button id="restart-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4 hidden">Újra játszom</button>
             <button id="view-leaderboard-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-4 hidden">Ranglista megtekintése</button>
         </div>
@@ -286,7 +293,7 @@
                     <button id="joker-free-lb-btn" class="lb-btn py-2 px-3 text-sm font-bold rounded-lg transition-all duration-300 bg-gray-700 text-white">Joker-mentes</button>
                 </div>
             </div>
-            
+
             <div id="status-message" class="text-center text-sm font-semibold text-yellow-400 mb-4"></div>
 
             <ul id="leaderboard-list" class="space-y-2">
@@ -301,7 +308,7 @@
             <button id="leaderboard-restart-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 mt-6">Újra játszom</button>
         </div>
     </div>
-    
+
     <!-- Modális ablak -->
     <div id="modal-container" style="display: none;" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div id="modal-content" class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
@@ -321,7 +328,7 @@
         // 2. Másold át ezeket a megfelelő változókba. Ügyelj arra, hogy ne másolj extra szóközöket vagy karaktereket!
         const supabaseUrl = 'https://badqobyvbfuhpxkoomhu.supabase.co'; // Pl.: https://your-project-id.supabase.co
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI' + 'cImJhZHFvYnl2YmZ1aHB4a29vbWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjEyNDUsImV4cCI6MjA3MzMzNzI0NX0.FTiQfMgEZQryLscrBi4bvGQwtZY_KqTT3wcOu9vTcZY'; // Pl.: eyJhbGciOi...
-        
+
         let supabase;
         let supabaseInitialized = false;
 
@@ -354,13 +361,13 @@
             showModal("Supabase inicializálási hiba. Kérlek, ellenőrizd a konzolt a részletekért.");
             supabaseInitialized = false;
         }
-        
+
         // A user ID is not required for an anonymous leaderboard, but we can generate a temporary one
         const userId = 'player-' + crypto.randomUUID();
 
         let questions = [];
         let questionsLoaded = false;
-        
+
         // Quiz state variables
         let currentQuestionIndex = 0;
         let score = 0;
@@ -379,7 +386,7 @@
         let timer = null;
         const timeLimit = 15; // 15 seconds
         let timeRemaining = timeLimit;
-        
+
         // Sound state
         let soundEnabled = true;
 
@@ -396,7 +403,7 @@
         const leaderboardFromStartBtn = document.getElementById('leaderboard-from-start-btn');
         const backToMenuBtn = document.getElementById('back-to-menu-btn');
         const soundToggle = document.getElementById('sound-toggle');
-        
+
         const loadingScreen = document.getElementById('loading-screen');
         const quizContent = document.getElementById('quiz-content');
         const questionText = document.getElementById('question-text');
@@ -419,6 +426,7 @@
         const jokerFreeLbBtn = document.getElementById('joker-free-lb-btn');
         const statusMessage = document.getElementById('status-message');
         const livesDisplay = document.getElementById('lives-display'); // New lives display element
+        const resultMessage = document.getElementById('result-message');
 
         // Initialize sound effects
         const synth = new Tone.PolySynth(Tone.Synth).toDestination();
@@ -454,7 +462,7 @@
                 startQuiz();
             }
         });
-        
+
         settingsBtn.addEventListener('click', () => {
             showScreen('settings-screen');
         });
@@ -462,7 +470,7 @@
         backToMenuBtn.addEventListener('click', () => {
             showScreen('start-screen');
         });
-        
+
         leaderboardFromStartBtn.addEventListener('click', () => {
             showScreen('leaderboard-screen');
             showLeaderboard('global');
@@ -509,7 +517,7 @@
                 fetchQuestionsAndStartQuiz();
                 return;
             }
-            
+
             showScreen('quiz-screen');
             currentQuestionIndex = 0;
             score = 0;
@@ -519,18 +527,18 @@
             usedJokersThisGame = { '50': false, 'time': false, 'skip': false };
             updateJokerButtons();
             updateLivesDisplay();
-            
+
             endScreen.classList.add('hidden');
             leaderboardScreen.classList.add('hidden');
             playerNameInput.value = '';
             scoreDisplay.textContent = `Pontszám: ${score} 🎯`;
-            
+
             statusMessage.textContent = '';
-            
+
             if (!supabaseInitialized) {
                  statusMessage.textContent = 'Jelenleg offline módban van. A ranglista helyi tárhelyre mentődik.';
             }
-            
+
             showQuestion();
         }
 
@@ -540,6 +548,7 @@
             timerBar.style.width = '100%';
             timerBar.style.backgroundColor = '#16a34a';
             timerBar.classList.remove('timer-warning');
+            resultMessage.textContent = ''; // Clear previous message
 
             // Clear previous timer if exists
             if (timer) clearInterval(timer);
@@ -556,8 +565,9 @@
 
                 if (timeRemaining <= 0) {
                     clearInterval(timer);
-                    selectedAnswer = "time_out";
-                    handleAnswer(null, null); // Incorrect answer, time ran out
+                    resultMessage.textContent = 'Lejárt az idő!';
+                    resultMessage.classList.add('text-red-500');
+                    handleAnswer(null, null); // Rossz válasz, idő lejárt
                 }
             }, 1000);
         }
@@ -588,8 +598,9 @@
                 showFinalScore(true);
                 return;
             }
-            
+
             startTimer();
+            resultMessage.classList.remove('text-green-500', 'text-red-500');
 
             const currentQuestion = questions[currentQuestionIndex];
             questionText.textContent = currentQuestion.question;
@@ -650,7 +661,7 @@
             const currentQuestion = questions[currentQuestionIndex];
             const correctText = currentQuestion.correct;
             const answerButtons = Array.from(answerButtonsContainer.children);
-            
+
             const incorrectAnswers = answerButtons.filter(btn => btn.textContent !== correctText);
 
             for (let i = 0; i < 2; i++) {
@@ -661,13 +672,13 @@
                 }
             }
         });
-        
+
         jokerTimeBtn.addEventListener('click', () => {
             if (!jokers['time']) return;
             jokers['time'] = false;
             usedJokersThisGame['time'] = true;
             updateJokerButtons();
-            
+
             timeRemaining += 10;
         });
 
@@ -687,21 +698,21 @@
         // Handle selected answer with animations
         function handleAnswer(button, answer) {
             clearInterval(timer);
-            
+
             // Allow only one answer
             if (selectedAnswer !== null) return;
             selectedAnswer = answer;
-            
-            const isTimeout = (button === null); // It's a timeout if no button was clicked
+
             const currentQuestion = questions[currentQuestionIndex];
-            const isCorrect = answer === currentQuestion.correct;
+            const isCorrect = (answer === currentQuestion.correct);
+            const isTimeout = (button === null);
 
             // Disable all buttons, but not jokers
             document.querySelectorAll('.btn-answer').forEach(btn => {
                 btn.disabled = true;
                 btn.classList.remove('hover:bg-gray-600', 'hover:text-white');
             });
-            
+
             // Add animation and color for correct/incorrect answer
             if (isCorrect) {
                 playSound(correctSound);
@@ -715,7 +726,10 @@
                 setTimeout(() => {
                     scoreDisplay.classList.remove('score-pulse');
                 }, 500); // Remove class after 0.5 seconds
-                
+                resultMessage.textContent = 'Helyes válasz!';
+                resultMessage.classList.remove('text-red-500');
+                resultMessage.classList.add('text-green-500');
+
                 // Wait for the animation to finish, then proceed
                 setTimeout(() => {
                     selectedAnswer = null;
@@ -728,25 +742,23 @@
                 playSound(lostLifeSound);
                 updateLivesDisplay();
 
-                // If it's a timeout, find a random incorrect button to highlight
                 if (isTimeout) {
-                    const allButtons = Array.from(answerButtonsContainer.children);
-                    const incorrectButtons = allButtons.filter(btn => btn.textContent !== currentQuestion.correct);
-                    if (incorrectButtons.length > 0) {
-                        const randomIncorrectButton = incorrectButtons[Math.floor(Math.random() * incorrectButtons.length)];
-                        randomIncorrectButton.classList.add('incorrect-answer');
-                    }
+                    resultMessage.textContent = 'Lejárt az idő!';
+                    resultMessage.classList.add('text-red-500');
                 } else {
-                     // If it's a regular incorrect click, highlight the clicked button
-                    button.classList.add('incorrect-answer');
+                    resultMessage.textContent = 'Helytelen válasz!';
+                    resultMessage.classList.add('text-red-500');
+                    if (button) {
+                        button.classList.add('incorrect-answer');
+                    }
                 }
-
+                
                 // Always highlight the correct answer on an incorrect attempt or timeout
                 const correctButton = Array.from(answerButtonsContainer.children).find(btn => btn.textContent === currentQuestion.correct);
                 if (correctButton) {
                     correctButton.classList.add('correct-answer');
                 }
-                
+
                 // Check if the game is over
                 if (lives <= 0) {
                     setTimeout(() => {
@@ -780,7 +792,7 @@
             quizScreen.classList.add('hidden');
             quizContent.classList.remove('game-over-animation'); // Clear animation for next game
             endScreen.classList.remove('hidden');
-            
+
             restartBtn.classList.remove('hidden');
             viewLeaderboardBtn.classList.remove('hidden');
 
@@ -794,7 +806,7 @@
                 finalScore.textContent = `Game Over! A végső pontszámod: ${score}. 😭`;
             }
         }
-        
+
         // Function to create confetti effect
         function createConfetti() {
             const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#795548', '#9e9e9e', '#607d8b'];
@@ -826,7 +838,7 @@
                 user_id: userId,
                 jokers_used: usedJokersThisGame
             };
-            
+
             if (supabaseInitialized) {
                 try {
                     const { data, error } = await supabase
@@ -849,7 +861,7 @@
                 saveToLocalStorage(playerName);
                 showLeaderboard('global', true);
             }
-            
+
             // Always reset button regardless of the outcome
             saveScoreBtn.disabled = false;
             saveScoreBtn.textContent = 'Pontszám mentése';
@@ -886,7 +898,7 @@
             setActiveButton(jokerFreeLbBtn);
             showLeaderboard('joker-free');
         });
-        
+
         function setActiveButton(button) {
             document.querySelectorAll('.lb-btn').forEach(btn => {
                 btn.classList.remove('bg-teal-600');
@@ -904,16 +916,16 @@
             leaderboardScreen.classList.remove('hidden');
             loader.classList.remove('hidden');
             leaderboardList.innerHTML = '';
-            
+
             if (useLocalStorage || !supabaseInitialized) {
                  const highScores = JSON.parse(localStorage.getItem('cs_high_scores') || '[]');
                  renderLeaderboard(highScores, true);
                  loader.classList.add('hidden');
                  return;
             }
-            
+
             let query = supabase.from('high_scores').select('*');
-            
+
             if (type === 'global') {
                 query = query.order('score', { ascending: false }).limit(10);
             } else if (type === 'joker-free') {
@@ -926,7 +938,7 @@
                     .eq('jokers_used->time', false)
                     .eq('jokers_used->skip', false);
             }
-            
+
             try {
                 const { data, error } = await query;
                 loader.classList.add('hidden');
@@ -939,10 +951,10 @@
                 showLeaderboard(type, true);
             }
         }
-        
+
         function renderLeaderboard(highScores, isLocal = false) {
             leaderboardList.innerHTML = '';
-            
+
             const liUserId = document.createElement('li');
             liUserId.className = 'flex justify-center p-3 rounded-lg bg-gray-700 mb-4';
             liUserId.innerHTML = `<span class="text-sm text-gray-400">Azonosítód: <span class="text-white font-bold">${userId}</span></span>`;
@@ -955,7 +967,7 @@
                 leaderboardList.appendChild(li);
                 return;
             }
-            
+
             highScores.forEach((entry, index) => {
                 const li = document.createElement('li');
                 li.classList.add('flex', 'justify-between', 'bg-gray-700', 'p-3', 'rounded-lg', 'shadow-sm', 'border-l-4', 'border-teal-500');
@@ -964,19 +976,19 @@
                 if (rank === 1) emoji = '🥇';
                 else if (rank === 2) emoji = '🥈';
                 else if (rank === 3) emoji = '🥉';
-                
+
                 let nameToDisplay = entry.name;
-                
+
                 let jokerIcons = '';
                 // Check if entry.jokers_used exists and is an object
                 if (entry.jokers_used && typeof entry.jokers_used === 'object') {
                     if (entry.jokers_used['50']) {
                         jokerIcons += '<i class="fa-solid fa-divide joker-icon" title="50:50"></i>';
                     }
-                    if (entry.jokers_used['time']) {
+                    if (entry.jokers.used['time']) {
                         jokerIcons += '<i class="fa-solid fa-clock joker-icon" title="Időpótló"></i>';
                     }
-                    if (entry.jokers_used['skip']) {
+                    if (entry.jokers.used['skip']) {
                         jokerIcons += '<i class="fa-solid fa-forward joker-icon" title="Kihagyás"></i>';
                     }
                 }
@@ -1002,3 +1014,4 @@
     </script>
 </body>
 </html>
+
