@@ -4,88 +4,331 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Longjump Plugin - Korki32</title>
-    <link rel="stylesheet" href="csoldalak.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-light-color: #818cf8;
+            --text-color: #e5e7eb;
+            --bg-dark: #0f172a;
+            --bg-medium: #1f2937;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --border-radius: 0.75rem;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow-x: hidden;
+            color: var(--text-color);
+            transition: background-color 0.5s ease;
+        }
+
+        h1, h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary-light-color);
+            text-shadow: 0 0 5px var(--primary-light-color);
+        }
+
+        /* Glassmorphism effect */
+        .glassmorphism {
+            background-color: rgba(31, 41, 55, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .plugin-title {
+            color: var(--primary-light-color);
+        }
+
+        .plugin-version {
+            color: #9ca3af;
+        }
+
+        .section-title {
+            color: var(--primary-light-color);
+        }
+
+        .plugin-nav li a {
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .plugin-nav li a:hover {
+            color: var(--primary-light-color);
+            transform: translateY(-2px);
+        }
+
+        .plugin-header,
+        .plugin-section,
+        .plugin-footer {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .plugin-header:hover,
+        .plugin-section:hover,
+        .plugin-footer:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px var(--shadow-color);
+        }
+
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
+            color: white;
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+            background: var(--primary-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .download-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            transition: width 0.6s ease, height 0.6s ease;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+        
+        .download-button:hover::before {
+            width: 300%;
+            height: 300%;
+        }
+
+        .download-button:hover {
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.8), 0 0 40px rgba(129, 140, 248, 0.5), 0 0 60px rgba(129, 140, 248, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .pulsing-version {
+            animation: pulse-effect 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-effect {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Video container */
+        .video-container {
+            position: relative;
+            padding-top: 56.25%;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Footer social icons */
+        .social-icons a img {
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+        
+        .social-icons a:hover img {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 5px var(--primary-light-color));
+        }
+
+        @media (max-width: 640px) {
+            .plugin-nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
 </head>
-<body>
-    <nav class="plugin-nav">
-        <ul>
-            <li><a href="longjump.html">Longjump</a></li>
-            <li><a href="wallclimb.html">WallClimb</a></li>
-            <li><a href="selloursouls.html">Sell Our Souls</a></li>
-            <li><a href="alca.html">Álca</a></li>
-            <li><a href="halloween.html">S1MPLA Halloween Környezet</a></li>
-            <li><a href="cs.html">Vissza a főoldalra</a></li>
-        </ul>
-    </nav>
+<body class="text-gray-200 font-sans">
+    
+    <!-- 3D háttér animáció -->
+    <div id="three-bg" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></div>
 
-    <header>
-        <div class="header-content">
-            <h1>Longjump Plugin</h1>
-            <span class="version">Verzió: 1.0 - Utolsó frissítés: 2023.10.11</span>
-        </div>
-    </header>
-
-    <main class="post">
-        <section class="post-content">
-            <h2>Leírás</h2>
-            <p><strong>Mi ez?</strong><br>
-            Ez egy egyszerű, de nagyon hasznos plugin CS1.6 szerverekre! 20 HP-ért cserébe a játékosok hosszabb ugrás képességét szerezhetik meg.</p>
-            <p><strong>Funkciók:</strong><br>
-            - 20 HP-ért vásárolható hosszú ugrás<br>
-            - Az ugrás 5 másodpercenként újratölt<br>
-            - Speciális modell jelenik meg ugrás közben</p>
-
-            <h2>Szükséges modulok</h2>
-            <ul>
-                <li>Fakemeta_util</li>
-                <li>Hamsandwich</li>
-                <li>Engine</li>
-                <li>Fun</li>
+    <div class="container mx-auto p-4 md:p-8 space-y-8 max-w-4xl relative z-10">
+        
+        <nav class="plugin-nav glassmorphism p-4">
+            <ul class="flex flex-wrap justify-center sm:justify-between text-sm sm:text-base font-semibold space-y-2 sm:space-y-0 sm:space-x-4">
+                <li><a href="longjump.html" class="hover-lift p-2 rounded-md">Longjump</a></li>
+                <li><a href="wallclimb.html" class="hover-lift p-2 rounded-md">WallClimb</a></li>
+                <li><a href="selloursouls.html" class="hover-lift p-2 rounded-md">Sell Our Souls</a></li>
+                <li><a href="alca.html" class="hover-lift p-2 rounded-md">Álca</a></li>
+                <li><a href="halloween.html" class="hover-lift p-2 rounded-md">S1MPLA Halloween Környezet</a></li>
+                <li><a href="cs.html" class="hover-lift p-2 rounded-md">Vissza a főoldalra</a></li>
             </ul>
+        </nav>
 
-            <h2>CVAR-ok</h2>
-            <ul>
-                <li><code>longjump_cost</code> - Hány HP-ba kerül a Longjump (default: 20)</li>
-                <li><code>longjump_cooldown</code> - Mennyi időnként használható újra (default: 5 másodperc)</li>
-                <li><code>longjump_force</code> - Milyen erősen ugorjon, ha használod a Long Jump képességet? (default: 590)</li>
-                <li><code>longjump_height </code> - Milyen magasra ugorjon, ha használod a Long Jump képességet? (default: 330)</li>
-            </ul>
+        <header class="plugin-header glassmorphism p-8 text-center space-y-4">
+            <h1 class="plugin-title text-4xl md:text-5xl font-bold tracking-wide">WallClimb Plugin</h1>
+            <span class="plugin-version pulsing-version inline-block text-lg md:text-xl font-medium tracking-wider text-gray-400">Verzió: 1.0 - Utolsó frissítés: 2023.10.11</span>
+        </header>
 
-            <h2>Parancsok</h2>
-            <ul>
-                <li><code>/longjump</code> - Longjump vásárlása</li>
-                <li><code>/lj</code> - Rövidített parancs a vásárláshoz</li>
-            </ul>
+        <main class="space-y-8">
+            <section class="plugin-section glassmorphism p-8">
+                <h2 class="section-title text-2xl font-bold mb-4">Leírás</h2>
+                <p class="mb-4 text-gray-300"><strong>Mi ez?</strong><br>
+                Ez egy egyszerű, de nagyon hasznos plugin CS1.6 szerverekre! 20 HP-ért cserébe a játékosok hosszabb ugrás képességét szerezhetik meg.</p>
+                <p class="text-gray-300"><strong>Funkciók:</strong><br>
+                - 20 HP-ért vásárolható hosszú ugrás<br>
+                - Az ugrás 5 másodpercenként újratölt<br>
+                - Speciális modell jelenik meg ugrás közben</p>
+            </section>
 
-             <h2>Telepítés</h2>
-            <ul>
-                <li><code>longjump.sma</code> ---> cstrike/addons/amxmodx/scripting</li>
-                <li><code>longjump.amxx</code> ---> cstrike/addons/amxmodx/plugins</li>
-                <li><code>longjump_s1mpla</code>MAPPA ---> cstrike/models</li>
-            </ul>
+            <section class="plugin-section glassmorphism p-8">
+                <h2 class="section-title text-2xl font-bold mb-4">Szükséges modulok</h2>
+                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                    <li>Fakemeta_util</li>
+                    <li>Hamsandwich</li>
+                    <li>Engine</li>
+                    <li>Fun</li>
+                </ul>
+            </section>
 
-            <h2>Videó bemutató</h2>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/Qmy-XnZ6YPM" frameborder="0" allowfullscreen></iframe>
+            <section class="plugin-section glassmorphism p-8">
+                <h2 class="section-title text-2xl font-bold mb-4">CVAR-ok</h2>
+                <ul>
+                    <li><code  class="text-sm bg-gray-700 rounded p-1">longjump_cost</code> - Hány HP-ba kerül a Longjump (default: 20)</li>
+                    <li><code  class="text-sm bg-gray-700 rounded p-1">longjump_cooldown</code> - Mennyi időnként használható újra (default: 5 másodperc)</li>
+                    <li><code  class="text-sm bg-gray-700 rounded p-1">longjump_force</code> - Milyen erősen ugorjon, ha használod a Long Jump képességet? (default: 590)</li>
+                    <li><code  class="text-sm bg-gray-700 rounded p-1">longjump_height </code> - Milyen magasra ugorjon, ha használod a Long Jump képességet? (default: 330)</li>
+                </ul>
+            </section>
+
+            <section class="plugin-section glassmorphism p-8">
+                <h2 class="section-title text-2xl font-bold mb-4">Parancsok</h2>
+                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                    <li><code class="text-sm bg-gray-700 rounded p-1">/longjump</code> - Longjump vásárlása</li>
+                    <li><code class="text-sm bg-gray-700 rounded p-1">/lj</code>  - Rövidített parancs a vásárláshoz</li>
+                </ul>
+                </ul>
+            </section>
+
+           <section class="plugin-section glassmorphism p-8">
+                <h2 class="section-title text-2xl font-bold mb-4">Telepítés</h2>
+                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                    <li><code class="text-sm bg-gray-700 rounded p-1">longjump.sma</code> ---> cstrike/addons/amxmodx/scripting</li>
+                    <li><code class="text-sm bg-gray-700 rounded p-1">longjump.amxx</code> ---> cstrike/addons/amxmodx/plugins</li>
+                    <li><code class="text-sm bg-gray-700 rounded p-1">longjump_s1mpla</code> ---> cstrike/models</li>
+                </ul>
+            </section>
+            
+            <section class="plugin-section glassmorphism p-8">
+                <h2 class="section-title text-2xl font-bold mb-4">Videó bemutató</h2>
+                <div class="video-container">
+                    <iframe src="https://youtu.be/Qmy-XnZ6YPM" frameborder="0" allowfullscreen></iframe>
+                </div>
+            </section>
+
+            <div class="flex justify-center">
+                <a href="https://github.com/korki32/Wall-Climb-cs1.6-plugin-hungary/releases/download/v1.0/wallclimb.rar" class="download-button" download>
+                    Letöltés
+                </a>
             </div>
-            <div class="download-section">
-            <a href="https://github.com/korki32/Long-Jump-cs1.6-plugin-hungary" class="download-button" download>Letöltés</a>
-        </div>
-        </section>
-    </main>
-
-    <footer>
-    <p>&copy; 2024 Korki32. Minden jog fenntartva.</p>
-    <div class="social-icons">
-        <a href="https://steamcommunity.com/id/korkika32/" target="_blank" title="Steam">
-            <img src="images/icons/steam.png" alt="Steam">
-        </a>
-        <a href="https://github.com/korki32" target="_blank" title="GitHub">
-            <img src="images/icons/github.png" alt="GitHub">
-        </a>
+        </main>
+        
+        <footer class="plugin-footer glassmorphism p-8 text-center">
+            <p class="mb-4 text-gray-400">&copy; 2024 Korki32. Minden jog fenntartva.</p>
+            <div class="social-icons flex justify-center space-x-6">
+                <a href="https://steamcommunity.com/id/korkika32/" target="_blank" title="Steam">
+                    <img src="https://placehold.co/40x40/1B2838/FFFFFF?text=Steam" alt="Steam" class="rounded-full">
+                </a>
+                <a href="https://github.com/korki32" target="_blank" title="GitHub">
+                    <img src="https://placehold.co/40x40/1B2838/FFFFFF?text=GitHub" alt="GitHub" class="rounded-full">
+                </a>
+            </div>
+        </footer>
     </div>
-</footer>
+    
+    <script>
+        window.onload = function() {
+            // Three.js 3D háttér animáció
+            let scene, camera, renderer, cubes;
 
-    <script src="csoldalak.js"></script>
+            function init() {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.getElementById('three-bg').appendChild(renderer.domElement);
+                
+                // Kockák (fegyverek) geometriája
+                const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0x818cf8,
+                    emissive: 0x818cf8,
+                    emissiveIntensity: 0.5,
+                    specular: 0xffffff,
+                    shininess: 10
+                });
+
+                cubes = [];
+                for (let i = 0; i < 200; i++) { // Növeltük a kockák számát
+                    const cube = new THREE.Mesh(geometry, material);
+                    cube.position.x = (Math.random() - 0.5) * 50;
+                    cube.position.y = (Math.random() - 0.5) * 50;
+                    cube.position.z = (Math.random() - 0.5) * 50;
+                    cube.rotation.x = Math.random() * Math.PI;
+                    cube.rotation.y = Math.random() * Math.PI;
+                    scene.add(cube);
+                    cubes.push(cube);
+                }
+
+                // Világítás
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(ambientLight);
+                const pointLight = new THREE.PointLight(0xffffff, 1);
+                pointLight.position.set(0, 0, 5);
+                scene.add(pointLight);
+
+                camera.position.z = 5;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                cubes.forEach(cube => {
+                    cube.rotation.x += 0.005;
+                    cube.rotation.y += 0.005;
+                });
+                renderer.render(scene, camera);
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            // Készülj fel a görgetésre és a 3D animációra
+            document.body.style.overflowY = 'scroll';
+            
+            init();
+            animate();
+            window.addEventListener('resize', onWindowResize, false);
+        }
+    </script>
 </body>
 </html>
