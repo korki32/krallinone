@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Turbó Gombgenerátor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Oswald:wght@300;400;700&family=Source+Code+Pro:wght@400;700&family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .code-box { white-space: pre-wrap; font-family: 'Courier New', Courier, monospace; }
+        /* Alapvető animációk (kulcskockák) */
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+        @keyframes fade { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes wobble { 0%, 100% { transform: translateX(0%); } 15% { transform: translateX(-25%) rotate(-5deg); } 30% { transform: translateX(20%) rotate(3deg); } 45% { transform: translateX(-15%) rotate(-3deg); } 60% { transform: translateX(10%) rotate(2deg); } 75% { transform: translateX(-5%) rotate(-1deg); } }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .shimmer-bg {
+            background-size: 200% 100%;
+            background-image: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+        }
+        .draggable-item { cursor: move; }
+        .draggable-item.dragging { opacity: 0.5; border: 2px dashed #ccc; }
+        .drag-over-item { border: 2px dashed #4F46E5; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg p-8 max-w-6xl w-full flex flex-col lg:flex-row space-y-8 lg:space-y-0 lg:space-x-8">
+
+        <!-- Vezérlőpult -->
+        <div class="w-full lg:w-1/2 space-y-6">
+            <h1 class="text-2xl font-bold text-gray-800 text-center">CSS Turbó Gombgenerátor</h1>
+            
+            <!-- Gomb szövege -->
+            <div>
+                <label for="buttonText" class="block text-sm font-medium text-gray-700">Gomb szövege</label>
+                <input type="text" id="buttonText" value="Kattints ide" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+            </div>
+
+            <!-- Stílus és méret -->
+            <hr class="border-gray-300">
+            <h2 class="text-lg font-medium text-gray-800">Alapvető stílusok</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="buttonPadding" class="block text-sm font-medium text-gray-700">Kitöltés (px)</label>
+                    <input type="range" id="buttonPadding" min="5" max="30" value="12" class="mt-1 block w-full">
+                    <span id="paddingValue" class="text-xs text-gray-500">12</span>
+                </div>
+                <div>
+                    <label for="buttonRadius" class="block text-sm font-medium text-gray-700">Lekerekítés (px)</label>
+                    <input type="range" id="buttonRadius" min="0" max="50" value="8" class="mt-1 block w-full">
+                    <span id="radiusValue" class="text-xs text-gray-500">8</span>
+                </div>
+            </div>
+
+            <!-- Háttér -->
+            <hr class="border-gray-300">
+            <h2 class="text-lg font-medium text-gray-800">Háttér</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="colorType" class="block text-sm font-medium text-gray-700">Háttér típusa</label>
+                    <select id="colorType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                        <option value="solid">Egyszínű</option>
+                        <option value="linear-gradient">Lineáris átmenet</option>
+                        <option value="radial-gradient">Radiális átmenet</option>
+                    </select>
+                </div>
+                <!-- Színátmenet opciók -->
+                <div id="gradientOptions" class="hidden space-y-4">
+                    <div id="colorStopsContainer" class="space-y-2">
+                        <!-- Szín bevitelek ide kerülnek -->
+                    </div>
+                    <button id="addColor" class="w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition">Szín hozzáadása</button>
+                    <div id="linearOptions" class="hidden space-y-4">
+                        <label for="gradientAngle" class="block text-sm font-medium text-gray-700">Irány (szögben)</label>
+                        <input type="range" id="gradientAngle" min="0" max="360" value="90" class="mt-1 block w-full">
+                        <span id="angleValue" class="text-xs text-gray-500">90°</span>
+                    </div>
+                    <div id="radialOptions" class="hidden space-y-4">
+                        <label for="radialShape" class="block text-sm font-medium text-gray-700">Alak</label>
+                        <select id="radialShape" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                            <option value="ellipse">Ellipszis</option>
+                            <option value="circle">Kör</option>
+                        </select>
+                        <label for="radialPosition" class="block text-sm font-medium text-gray-700">Pozíció</label>
+                        <select id="radialPosition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                            <option value="center">Közép</option>
+                            <option value="top">Felül</option>
+                            <option value="bottom">Alul</option>
+                            <option value="left">Balra</option>
+                            <option value="right">Jobbra</option>
+                            <option value="top left">Balra felül</option>
+                            <option value="top right">Jobbra felül</option>
+                            <option value="bottom left">Balra alul</option>
+                            <option value="bottom right">Jobbra alul</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Szöveg -->
+            <hr class="border-gray-300">
+            <h2 class="text-lg font-medium text-gray-800">Szöveg</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="textColor" class="block text-sm font-medium text-gray-700">Betűszín</label>
+                    <input type="color" id="textColor" value="#FFFFFF" class="mt-1 block w-full rounded-md h-10">
+                </div>
+                <div>
+                    <label for="fontSize" class="block text-sm font-medium text-gray-700">Betűméret (px)</label>
+                    <input type="range" id="fontSize" min="12" max="24" value="16" class="mt-1 block w-full">
+                    <span id="fontSizeValue" class="text-xs text-gray-500">16</span>
+                </div>
+                <div class="col-span-2">
+                    <label for="fontFamily" class="block text-sm font-medium text-gray-700">Betűtípus</label>
+                    <select id="fontFamily" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                        <option value="Inter, sans-serif">Inter</option>
+                        <option value="Roboto, sans-serif">Roboto</option>
+                        <option value="Montserrat, sans-serif">Montserrat</option>
+                        <option value="Lato, sans-serif">Lato</option>
+                        <option value="Oswald, sans-serif">Oswald</option>
+                        <option value="Playfair Display, serif">Playfair Display</option>
+                        <option value="Source Code Pro, monospace">Source Code Pro</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label for="fontWeight" class="block text-sm font-medium text-gray-700">Betűsúly</label>
+                    <select id="fontWeight" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                        <option value="400">Regular (400)</option>
+                        <option value="100">Thin (100)</option>
+                        <option value="300">Light (300)</option>
+                        <option value="500">Medium (500)</option>
+                        <option value="700">Bold (700)</option>
+                        <option value="900">Black (900)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="letterSpacing" class="block text-sm font-medium text-gray-700">Betűtávolság (px)</label>
+                    <input type="range" id="letterSpacing" min="-1" max="5" step="0.1" value="0" class="mt-1 block w-full">
+                    <span id="letterSpacingValue" class="text-xs text-gray-500">0.0</span>
+                </div>
+                <div>
+                    <label for="textTransform" class="block text-sm font-medium text-gray-700">Szöveg átalakítás</label>
+                    <select id="textTransform" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                        <option value="none">Nincs</option>
+                        <option value="uppercase">Nagybetűs</option>
+                        <option value="lowercase">Kisbetűs</option>
+                        <option value="capitalize">Csupa nagybetűs kezdőbetű</option>
+                    </select>
+                </div>
+                <div class="col-span-2 flex items-center space-x-2">
+                    <input type="checkbox" id="textShadow" class="rounded text-indigo-600 focus:ring-indigo-500">
+                    <label for="textShadow" class="text-sm font-medium text-gray-700">Szöveg árnyék</label>
+                </div>
+            </div>
+
+            <!-- Árnyék -->
+            <hr class="border-gray-300">
+            <h2 class="text-lg font-medium text-gray-800">Doboz árnyék</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="boxShadowColor" class="block text-sm font-medium text-gray-700">Színe</label>
+                    <input type="color" id="boxShadowColor" value="#000000" class="mt-1 block w-full rounded-md h-10">
+                </div>
+                <div>
+                    <label for="shadowX" class="block text-sm font-medium text-gray-700">X eltolás (px)</label>
+                    <input type="range" id="shadowX" min="-10" max="10" value="0" class="mt-1 block w-full">
+                    <span id="shadowXValue" class="text-xs text-gray-500">0</span>
+                </div>
+                <div>
+                    <label for="shadowY" class="block text-sm font-medium text-gray-700">Y eltolás (px)</label>
+                    <input type="range" id="shadowY" min="-10" max="10" value="4" class="mt-1 block w-full">
+                    <span id="shadowYValue" class="text-xs text-gray-500">4</span>
+                </div>
+                <div>
+                    <label for="shadowBlur" class="block text-sm font-medium text-gray-700">Elmosás (px)</label>
+                    <input type="range" id="shadowBlur" min="0" max="20" value="6" class="mt-1 block w-full">
+                    <span id="shadowBlurValue" class="text-xs text-gray-500">6</span>
+                </div>
+                <div>
+                    <label for="shadowSpread" class="block text-sm font-medium text-gray-700">Terjedés (px)</label>
+                    <input type="range" id="shadowSpread" min="0" max="10" value="0" class="mt-1 block w-full">
+                    <span id="shadowSpreadValue" class="text-xs text-gray-500">0</span>
+                </div>
+                <div class="col-span-2 flex items-center space-x-2">
+                    <input type="checkbox" id="boxShadowInset" class="rounded text-indigo-600 focus:ring-indigo-500">
+                    <label for="boxShadowInset" class="text-sm font-medium text-gray-700">Belső árnyék</label>
+                </div>
+            </div>
+
+            <!-- Határvonal -->
+            <hr class="border-gray-300">
+            <h2 class="text-lg font-medium text-gray-800">Határvonal</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="borderWidth" class="block text-sm font-medium text-gray-700">Szélesség (px)</label>
+                    <input type="range" id="borderWidth" min="0" max="10" value="0" class="mt-1 block w-full">
+                    <span id="borderWidthValue" class="text-xs text-gray-500">0</span>
+                </div>
+                <div>
+                    <label for="borderStyle" class="block text-sm font-medium text-gray-700">Stílus</label>
+                    <select id="borderStyle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                        <option value="solid">Szilárd</option>
+                        <option value="dashed">Szaggatott</option>
+                        <option value="dotted">Pontozott</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label for="borderColor" class="block text-sm font-medium text-gray-700">Színe</label>
+                    <input type="color" id="borderColor" value="#000000" class="mt-1 block w-full rounded-md h-10">
+                </div>
+            </div>
+
+            <!-- Animáció -->
+            <hr class="border-gray-300">
+            <h2 class="text-lg font-medium text-gray-800">Alap animáció</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="animationType" class="block text-sm font-medium text-gray-700">Animáció típusa</label>
+                    <select id="animationType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                        <option value="none">Nincs</option>
+                        <option value="pulse">Pulzálás</option>
+                        <option value="bounce">Pattogás</option>
+                        <option value="fade">Halványulás</option>
+                        <option value="wobble">Lebegés</option>
+                        <option value="rotate">Forgatás</option>
+                        <option value="shimmer">Csillogás</option>
+                    </select>
+                </div>
+                <div id="animationOptions" class="hidden space-y-4">
+                    <div>
+                        <label for="animationDuration" class="block text-sm font-medium text-gray-700">Időtartam (s)</label>
+                        <input type="range" id="animationDuration" min="0.5" max="5" step="0.5" value="2" class="mt-1 block w-full">
+                        <span id="animationDurationValue" class="text-xs text-gray-500">2.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hover Animáció -->
+            <hr class="border-gray-300">
+            <h2 class="text-lg font-medium text-gray-800">Hover animáció</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="hoverType" class="block text-sm font-medium text-gray-700">Hover effekt típusa</label>
+                    <select id="hoverType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                        <option value="none">Nincs</option>
+                        <option value="scale">Skálázás</option>
+                        <option value="lift">Felugrás</option>
+                        <option value="rotate">Forgatás</option>
+                        <option value="bg-change">Háttérszín váltás</option>
+                        <option value="bg-gradient">Átmenet váltás</option>
+                        <option value="glow">Fénycsóva</option>
+                    </select>
+                </div>
+                <div id="hoverOptions" class="hidden space-y-4">
+                    <div>
+                        <label for="hoverDuration" class="block text-sm font-medium text-gray-700">Időtartam (s)</label>
+                        <input type="range" id="hoverDuration" min="0.1" max="2" step="0.1" value="0.3" class="mt-1 block w-full">
+                        <span id="hoverDurationValue" class="text-xs text-gray-500">0.3</span>
+                    </div>
+                    <div>
+                        <label for="hoverTimingFunction" class="block text-sm font-medium text-gray-700">Időzítés</label>
+                        <select id="hoverTimingFunction" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                            <option value="ease-in-out">Lassuló/Gyorsuló</option>
+                            <option value="ease-in">Gyorsuló</option>
+                            <option value="ease-out">Lassuló</option>
+                            <option value="linear">Egyenletes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Előnézet és Kód -->
+        <div class="w-full lg:w-1/2 flex flex-col items-center justify-between space-y-6">
+            <h2 class="text-xl font-medium text-gray-800">Előnézet</h2>
+            <div class="flex-grow flex items-center justify-center w-full min-h-[100px]">
+                <button id="previewButton" class="rounded-lg shadow-md font-semibold transition-all duration-300 relative overflow-hidden">
+                    Kattints ide
+                </button>
+            </div>
+
+            <div class="w-full">
+                <h2 class="text-xl font-medium text-gray-800 mb-2">Generált Kód</h2>
+                <textarea id="generatedCode" rows="10" readonly class="code-box w-full p-4 bg-gray-50 rounded-lg border border-gray-200 resize-none"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const buttonText = document.getElementById('buttonText');
+        const colorType = document.getElementById('colorType');
+        const gradientOptions = document.getElementById('gradientOptions');
+        const colorStopsContainer = document.getElementById('colorStopsContainer');
+        const addColorBtn = document.getElementById('addColor');
+        const angleSlider = document.getElementById('gradientAngle');
+        const angleValueSpan = document.getElementById('angleValue');
+        const linearOptions = document.getElementById('linearOptions');
+        const radialOptions = document.getElementById('radialOptions');
+        const radialShape = document.getElementById('radialShape');
+        const radialPosition = document.getElementById('radialPosition');
+        const textColor = document.getElementById('textColor');
+        const buttonPadding = document.getElementById('buttonPadding');
+        const buttonRadius = document.getElementById('buttonRadius');
+        const fontSize = document.getElementById('fontSize');
+        const fontFamily = document.getElementById('fontFamily');
+        const fontWeight = document.getElementById('fontWeight');
+        const letterSpacing = document.getElementById('letterSpacing');
+        const textTransform = document.getElementById('textTransform');
+        const textShadow = document.getElementById('textShadow');
+        const boxShadowColor = document.getElementById('boxShadowColor');
+        const shadowX = document.getElementById('shadowX');
+        const shadowY = document.getElementById('shadowY');
+        const shadowBlur = document.getElementById('shadowBlur');
+        const shadowSpread = document.getElementById('shadowSpread');
+        const boxShadowInset = document.getElementById('boxShadowInset');
+        const borderWidth = document.getElementById('borderWidth');
+        const borderStyle = document.getElementById('borderStyle');
+        const borderColor = document.getElementById('borderColor');
+        const animationType = document.getElementById('animationType');
+        const animationDuration = document.getElementById('animationDuration');
+        const animationOptions = document.getElementById('animationOptions');
+        const hoverType = document.getElementById('hoverType');
+        const hoverDuration = document.getElementById('hoverDuration');
+        const hoverOptions = document.getElementById('hoverOptions');
+        const hoverTimingFunction = document.getElementById('hoverTimingFunction');
+        const paddingValue = document.getElementById('paddingValue');
+        const radiusValue = document.getElementById('radiusValue');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const letterSpacingValue = document.getElementById('letterSpacingValue');
+        const shadowXValue = document.getElementById('shadowXValue');
+        const shadowYValue = document.getElementById('shadowYValue');
+        const shadowBlurValue = document.getElementById('shadowBlurValue');
+        const shadowSpreadValue = document.getElementById('shadowSpreadValue');
+        const borderWidthValue = document.getElementById('borderWidthValue');
+        const animationDurationValue = document.getElementById('animationDurationValue');
+        const hoverDurationValue = document.getElementById('hoverDurationValue');
+        const previewButton = document.getElementById('previewButton');
+        const generatedCode = document.getElementById('generatedCode');
+
+        let draggedItem = null;
+
+        function addColorStop(colorValue) {
+            const newColorDiv = document.createElement('div');
+            newColorDiv.className = 'flex items-center space-x-4 draggable-item';
+            newColorDiv.draggable = true;
+            newColorDiv.innerHTML = `
+                <input type="color" value="${colorValue}" class="color-picker rounded-md h-10 w-full">
+                <button class="remove-color-btn text-gray-400 hover:text-red-500 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            `;
+            colorStopsContainer.appendChild(newColorDiv);
+            setupColorStopListeners(newColorDiv);
+        }
+
+        function setupColorStopListeners(item) {
+            item.querySelector('.color-picker').addEventListener('input', updateButton);
+            item.querySelector('.remove-color-btn').addEventListener('click', () => {
+                if (colorStopsContainer.children.length > 2) {
+                    item.remove();
+                    updateButton();
+                }
+            });
+
+            item.addEventListener('dragstart', (e) => {
+                draggedItem = item;
+                setTimeout(() => item.classList.add('dragging'), 0);
+            });
+
+            item.addEventListener('dragend', () => {
+                draggedItem.classList.remove('dragging');
+                draggedItem = null;
+            });
+
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const boundingBox = item.getBoundingClientRect();
+                const middleY = boundingBox.y + boundingBox.height / 2;
+                if (e.clientY > middleY) {
+                    item.classList.remove('drag-over-item');
+                    item.classList.add('drag-over-item-bottom');
+                } else {
+                    item.classList.remove('drag-over-item-bottom');
+                    item.classList.add('drag-over-item');
+                }
+            });
+
+            item.addEventListener('dragleave', () => {
+                item.classList.remove('drag-over-item', 'drag-over-item-bottom');
+            });
+
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                item.classList.remove('drag-over-item', 'drag-over-item-bottom');
+
+                if (draggedItem && draggedItem !== item) {
+                    const referenceNode = e.clientY > item.getBoundingClientRect().y + item.offsetHeight / 2 ? item.nextSibling : item;
+                    colorStopsContainer.insertBefore(draggedItem, referenceNode);
+                    updateButton();
+                }
+            });
+        }
+        
+        // Színek inicializálása
+        addColorStop('#4F46E5');
+        addColorStop('#8B5CF6');
+
+        function updateButton() {
+            // Update slider values
+            paddingValue.textContent = buttonPadding.value;
+            radiusValue.textContent = buttonRadius.value;
+            fontSizeValue.textContent = fontSize.value;
+            letterSpacingValue.textContent = parseFloat(letterSpacing.value).toFixed(1);
+            shadowXValue.textContent = shadowX.value;
+            shadowYValue.textContent = shadowY.value;
+            shadowBlurValue.textContent = shadowBlur.value;
+            shadowSpreadValue.textContent = shadowSpread.value;
+            borderWidthValue.textContent = borderWidth.value;
+            animationDurationValue.textContent = animationDuration.value;
+            hoverDurationValue.textContent = hoverDuration.value;
+            angleValueSpan.textContent = `${angleSlider.value}°`;
+            
+            // Update button styles
+            previewButton.textContent = buttonText.value;
+            previewButton.style.color = textColor.value;
+            previewButton.style.padding = `${buttonPadding.value}px ${parseInt(buttonPadding.value) * 2}px`;
+            previewButton.style.borderRadius = `${buttonRadius.value}px`;
+            previewButton.style.fontSize = `${fontSize.value}px`;
+            previewButton.style.fontFamily = fontFamily.value;
+            previewButton.style.fontWeight = fontWeight.value;
+            previewButton.style.letterSpacing = `${letterSpacing.value}px`;
+            previewButton.style.textTransform = textTransform.value;
+
+            // Background
+            const gradientColors = Array.from(document.querySelectorAll('.color-picker')).map(picker => picker.value).join(', ');
+            if (colorType.value === 'solid') {
+                previewButton.style.background = gradientColors.split(', ')[0];
+            } else if (colorType.value === 'linear-gradient') {
+                previewButton.style.background = `linear-gradient(${angleSlider.value}deg, ${gradientColors})`;
+            } else if (colorType.value === 'radial-gradient') {
+                previewButton.style.background = `radial-gradient(${radialShape.value} at ${radialPosition.value}, ${gradientColors})`;
+            }
+
+            // Box shadow
+            const inset = boxShadowInset.checked ? 'inset ' : '';
+            const shadowColor = boxShadowColor.value;
+            const shadowString = `${inset}${shadowX.value}px ${shadowY.value}px ${shadowBlur.value}px ${shadowSpread.value}px ${shadowColor}`;
+            previewButton.style.boxShadow = shadowString;
+            
+            // Text shadow
+            if (textShadow.checked) {
+                previewButton.style.textShadow = `1px 1px 2px ${boxShadowColor.value}`;
+            } else {
+                previewButton.style.textShadow = 'none';
+            }
+
+            // Border
+            previewButton.style.borderWidth = `${borderWidth.value}px`;
+            previewButton.style.borderStyle = borderStyle.value;
+            previewButton.style.borderColor = borderColor.value;
+
+            // Base animation
+            if (animationType.value === 'none') {
+                previewButton.style.animation = 'none';
+                previewButton.classList.remove('shimmer-bg');
+                animationOptions.classList.add('hidden');
+            } else if (animationType.value === 'shimmer') {
+                previewButton.style.animation = `shimmer ${animationDuration.value}s infinite`;
+                previewButton.classList.add('shimmer-bg');
+                animationOptions.classList.remove('hidden');
+            } else {
+                previewButton.style.animation = `${animationType.value} ${animationDuration.value}s infinite`;
+                previewButton.classList.remove('shimmer-bg');
+                animationOptions.classList.remove('hidden');
+            }
+
+            // Hover animation
+            if (hoverType.value === 'none' || hoverType.value === 'glow') {
+                previewButton.style.transition = 'none';
+                hoverOptions.classList.add('hidden');
+            } else {
+                previewButton.style.transition = `all ${hoverDuration.value}s ${hoverTimingFunction.value}`;
+                hoverOptions.classList.remove('hidden');
+            }
+
+            generateCode();
+        }
+
+        function generateCode() {
+            const gradientColors = Array.from(document.querySelectorAll('.color-picker')).map(picker => picker.value).join(', ');
+            let bgCSS = '';
+            if (colorType.value === 'solid') {
+                bgCSS = `background-color: ${gradientColors.split(', ')[0]};`;
+            } else if (colorType.value === 'linear-gradient') {
+                bgCSS = `background: linear-gradient(${angleSlider.value}deg, ${gradientColors});`;
+            } else if (colorType.value === 'radial-gradient') {
+                bgCSS = `background: radial-gradient(${radialShape.value} at ${radialPosition.value}, ${gradientColors});`;
+            }
+
+            const hoverEffects = {
+                'none': '',
+                'scale': 'transform: scale(1.1);',
+                'lift': 'transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.2);',
+                'rotate': 'transform: rotate(5deg);',
+                'bg-change': `background-color: ${document.querySelectorAll('.color-picker')[1] ? document.querySelectorAll('.color-picker')[1].value : document.querySelectorAll('.color-picker')[0].value};`,
+                'bg-gradient': colorType.value === 'linear-gradient' ? `background: linear-gradient(${angleSlider.value}deg, ${gradientColors.split(', ').reverse().join(', ')});` : `background: radial-gradient(${radialShape.value} at ${radialPosition.value}, ${gradientColors.split(', ').reverse().join(', ')});`,
+                'glow': ''
+            };
+            
+            const animationCode = animationType.value !== 'none' ? `animation: ${animationType.value} ${animationDuration.value}s infinite;` : '';
+            const boxShadowCSS = `${boxShadowInset.checked ? 'inset ' : ''}${shadowX.value}px ${shadowY.value}px ${shadowBlur.value}px ${shadowSpread.value}px ${boxShadowColor.value};`;
+            const textShadowCSS = textShadow.checked ? `text-shadow: 1px 1px 2px ${boxShadowColor.value};` : '';
+            const borderCSS = `border: ${borderWidth.value}px ${borderStyle.value} ${borderColor.value};`;
+            const transitionCSS = hoverType.value !== 'glow' ? `transition: all ${hoverDuration.value}s ${hoverTimingFunction.value};` : '';
+
+            const cssCode = `
+.custom-button {
+    padding: ${buttonPadding.value}px ${parseInt(buttonPadding.value) * 2}px;
+    border-radius: ${buttonRadius.value}px;
+    font-size: ${fontSize.value}px;
+    font-family: ${fontFamily.value};
+    font-weight: ${fontWeight.value};
+    letter-spacing: ${letterSpacing.value}px;
+    text-transform: ${textTransform.value};
+    color: ${textColor.value};
+    ${bgCSS}
+    box-shadow: ${boxShadowCSS}
+    ${textShadowCSS}
+    ${borderCSS}
+    ${transitionCSS}
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    ${animationCode}
+}
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+@keyframes fade { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes wobble { 0%, 100% { transform: translateX(0%); } 15% { transform: translateX(-25%) rotate(-5deg); } 30% { transform: translateX(20%) rotate(3deg); } 45% { transform: translateX(-15%) rotate(-3deg); } 60% { transform: translateX(10%) rotate(2deg); } 75% { transform: translateX(-5%) rotate(-1deg); } }
+@keyframes rotate { 100% { transform: rotate(360deg); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+.custom-button.shimmer-bg {
+    background-size: 200% 100%;
+    background-image: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+}
+
+.custom-button:hover {
+    ${hoverEffects[hoverType.value]}
+}
+
+${hoverType.value === 'glow' ? `
+.custom-button::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    z-index: -1;
+    background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+    background-size: 400%;
+    border-radius: ${buttonRadius.value}px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+.custom-button:hover::before {
+    animation: glow-animation 8s linear infinite;
+    opacity: 1;
+}
+@keyframes glow-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+` : ''}
+            `.trim();
+
+            const htmlCode = `
+<button class="custom-button">${buttonText.value}</button>
+            `.trim();
+            
+            generatedCode.value = `<!-- HTML Kód -->\n${htmlCode}\n\n/* CSS Kód */\n${cssCode}`;
+        }
+
+        const controls = [
+            buttonText, textColor, buttonPadding, buttonRadius, fontSize, fontFamily, 
+            fontWeight, letterSpacing, textTransform, textShadow, boxShadowColor, shadowX, shadowY, shadowBlur, shadowSpread, boxShadowInset, borderWidth, borderStyle, 
+            borderColor, animationType, animationDuration, colorType, hoverType, hoverDuration, hoverTimingFunction, angleSlider, radialShape, radialPosition
+        ];
+        controls.forEach(control => {
+            control.addEventListener('input', updateButton);
+        });
+
+        colorType.addEventListener('change', () => {
+            if (colorType.value === 'solid') {
+                gradientOptions.classList.add('hidden');
+            } else {
+                gradientOptions.classList.remove('hidden');
+                if (colorType.value === 'linear-gradient') {
+                    linearOptions.classList.remove('hidden');
+                    radialOptions.classList.add('hidden');
+                } else {
+                    linearOptions.classList.add('hidden');
+                    radialOptions.classList.remove('hidden');
+                }
+            }
+            updateButton();
+        });
+
+        addColorBtn.addEventListener('click', () => {
+            if (colorStopsContainer.children.length >= 5) {
+                return;
+            }
+            addColorStop('#ffffff');
+            updateButton();
+        });
+
+        boxShadowInset.addEventListener('change', updateButton);
+        textShadow.addEventListener('change', updateButton);
+
+        animationType.addEventListener('change', () => {
+            if (animationType.value !== 'none') {
+                animationOptions.classList.remove('hidden');
+            } else {
+                animationOptions.classList.add('hidden');
+            }
+            updateButton();
+        });
+
+        hoverType.addEventListener('change', () => {
+            if (hoverType.value !== 'none' && hoverType.value !== 'glow') {
+                hoverOptions.classList.remove('hidden');
+            } else {
+                hoverOptions.classList.add('hidden');
+            }
+            updateButton();
+        });
+
+        updateButton();
+    </script>
+</body>
+</html>
