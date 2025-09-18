@@ -7,7 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Oswald:wght@300;400;700&family=Source+Code+Pro:wght@400;700&family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
         .code-box { white-space: pre-wrap; font-family: 'Courier New', Courier, monospace; }
         /* Alapvető animációk (kulcskockák) */
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -26,270 +31,319 @@
         .draggable-item { cursor: move; }
         .draggable-item.dragging { opacity: 0.5; border: 2px dashed #ccc; }
         .drag-over-item { border: 2px dashed #4F46E5; }
+
+        /* A Hex-RGB konvertáló stílusainak beépítése */
+        #futuristic-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            display: block;
+            background: linear-gradient(180deg, #071025 0%, #071025 100%);
+        }
+        .glass-panel {
+            background-color: rgba(24, 30, 41, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        .control-input {
+            background-color: #1a202c; /* dark input field */
+            color: #d1d5db; /* light gray text */
+            border: 1px solid #4b5563; /* dark gray border */
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .control-input:focus {
+            outline: none;
+            border-color: #6366f1; /* indigo-500 */
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+        }
+        .control-label {
+            color: #9ca3af; /* gray-400 */
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-center">
-    <div class="bg-white rounded-xl shadow-lg p-8 max-w-6xl w-full flex flex-col lg:flex-row space-y-8 lg:space-y-0 lg:space-x-8">
+<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-center relative">
+    
+    <!-- Canvas for background animation -->
+    <canvas id="futuristic-canvas"></canvas>
+
+    <div class="glass-panel rounded-xl shadow-lg p-8 max-w-6xl w-full flex flex-col lg:flex-row space-y-8 lg:space-y-0 lg:space-x-8 z-10">
 
         <!-- Vezérlőpult -->
-        <div class="w-full lg:w-1/2 space-y-6">
-            <h1 class="text-2xl font-bold text-gray-800 text-center">CSS Turbó Gombgenerátor</h1>
+        <div class="w-full lg:w-1/2">
+            <h1 class="text-2xl font-bold text-gray-200 text-center mb-6">CSS Turbó Gombgenerátor</h1>
             
-            <!-- Gomb szövege -->
-            <div>
-                <label for="buttonText" class="block text-sm font-medium text-gray-700">Gomb szövege</label>
-                <input type="text" id="buttonText" value="Kattints ide" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-            </div>
+            <!-- Vezérlő elemek csoportosítása a jobb elrendezés érdekében -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-8 gap-y-6">
 
-            <!-- Stílus és méret -->
-            <hr class="border-gray-300">
-            <h2 class="text-lg font-medium text-gray-800">Alapvető stílusok</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="buttonPadding" class="block text-sm font-medium text-gray-700">Kitöltés (px)</label>
-                    <input type="range" id="buttonPadding" min="5" max="30" value="12" class="mt-1 block w-full">
-                    <span id="paddingValue" class="text-xs text-gray-500">12</span>
+                <!-- Gomb szövege -->
+                <div class="md:col-span-2">
+                    <h2 class="text-lg font-medium text-gray-200 mb-2">Gomb szövege</h2>
+                    <label for="buttonText" class="block text-sm font-medium control-label">Szöveg</label>
+                    <input type="text" id="buttonText" value="Kattints ide" class="mt-1 block w-full rounded-md control-input">
                 </div>
-                <div>
-                    <label for="buttonRadius" class="block text-sm font-medium text-gray-700">Lekerekítés (px)</label>
-                    <input type="range" id="buttonRadius" min="0" max="50" value="8" class="mt-1 block w-full">
-                    <span id="radiusValue" class="text-xs text-gray-500">8</span>
-                </div>
-            </div>
 
-            <!-- Háttér -->
-            <hr class="border-gray-300">
-            <h2 class="text-lg font-medium text-gray-800">Háttér</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="colorType" class="block text-sm font-medium text-gray-700">Háttér típusa</label>
-                    <select id="colorType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                        <option value="solid">Egyszínű</option>
-                        <option value="linear-gradient">Lineáris átmenet</option>
-                        <option value="radial-gradient">Radiális átmenet</option>
-                    </select>
-                </div>
-                <!-- Színátmenet opciók -->
-                <div id="gradientOptions" class="hidden space-y-4">
-                    <div id="colorStopsContainer" class="space-y-2">
-                        <!-- Szín bevitelek ide kerülnek -->
-                    </div>
-                    <button id="addColor" class="w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition">Szín hozzáadása</button>
-                    <div id="linearOptions" class="hidden space-y-4">
-                        <label for="gradientAngle" class="block text-sm font-medium text-gray-700">Irány (szögben)</label>
-                        <input type="range" id="gradientAngle" min="0" max="360" value="90" class="mt-1 block w-full">
-                        <span id="angleValue" class="text-xs text-gray-500">90°</span>
-                    </div>
-                    <div id="radialOptions" class="hidden space-y-4">
-                        <label for="radialShape" class="block text-sm font-medium text-gray-700">Alak</label>
-                        <select id="radialShape" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                            <option value="ellipse">Ellipszis</option>
-                            <option value="circle">Kör</option>
-                        </select>
-                        <label for="radialPosition" class="block text-sm font-medium text-gray-700">Pozíció</label>
-                        <select id="radialPosition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                            <option value="center">Közép</option>
-                            <option value="top">Felül</option>
-                            <option value="bottom">Alul</option>
-                            <option value="left">Balra</option>
-                            <option value="right">Jobbra</option>
-                            <option value="top left">Balra felül</option>
-                            <option value="top right">Jobbra felül</option>
-                            <option value="bottom left">Balra alul</option>
-                            <option value="bottom right">Jobbra alul</option>
-                        </select>
+                <!-- Stílus és méret -->
+                <div class="md:col-span-1">
+                    <h2 class="text-lg font-medium text-gray-200 mb-2">Stílus és méret</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="buttonPadding" class="block text-sm font-medium control-label">Kitöltés (px)</label>
+                            <input type="range" id="buttonPadding" min="5" max="30" value="12" class="mt-1 block w-full">
+                            <span id="paddingValue" class="text-xs text-gray-500">12</span>
+                        </div>
+                        <div>
+                            <label for="buttonRadius" class="block text-sm font-medium control-label">Lekerekítés (px)</label>
+                            <input type="range" id="buttonRadius" min="0" max="50" value="8" class="mt-1 block w-full">
+                            <span id="radiusValue" class="text-xs text-gray-500">8</span>
+                        </div>
+                        <div>
+                            <label for="fontSize" class="block text-sm font-medium control-label">Betűméret (px)</label>
+                            <input type="range" id="fontSize" min="12" max="24" value="16" class="mt-1 block w-full">
+                            <span id="fontSizeValue" class="text-xs text-gray-500">16</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Szöveg -->
-            <hr class="border-gray-300">
-            <h2 class="text-lg font-medium text-gray-800">Szöveg</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="textColor" class="block text-sm font-medium text-gray-700">Betűszín</label>
-                    <input type="color" id="textColor" value="#FFFFFF" class="mt-1 block w-full rounded-md h-10">
-                </div>
-                <div>
-                    <label for="fontSize" class="block text-sm font-medium text-gray-700">Betűméret (px)</label>
-                    <input type="range" id="fontSize" min="12" max="24" value="16" class="mt-1 block w-full">
-                    <span id="fontSizeValue" class="text-xs text-gray-500">16</span>
-                </div>
-                <div class="col-span-2">
-                    <label for="fontFamily" class="block text-sm font-medium text-gray-700">Betűtípus</label>
-                    <select id="fontFamily" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                        <option value="Inter, sans-serif">Inter</option>
-                        <option value="Roboto, sans-serif">Roboto</option>
-                        <option value="Montserrat, sans-serif">Montserrat</option>
-                        <option value="Lato, sans-serif">Lato</option>
-                        <option value="Oswald, sans-serif">Oswald</option>
-                        <option value="Playfair Display, serif">Playfair Display</option>
-                        <option value="Source Code Pro, monospace">Source Code Pro</option>
-                    </select>
-                </div>
-                <div class="col-span-2">
-                    <label for="fontWeight" class="block text-sm font-medium text-gray-700">Betűsúly</label>
-                    <select id="fontWeight" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                        <option value="400">Regular (400)</option>
-                        <option value="100">Thin (100)</option>
-                        <option value="300">Light (300)</option>
-                        <option value="500">Medium (500)</option>
-                        <option value="700">Bold (700)</option>
-                        <option value="900">Black (900)</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="letterSpacing" class="block text-sm font-medium text-gray-700">Betűtávolság (px)</label>
-                    <input type="range" id="letterSpacing" min="-1" max="5" step="0.1" value="0" class="mt-1 block w-full">
-                    <span id="letterSpacingValue" class="text-xs text-gray-500">0.0</span>
-                </div>
-                <div>
-                    <label for="textTransform" class="block text-sm font-medium text-gray-700">Szöveg átalakítás</label>
-                    <select id="textTransform" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                        <option value="none">Nincs</option>
-                        <option value="uppercase">Nagybetűs</option>
-                        <option value="lowercase">Kisbetűs</option>
-                        <option value="capitalize">Csupa nagybetűs kezdőbetű</option>
-                    </select>
-                </div>
-                <div class="col-span-2 flex items-center space-x-2">
-                    <input type="checkbox" id="textShadow" class="rounded text-indigo-600 focus:ring-indigo-500">
-                    <label for="textShadow" class="text-sm font-medium text-gray-700">Szöveg árnyék</label>
-                </div>
-            </div>
-
-            <!-- Árnyék -->
-            <hr class="border-gray-300">
-            <h2 class="text-lg font-medium text-gray-800">Doboz árnyék</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="boxShadowColor" class="block text-sm font-medium text-gray-700">Színe</label>
-                    <input type="color" id="boxShadowColor" value="#000000" class="mt-1 block w-full rounded-md h-10">
-                </div>
-                <div>
-                    <label for="shadowX" class="block text-sm font-medium text-gray-700">X eltolás (px)</label>
-                    <input type="range" id="shadowX" min="-10" max="10" value="0" class="mt-1 block w-full">
-                    <span id="shadowXValue" class="text-xs text-gray-500">0</span>
-                </div>
-                <div>
-                    <label for="shadowY" class="block text-sm font-medium text-gray-700">Y eltolás (px)</label>
-                    <input type="range" id="shadowY" min="-10" max="10" value="4" class="mt-1 block w-full">
-                    <span id="shadowYValue" class="text-xs text-gray-500">4</span>
-                </div>
-                <div>
-                    <label for="shadowBlur" class="block text-sm font-medium text-gray-700">Elmosás (px)</label>
-                    <input type="range" id="shadowBlur" min="0" max="20" value="6" class="mt-1 block w-full">
-                    <span id="shadowBlurValue" class="text-xs text-gray-500">6</span>
-                </div>
-                <div>
-                    <label for="shadowSpread" class="block text-sm font-medium text-gray-700">Terjedés (px)</label>
-                    <input type="range" id="shadowSpread" min="0" max="10" value="0" class="mt-1 block w-full">
-                    <span id="shadowSpreadValue" class="text-xs text-gray-500">0</span>
-                </div>
-                <div class="col-span-2 flex items-center space-x-2">
-                    <input type="checkbox" id="boxShadowInset" class="rounded text-indigo-600 focus:ring-indigo-500">
-                    <label for="boxShadowInset" class="text-sm font-medium text-gray-700">Belső árnyék</label>
-                </div>
-            </div>
-
-            <!-- Határvonal -->
-            <hr class="border-gray-300">
-            <h2 class="text-lg font-medium text-gray-800">Határvonal</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="borderWidth" class="block text-sm font-medium text-gray-700">Szélesség (px)</label>
-                    <input type="range" id="borderWidth" min="0" max="10" value="0" class="mt-1 block w-full">
-                    <span id="borderWidthValue" class="text-xs text-gray-500">0</span>
-                </div>
-                <div>
-                    <label for="borderStyle" class="block text-sm font-medium text-gray-700">Stílus</label>
-                    <select id="borderStyle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                        <option value="solid">Szilárd</option>
-                        <option value="dashed">Szaggatott</option>
-                        <option value="dotted">Pontozott</option>
-                    </select>
-                </div>
-                <div class="col-span-2">
-                    <label for="borderColor" class="block text-sm font-medium text-gray-700">Színe</label>
-                    <input type="color" id="borderColor" value="#000000" class="mt-1 block w-full rounded-md h-10">
-                </div>
-            </div>
-
-            <!-- Animáció -->
-            <hr class="border-gray-300">
-            <h2 class="text-lg font-medium text-gray-800">Alap animáció</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="animationType" class="block text-sm font-medium text-gray-700">Animáció típusa</label>
-                    <select id="animationType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                        <option value="none">Nincs</option>
-                        <option value="pulse">Pulzálás</option>
-                        <option value="bounce">Pattogás</option>
-                        <option value="fade">Halványulás</option>
-                        <option value="wobble">Lebegés</option>
-                        <option value="rotate">Forgatás</option>
-                        <option value="shimmer">Csillogás</option>
-                    </select>
-                </div>
-                <div id="animationOptions" class="hidden space-y-4">
-                    <div>
-                        <label for="animationDuration" class="block text-sm font-medium text-gray-700">Időtartam (s)</label>
-                        <input type="range" id="animationDuration" min="0.5" max="5" step="0.5" value="2" class="mt-1 block w-full">
-                        <span id="animationDurationValue" class="text-xs text-gray-500">2.0</span>
+                <!-- Háttér -->
+                <div class="md:col-span-1">
+                    <h2 class="text-lg font-medium text-gray-200 mb-2">Háttér</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="colorType" class="block text-sm font-medium control-label">Háttér típusa</label>
+                            <select id="colorType" class="mt-1 block w-full rounded-md control-input p-2">
+                                <option value="solid">Egyszínű</option>
+                                <option value="linear-gradient">Lineáris átmenet</option>
+                                <option value="radial-gradient">Radiális átmenet</option>
+                            </select>
+                        </div>
+                        <!-- Színátmenet opciók -->
+                        <div id="gradientOptions" class="hidden space-y-4">
+                            <div id="colorStopsContainer" class="space-y-2">
+                                <!-- Szín bevitelek ide kerülnek -->
+                            </div>
+                            <button id="addColor" class="w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition">Szín hozzáadása</button>
+                            <div id="linearOptions" class="hidden space-y-4">
+                                <label for="gradientAngle" class="block text-sm font-medium control-label">Irány (szögben)</label>
+                                <input type="range" id="gradientAngle" min="0" max="360" value="90" class="mt-1 block w-full">
+                                <span id="angleValue" class="text-xs text-gray-500">90°</span>
+                            </div>
+                            <div id="radialOptions" class="hidden space-y-4">
+                                <label for="radialShape" class="block text-sm font-medium control-label">Alak</label>
+                                <select id="radialShape" class="mt-1 block w-full rounded-md control-input p-2">
+                                    <option value="ellipse">Ellipszis</option>
+                                    <option value="circle">Kör</option>
+                                </select>
+                                <label for="radialPosition" class="block text-sm font-medium control-label">Pozíció</label>
+                                <select id="radialPosition" class="mt-1 block w-full rounded-md control-input p-2">
+                                    <option value="center">Közép</option>
+                                    <option value="top">Felül</option>
+                                    <option value="bottom">Alul</option>
+                                    <option value="left">Balra</option>
+                                    <option value="right">Jobbra</option>
+                                    <option value="top left">Balra felül</option>
+                                    <option value="top right">Jobbra felül</option>
+                                    <option value="bottom left">Balra alul</option>
+                                    <option value="bottom right">Jobbra alul</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Hover Animáció -->
-            <hr class="border-gray-300">
-            <h2 class="text-lg font-medium text-gray-800">Hover animáció</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="hoverType" class="block text-sm font-medium text-gray-700">Hover effekt típusa</label>
-                    <select id="hoverType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                        <option value="none">Nincs</option>
-                        <option value="scale">Skálázás</option>
-                        <option value="lift">Felugrás</option>
-                        <option value="rotate">Forgatás</option>
-                        <option value="bg-change">Háttérszín váltás</option>
-                        <option value="bg-gradient">Átmenet váltás</option>
-                        <option value="glow">Fénycsóva</option>
-                    </select>
-                </div>
-                <div id="hoverOptions" class="hidden space-y-4">
-                    <div>
-                        <label for="hoverDuration" class="block text-sm font-medium text-gray-700">Időtartam (s)</label>
-                        <input type="range" id="hoverDuration" min="0.1" max="2" step="0.1" value="0.3" class="mt-1 block w-full">
-                        <span id="hoverDurationValue" class="text-xs text-gray-500">0.3</span>
+
+                <!-- Szöveg stílusok -->
+                <div class="md:col-span-1">
+                    <h2 class="text-lg font-medium text-gray-200 mb-2">Szöveg</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="textColor" class="block text-sm font-medium control-label">Betűszín</label>
+                            <input type="color" id="textColor" value="#FFFFFF" class="mt-1 block w-full rounded-md h-10">
+                        </div>
+                        <div>
+                            <label for="fontFamily" class="block text-sm font-medium control-label">Betűtípus</label>
+                            <select id="fontFamily" class="mt-1 block w-full rounded-md control-input p-2">
+                                <option value="Inter, sans-serif">Inter</option>
+                                <option value="Roboto, sans-serif">Roboto</option>
+                                <option value="Montserrat, sans-serif">Montserrat</option>
+                                <option value="Lato, sans-serif">Lato</option>
+                                <option value="Oswald, sans-serif">Oswald</option>
+                                <option value="Playfair Display, serif">Playfair Display</option>
+                                <option value="Source Code Pro, monospace">Source Code Pro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="fontWeight" class="block text-sm font-medium control-label">Betűsúly</label>
+                            <select id="fontWeight" class="mt-1 block w-full rounded-md control-input p-2">
+                                <option value="400">Regular (400)</option>
+                                <option value="100">Thin (100)</option>
+                                <option value="300">Light (300)</option>
+                                <option value="500">Medium (500)</option>
+                                <option value="700">Bold (700)</option>
+                                <option value="900">Black (900)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="letterSpacing" class="block text-sm font-medium control-label">Betűtávolság (px)</label>
+                            <input type="range" id="letterSpacing" min="-1" max="5" step="0.1" value="0" class="mt-1 block w-full">
+                            <span id="letterSpacingValue" class="text-xs text-gray-500">0.0</span>
+                        </div>
+                        <div>
+                            <label for="textTransform" class="block text-sm font-medium control-label">Szöveg átalakítás</label>
+                            <select id="textTransform" class="mt-1 block w-full rounded-md control-input p-2">
+                                <option value="none">Nincs</option>
+                                <option value="uppercase">Nagybetűs</option>
+                                <option value="lowercase">Kisbetűs</option>
+                                <option value="capitalize">Csupa nagybetűs kezdőbetű</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="textShadow" class="rounded text-indigo-600 focus:ring-indigo-500">
+                            <label for="textShadow" class="text-sm font-medium control-label">Szöveg árnyék</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="hoverTimingFunction" class="block text-sm font-medium text-gray-700">Időzítés</label>
-                        <select id="hoverTimingFunction" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
-                            <option value="ease-in-out">Lassuló/Gyorsuló</option>
-                            <option value="ease-in">Gyorsuló</option>
-                            <option value="ease-out">Lassuló</option>
-                            <option value="linear">Egyenletes</option>
-                        </select>
+                </div>
+
+                <!-- Árnyék és Határvonal -->
+                <div class="md:col-span-1">
+                    <h2 class="text-lg font-medium text-gray-200 mb-2">Árnyék és Határvonal</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="boxShadowColor" class="block text-sm font-medium control-label">Árnyék színe</label>
+                            <input type="color" id="boxShadowColor" value="#000000" class="mt-1 block w-full rounded-md h-10">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="shadowX" class="block text-sm font-medium control-label">X eltolás (px)</label>
+                                <input type="range" id="shadowX" min="-10" max="10" value="0" class="mt-1 block w-full">
+                                <span id="shadowXValue" class="text-xs text-gray-500">0</span>
+                            </div>
+                            <div>
+                                <label for="shadowY" class="block text-sm font-medium control-label">Y eltolás (px)</label>
+                                <input type="range" id="shadowY" min="-10" max="10" value="4" class="mt-1 block w-full">
+                                <span id="shadowYValue" class="text-xs text-gray-500">4</span>
+                            </div>
+                            <div>
+                                <label for="shadowBlur" class="block text-sm font-medium control-label">Elmosás (px)</label>
+                                <input type="range" id="shadowBlur" min="0" max="20" value="6" class="mt-1 block w-full">
+                                <span id="shadowBlurValue" class="text-xs text-gray-500">6</span>
+                            </div>
+                            <div>
+                                <label for="shadowSpread" class="block text-sm font-medium control-label">Terjedés (px)</label>
+                                <input type="range" id="shadowSpread" min="0" max="10" value="0" class="mt-1 block w-full">
+                                <span id="shadowSpreadValue" class="text-xs text-gray-500">0</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="boxShadowInset" class="rounded text-indigo-600 focus:ring-indigo-500">
+                            <label for="boxShadowInset" class="text-sm font-medium control-label">Belső árnyék</label>
+                        </div>
+                        <hr class="border-gray-600 my-4">
+                        <div>
+                            <label for="borderWidth" class="block text-sm font-medium control-label">Szélesség (px)</label>
+                            <input type="range" id="borderWidth" min="0" max="10" value="0" class="mt-1 block w-full">
+                            <span id="borderWidthValue" class="text-xs text-gray-500">0</span>
+                        </div>
+                        <div>
+                            <label for="borderStyle" class="block text-sm font-medium control-label">Stílus</label>
+                            <select id="borderStyle" class="mt-1 block w-full rounded-md control-input p-2">
+                                <option value="solid">Szilárd</option>
+                                <option value="dashed">Szaggatott</option>
+                                <option value="dotted">Pontozott</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="borderColor" class="block text-sm font-medium control-label">Színe</label>
+                            <input type="color" id="borderColor" value="#000000" class="mt-1 block w-full rounded-md h-10">
+                        </div>
                     </div>
                 </div>
+
+                <!-- Animációk -->
+                <div class="md:col-span-2">
+                    <h2 class="text-lg font-medium text-gray-200 mb-2">Animációk</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h3 class="text-md font-medium text-gray-200 mb-1">Alap animáció</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="animationType" class="block text-sm font-medium control-label">Animáció típusa</label>
+                                    <select id="animationType" class="mt-1 block w-full rounded-md control-input p-2">
+                                        <option value="none">Nincs</option>
+                                        <option value="pulse">Pulzálás</option>
+                                        <option value="bounce">Pattogás</option>
+                                        <option value="fade">Halványulás</option>
+                                        <option value="wobble">Lebegés</option>
+                                        <option value="rotate">Forgatás</option>
+                                        <option value="shimmer">Csillogás</option>
+                                    </select>
+                                </div>
+                                <div id="animationOptions" class="hidden">
+                                    <label for="animationDuration" class="block text-sm font-medium control-label">Időtartam (s)</label>
+                                    <input type="range" id="animationDuration" min="0.5" max="5" step="0.5" value="2" class="mt-1 block w-full">
+                                    <span id="animationDurationValue" class="text-xs text-gray-500">2.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-medium text-gray-200 mb-1">Hover animáció</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="hoverType" class="block text-sm font-medium control-label">Hover effekt típusa</label>
+                                    <select id="hoverType" class="mt-1 block w-full rounded-md control-input p-2">
+                                        <option value="none">Nincs</option>
+                                        <option value="scale">Skálázás</option>
+                                        <option value="lift">Felugrás</option>
+                                        <option value="rotate">Forgatás</option>
+                                        <option value="bg-change">Háttérszín váltás</option>
+                                        <option value="bg-gradient">Átmenet váltás</option>
+                                        <option value="glow">Fénycsóva</option>
+                                    </select>
+                                </div>
+                                <div id="hoverOptions" class="hidden">
+                                    <div>
+                                        <label for="hoverDuration" class="block text-sm font-medium control-label">Időtartam (s)</label>
+                                        <input type="range" id="hoverDuration" min="0.1" max="2" step="0.1" value="0.3" class="mt-1 block w-full">
+                                        <span id="hoverDurationValue" class="text-xs text-gray-500">0.3</span>
+                                    </div>
+                                    <div>
+                                        <label for="hoverTimingFunction" class="block text-sm font-medium control-label">Időzítés</label>
+                                        <select id="hoverTimingFunction" class="mt-1 block w-full rounded-md control-input p-2">
+                                            <option value="ease-in-out">Lassuló/Gyorsuló</option>
+                                            <option value="ease-in">Gyorsuló</option>
+                                            <option value="ease-out">Lassuló</option>
+                                            <option value="linear">Egyenletes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
         <!-- Előnézet és Kód -->
         <div class="w-full lg:w-1/2 flex flex-col items-center justify-between space-y-6">
-            <h2 class="text-xl font-medium text-gray-800">Előnézet</h2>
-            <div class="flex-grow flex items-center justify-center w-full min-h-[100px]">
+            <h2 class="text-xl font-medium text-gray-200 mb-2">Előnézet</h2>
+            <div class="flex-grow flex items-center justify-center w-full min-h-[100px] mb-6">
                 <button id="previewButton" class="rounded-lg shadow-md font-semibold transition-all duration-300 relative overflow-hidden">
                     Kattints ide
                 </button>
             </div>
 
             <div class="w-full">
-                <h2 class="text-xl font-medium text-gray-800 mb-2">Generált Kód</h2>
+                <h2 class="text-xl font-medium text-gray-200 mb-2">Generált Kód</h2>
                 <textarea id="generatedCode" rows="10" readonly class="code-box w-full p-4 bg-gray-50 rounded-lg border border-gray-200 resize-none"></textarea>
             </div>
         </div>
+        <footer class="text-center text-gray-400 mt-8 text-sm">
+        <p>&copy; 2025 Korki32</p>
+      </footer>
     </div>
+    
 
     <script>
         const buttonText = document.getElementById('buttonText');
@@ -341,7 +395,61 @@
         const hoverDurationValue = document.getElementById('hoverDurationValue');
         const previewButton = document.getElementById('previewButton');
         const generatedCode = document.getElementById('generatedCode');
+        
+        // Background animation
+        const canvas = document.getElementById('futuristic-canvas');
+        const ctx = canvas.getContext?.('2d');
+        if (canvas && ctx) {
+            const matrixCharacters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%^&*()_+{}|:<>?-=[]\\;\'",./`~';
+            let streams = [];
+            const fontSize = 16;
+            let animationFrameId;
 
+            function initializeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                const columns = Math.floor(canvas.width / fontSize);
+                streams = [];
+                for (let i = 0; i < columns; i++) {
+                    streams.push({
+                        x: i * fontSize,
+                        y: Math.random() * canvas.height,
+                        speed: Math.random() * 5 + 1
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.fillStyle = 'rgba(7, 16, 37, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#22c55e';
+                ctx.font = `${fontSize}px monospace`;
+                streams.forEach(stream => {
+                    const char = matrixCharacters.charAt(Math.floor(Math.random() * matrixCharacters.length));
+                    ctx.fillText(char, stream.x, stream.y);
+                    if (stream.y > canvas.height + 50) {
+                        stream.y = 0;
+                    } else {
+                        stream.y += stream.speed;
+                    }
+                });
+            }
+            
+            function animate() {
+                draw();
+                animationFrameId = requestAnimationFrame(animate);
+            }
+
+            initializeCanvas();
+            animate();
+            
+            window.addEventListener('resize', () => {
+                cancelAnimationFrame(animationFrameId);
+                initializeCanvas();
+                animate();
+            });
+        }
+        
         let draggedItem = null;
 
         function addColorStop(colorValue) {
