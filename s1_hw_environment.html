@@ -64,6 +64,29 @@
         #gallery-modal {
             transition: opacity 0.3s ease-in-out;
         }
+
+        /* Pók futás animáció */
+        @keyframes spider-crawl {
+            0% { transform: translateX(-100vw) translateY(0) scale(1) rotate(0deg); }
+            50% { transform: translateX(50vw) translateY(100px) scale(1.5) rotate(180deg); }
+            100% { transform: translateX(200vw) translateY(0) scale(1) rotate(360deg); }
+        }
+        .spider {
+            position: absolute;
+            top: 50vh;
+            font-size: 2rem;
+            animation: spider-crawl 20s linear infinite;
+        }
+        .spider:nth-child(2) {
+            top: 20vh;
+            animation-duration: 15s;
+            animation-delay: 5s;
+        }
+        .spider:nth-child(3) {
+            top: 80vh;
+            animation-duration: 25s;
+            animation-delay: 10s;
+        }
     </style>
     <script>
         // Tailwind konfiguráció
@@ -86,6 +109,14 @@
 
 <!-- ÚJ: Villámlás effektus div -->
 <div id="lightning"></div>
+
+<!-- ÚJ: Pókok animációja -->
+<div class="spider-container pointer-events-none fixed inset-0 z-0">
+    <div class="spider" style="top: 50vh; animation-duration: 20s; animation-delay: 0s;">🕷️</div>
+    <div class="spider" style="top: 20vh; animation-duration: 15s; animation-delay: 5s;">🕷️</div>
+    <div class="spider" style="top: 80vh; animation-duration: 25s; animation-delay: 10s;">🕷️</div>
+</div>
+
 
 <!-- Díszítő elemek: Pókhálók (megmaradt) -->
 <div class="pointer-events-none absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 text-gray-800/20 dark:text-gray-500/10 opacity-50 z-20"><svg width="200" height="200" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="0.5"><path d="M 50 50 L 0 0 M 50 50 L 50 0 M 50 50 L 100 0 M 50 50 L 100 50 M 50 50 L 100 100 M 50 50 L 50 100 M 50 50 L 0 100 M 50 50 L 0 50 M 25 12.5 A 37.5 37.5 0 0 1 75 12.5 M 12.5 25 A 37.5 37.5 0 0 1 12.5 75 M 25 87.5 A 37.5 37.5 0 0 1 75 87.5 M 87.5 25 A 37.5 37.5 0 0 1 87.5 75"></path></svg></div>
@@ -179,16 +210,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Az adatok tárolása, hogy könnyen szerkeszthetőek legyenek
     const data = {
         cvars: [
-            { name: "halloween_mode", description: "Be- vagy kikapcsolja a Halloween módot (alapértelmezett: 1)." },
-            { name: "halloween_sound", description: "Be- vagy kikapcsolja a kísérteties hangokat (alapértelmezett: 1)." },
-            { name: "halloween_map", description: "Beállítja a Halloween pályát (alapértelmezett: halloween_map)." },
-            { name: "pumpkin_head", description: "Engedélyezi a tökfej modelleket (alapértelmezett: 1)." },
-            { name: "graveyard_fog", description: "Be- vagy kikapcsolja a pálya ködét (alapértelmezett: 1)." }
+            { name: "s1hw_spooky_sounds", description: "Be- vagy kikapcsolja a kísérteties hangokat (alapértelmezett: 1)." },
+            { name: "s1hw_spooky_messages", description: "Be- vagy kikapcsolja a kísérteties üzeneteket (alapértelmezett: 1)." },
+            { name: "s1hw_spooky_darkness", description: "Be- vagy kikapcsolja a sötétítést a pályákon (alapértelmezett: 1). " },
+            { name: "s1hw_spooky_fog", description: "Be- vagy kikapcsolja a ködöt (alapértelmezett: 1)." },
+            { name: "s1hw_spooky_sky", description: "Be- vagy kikapcsolja a dinamikus égboltot (alapértelmezett: 1)." },
+            { name: "s1hw_spooky_bomb", description: "Be- vagy kikapcsolja a halloweeni bomba modelt és hangot (alapértelmezett: 1)." },
+            { name: "s1hw_spooky_leaf", description: "Be- vagy kikapcsolja a hulló leveleket (alapértelmezett: 1)." }
         ],
         gameModes: [
-            "Classic Competitive",
-            "Deathmatch",
-            "Gun Game"
+            "Fakemeta",
+            "Fun",
+            "Hamsandwich",
+            "Engine",
+            "Amxmisc"
         ],
         downloadSteps: [
             { 
