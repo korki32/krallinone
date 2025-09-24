@@ -180,15 +180,13 @@
                     <!-- Ide kerülnek dinamikusan a lépések -->
                 </div>
             </div>
-
+            
             <!-- Fejlesztések -->
             <div class="flex flex-col gap-4 rounded-xl border border-gray-700/50 bg-gray-800/20 p-6 scroll-animate">
                 <h2 class="font-spooky text-4xl font-bold text-primary">Fejlesztések</h2>
                 <p class="text-gray-400">Kövesd nyomon a plugin legújabb frissítéseit és fejlesztéseit.</p>
-                <div class="mt-4 space-y-8 border-l-2 border-primary/30 pl-6">
-                    <div class="relative flex flex-col gap-1"><div class="absolute -left-[34px] top-1 flex size-6 items-center justify-center rounded-full bg-primary text-white ring-8 ring-background-dark"><svg class="bi bi-tag-fill" fill="currentColor" height="12" viewBox="0 0 16 16" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 3.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg></div><p class="font-semibold text-primary">Verzió 1.2.0</p><p class="text-gray-300">Új, kísérteties karaktermodellek és továbbfejlesztett környezeti hangok a még magával ragadóbb élményért.</p></div>
-                    <div class="relative flex flex-col gap-1"><div class="absolute -left-[34px] top-1 flex size-6 items-center justify-center rounded-full bg-primary text-white ring-8 ring-background-dark"><svg class="bi bi-tag-fill" fill="currentColor" height="12" viewBox="0 0 16 16" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 3.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg></div><p class="font-semibold text-primary">Verzió 1.1.5</p><p class="text-gray-300">Javítva egy hiba, ami miatt a tökfejek nem jelentek meg bizonyos karaktermodelleken. A világítás beállítása az összes Halloween pályán.</p></div>
-                    <div class="relative flex flex-col gap-1"><div class="absolute -left-[34px] top-1 flex size-6 items-center justify-center rounded-full bg-primary text-white ring-8 ring-background-dark"><svg class="bi bi-tag-fill" fill="currentColor" height="12" viewBox="0 0 16 16" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 3.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg></div><p class="font-semibold text-primary">Verzió 1.0.0</p><p class="text-gray-300">A Spooky CS 1.6 Plugin első kiadása. Tartalmaz egyedi Halloween pályákat, hangokat és játékmenet-finomításokat.</p></div>
+                <div id="updates-list" class="mt-4 space-y-8 border-l-2 border-primary/30 pl-6">
+                    <!-- Ide kerülnek dinamikusan a fejlesztések -->
                 </div>
             </div>
         </div>
@@ -212,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cvars: [
             { name: "s1hw_spooky_sounds", description: "Be- vagy kikapcsolja a kísérteties hangokat (alapértelmezett: 1)." },
             { name: "s1hw_spooky_messages", description: "Be- vagy kikapcsolja a kísérteties üzeneteket (alapértelmezett: 1)." },
-            { name: "s1hw_spooky_darkness", description: "Be- vagy kikapcsolja a sötétítést a pályákon (alapértelmezett: 1). " },
+            { name: "s1hw_spooky_darkness", description: "Be- vagy kikapcsolja a sötétítést a pályákon (alapértelmezett: 1)." },
             { name: "s1hw_spooky_fog", description: "Be- vagy kikapcsolja a ködöt (alapértelmezett: 1)." },
             { name: "s1hw_spooky_sky", description: "Be- vagy kikapcsolja a dinamikus égboltot (alapértelmezett: 1)." },
             { name: "s1hw_spooky_bomb", description: "Be- vagy kikapcsolja a halloweeni bomba modelt és hangot (alapértelmezett: 1)." },
@@ -244,6 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: "Aktiváld a Plugint", 
                 description: "Nyisd meg a `plugins.ini` fájlt, ami az `amxmodx/configs/` mappában található. Adj hozzá egy új sort: `spooky_plugin.amxx`, hogy engedélyezd a plugint. Mentsd el a fájlt és indítsd újra a szervert." 
             }
+        ],
+        updates: [
+            { version: "1.2.0", description: "Új, kísérteties karaktermodellek és továbbfejlesztett környezeti hangok a még magával ragadóbb élményért." },
+            { version: "1.1.5", description: "Javítva egy hiba, ami miatt a tökfejek nem jelentek meg bizonyos karaktermodelleken. A világítás beállítása az összes Halloween pályán." },
+            { version: "1.0.0", description: "A Spooky CS 1.6 Plugin első kiadása. Tartalmaz egyedi Halloween pályákat, hangokat és játékmenet-finomításokat." }
         ]
     };
 
@@ -289,7 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 scrollAnimatedItems: document.querySelectorAll('.scroll-animate'),
                 cvarList: document.getElementById('cvar-list'),
                 gamemodeList: document.getElementById('gamemode-list'),
-                downloadSteps: document.getElementById('download-steps')
+                downloadSteps: document.getElementById('download-steps'),
+                updatesList: document.getElementById('updates-list')
             };
         },
         
@@ -299,9 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderContent() {
             // CVAR-ok renderelése
             this.elements.cvarList.innerHTML = data.cvars.map(cvar => `
-                <div class="grid grid-cols-1 gap-2 py-4 sm:grid-cols-3 sm:gap-4">
+                <div class="py-4">
                     <p class="font-semibold text-gray-200">${cvar.name}</p>
-                    <p class="col-span-2 text-gray-400">${cvar.description}</p>
+                    <p class="mt-1 text-gray-400 text-sm">${cvar.description}</p>
                 </div>
             `).join('');
 
@@ -324,6 +328,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="text-gray-400">${step.description}</p>
                         ${step.buttonText ? `<button class="btn-shake mt-2 w-full rounded-lg bg-primary px-6 py-3 text-base font-bold text-white transition-colors hover:bg-primary/90 sm:w-auto">${step.buttonText}</button>` : ''}
                     </div>
+                </div>
+            `).join('');
+
+            // Fejlesztések renderelése
+            this.elements.updatesList.innerHTML = data.updates.map(update => `
+                <div class="relative flex flex-col gap-1">
+                    <div class="absolute -left-[34px] top-1 flex size-6 items-center justify-center rounded-full bg-primary text-white ring-8 ring-background-dark">
+                        <svg class="bi bi-tag-fill" fill="currentColor" height="12" viewBox="0 0 16 16" width="12" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 3.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path>
+                        </svg>
+                    </div>
+                    <p class="font-semibold text-primary">Verzió ${update.version}</p>
+                    <p class="text-gray-300">${update.description}</p>
                 </div>
             `).join('');
         },
