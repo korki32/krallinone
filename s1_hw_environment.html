@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html class="dark" lang="hu">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Stitch Design - Spooky CS 1.6 Plugin</title>
+    <!-- Favicon -->
+    <link href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎃</text></svg>" rel="icon" type="image/svg+xml">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Tone.js a hangokhoz -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    
+    <style type="text/tailwindcss">
+        /* Egyedi kurzor */
+        body {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M3 18L18 3"/></svg>'), auto;
+        }
+
+        /* Háttér animáció */
+        @keyframes bg-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .animated-bg {
+            background-image: url('https://images.unsplash.com/photo-1572521165324-180f626154c8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+            background-size: 200% 200%;
+            animation: bg-pan 25s ease-in-out infinite;
+        }
+
+        /* Szellem lebegés animáció */
+        @keyframes float { 0% { transform: translateY(0px) rotate(-2deg); } 50% { transform: translateY(-25px) rotate(2deg); } 100% { transform: translateY(0px) rotate(-2deg); } }
+        .ghost { animation: float 6s ease-in-out infinite; }
+
+        /* Gomb rázkódás animáció */
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); } 20%, 40%, 60%, 80% { transform: translateX(3px); } }
+        .btn-shake:hover { animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both; }
+        
+        /* Görgetésre beúszó animációk */
+        .scroll-animate { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .scroll-animate.visible { opacity: 1; transform: translateY(0); }
+
+        /* Írógép effektus kurzor */
+        .typing::after { content: '_'; animation: blink 1s step-end infinite; }
+        @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Villámlás effektus */
+        @keyframes lightning-flash { 0%, 100% { opacity: 0; } 50% { opacity: 0.8; } }
+        #lightning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9998;
+        }
+        #lightning.flash {
+            animation: lightning-flash 0.3s ease-out;
+        }
+
+        /* Képgaléria Modal */
+        #gallery-modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+    <script>
+        // Tailwind konfiguráció
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { primary: "#c2570a", "background-light": "#f8f7f5", "background-dark": "#121212", },
+                    fontFamily: { display: ["Space Grotesk", "sans-serif"], spooky: ["Creepster", "cursive"], },
+                    borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px", },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200 overflow-x-hidden">
+
+<!-- ÚJ: Canvas az egér effektushoz -->
+<canvas id="cursor-particles" class="pointer-events-none fixed top-0 left-0 z-[9999] h-full w-full"></canvas>
+
+<!-- ÚJ: Villámlás effektus div -->
+<div id="lightning"></div>
+
+<!-- ÚJ: Hangulat zene vezérlő -->
+<button id="music-toggle" class="fixed bottom-5 left-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary/80 text-white backdrop-blur-sm transition-transform hover:scale-110">
+    <!-- Kezdetben a némított ikon látszik -->
+    <svg id="music-off-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
+    <!-- Ez a lejátszás ikon, kezdetben rejtett -->
+    <svg id="music-on-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+</button>
+
+<!-- Díszítő elemek: Pókhálók (megmaradt) -->
+<div class="pointer-events-none absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 text-gray-800/20 dark:text-gray-500/10 opacity-50 z-20"><svg width="200" height="200" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="0.5"><path d="M 50 50 L 0 0 M 50 50 L 50 0 M 50 50 L 100 0 M 50 50 L 100 50 M 50 50 L 100 100 M 50 50 L 50 100 M 50 50 L 0 100 M 50 50 L 0 50 M 25 12.5 A 37.5 37.5 0 0 1 75 12.5 M 12.5 25 A 37.5 37.5 0 0 1 12.5 75 M 25 87.5 A 37.5 37.5 0 0 1 75 87.5 M 87.5 25 A 37.5 37.5 0 0 1 87.5 75"></path></svg></div>
+<div class="pointer-events-none absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 text-gray-800/20 dark:text-gray-500/10 opacity-50 z-20 transform scale-x-[-1]"><svg width="200" height="200" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="0.5"><path d="M 50 50 L 0 0 M 50 50 L 50 0 M 50 50 L 100 0 M 50 50 L 100 50 M 50 50 L 100 100 M 50 50 L 50 100 M 50 50 L 0 100 M 50 50 L 0 50 M 25 12.5 A 37.5 37.5 0 0 1 75 12.5 M 12.5 25 A 37.5 37.5 0 0 1 12.5 75 M 25 87.5 A 37.5 37.5 0 0 1 75 87.5 M 87.5 25 A 37.5 37.5 0 0 1 87.5 75"></path></svg></div>
+<!-- Lebegő szellem (megmaradt) -->
+<div class="ghost pointer-events-none fixed bottom-10 right-10 z-0 opacity-20 dark:opacity-30"><svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="white"><path d="M12 2c-5.523 0-10 4.477-10 10 0 2.051.619 3.96 1.688 5.589l-1.688 4.411h20l-1.688-4.411c1.069-1.629 1.688-3.538 1.688-5.589 0-5.523-4.477-10-10-10zm-3 8c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm6 0c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2z"/></svg></div>
+
+<div class="relative flex min-h-screen w-full flex-col">
+    <div class="mx-auto w-full max-w-5xl grow p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col gap-8">
+            <!-- Fő szekció -->
+            <div class="relative flex min-h-[450px] items-center justify-center overflow-hidden rounded-xl bg-cover bg-center bg-no-repeat p-8 text-center text-white animated-bg shadow-2xl shadow-primary/20">
+                <div class="absolute inset-0 bg-black/70"></div>
+                <div class="relative z-10 flex flex-col items-center gap-4">
+                    <h1 id="main-title" class="font-spooky text-6xl font-bold md:text-8xl text-primary tracking-wider" style="min-height: 100px;"></h1>
+                    <p class="max-w-2xl text-base text-gray-200">Változtasd át a Counter-Strike 1.6 élményedet a Halloween-témájú pluginunkkal. Élvezd a hátborzongató pályákat, kísérteties hangokat és izgalmas játékmenetet.</p>
+                    <a class="btn-shake mt-4 flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-bold text-white transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/50" href="#download">Letöltés most <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="ml-2" viewBox="0 0 16 16"><path d="M8.5 1.5A1.5 1.5 0 0 1 10 0h4a2 2 0 0 1 2 2v4a1.5 1.5 0 0 1-3 0V3.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.5a1.5 1.5 0 0 1-3 0V1.5z"/><path d="M4 14a1 1 0 0 1-1-1v-1a1 1 0 0 1 2 0v1a1 1 0 0 1-1 1zm3 0a1 1 0 0 1-1-1v-4a1 1 0 0 1 2 0v4a1 1 0 0 1-1 1zm3 0a1 1 0 0 1-1-1v-2a1 1 0 0 1 2 0v2a1 1 0 0 1-1 1zm3 0a1 1 0 0 1-1-1v-5a1 1 0 0 1 2 0v5a1 1 0 0 1-1 1z"/><path d="M16 16H0V0h1.5A1.5 1.5 0 0 1 0 1.5v13A1.5 1.5 0 0 0 1.5 16H16z"/></svg></a>
+                </div>
+            </div>
+            
+            <!-- ÚJ: Képgaléria -->
+            <div id="gallery" class="flex flex-col gap-4 rounded-xl border border-gray-700/50 bg-gray-800/20 p-6 scroll-animate">
+                <h2 class="font-spooky text-4xl font-bold text-primary">Plugin a gyakorlatban</h2>
+                <p class="text-gray-400">Nézd meg, milyen kísérteties hangulatot teremt a plugin a játékban!</p>
+                <!-- Fő kép -->
+                <div class="aspect-video w-full overflow-hidden rounded-lg border border-gray-700">
+                    <img id="main-image" src="https://placehold.co/1280x720/1a1a1a/c2570a?text=K%C3%ADs%C3%A9rteties+de_dust2" alt="Kiemelt kép a pluginról" class="h-full w-full cursor-pointer object-cover transition-transform duration-300 hover:scale-105">
+                </div>
+                <!-- Miniatűrök -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <img src="https://placehold.co/400x225/1a1a1a/c2570a?text=K%C3%ADs%C3%A9rteties+de_dust2" alt="Miniatűr 1" data-full="https://placehold.co/1280x720/1a1a1a/c2570a?text=K%C3%ADs%C3%A9rteties+de_dust2" class="thumbnail aspect-video w-full cursor-pointer rounded-md border-2 border-transparent object-cover transition hover:border-primary">
+                    <img src="https://placehold.co/400x225/1a1a1a/c2570a?text=T%C3%B6kfej%C5%B1+Terrorista" alt="Miniatűr 2" data-full="https://placehold.co/1280x720/1a1a1a/c2570a?text=T%C3%B6kfej%C5%B1+Terrorista" class="thumbnail aspect-video w-full cursor-pointer rounded-md border-2 border-transparent object-cover transition hover:border-primary">
+                    <img src="https://placehold.co/400x225/1a1a1a/c2570a?text=%C3%89jszakai+cs_assault" alt="Miniatűr 3" data-full="https://placehold.co/1280x720/1a1a1a/c2570a?text=%C3%89jszakai+cs_assault" class="thumbnail aspect-video w-full cursor-pointer rounded-md border-2 border-transparent object-cover transition hover:border-primary">
+                    <img src="https://placehold.co/400x225/1a1a1a/c2570a?text=Zombi+horda" alt="Miniatűr 4" data-full="https://placehold.co/1280x720/1a1a1a/c2570a?text=Zombi+horda" class="thumbnail aspect-video w-full cursor-pointer rounded-md border-2 border-transparent object-cover transition hover:border-primary">
+                </div>
+            </div>
+
+            <!-- CVARs & Játékmódok -->
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+                <div class="flex flex-col gap-4 rounded-xl border border-gray-700/50 bg-gray-800/20 p-6 scroll-animate"><h2 class="font-spooky text-4xl font-bold text-primary">CVARs</h2><p class="text-gray-400">Szabd személyre a Halloween élményt ezekkel a konzol változókkal (CVARs):</p><div class="divide-y divide-gray-700"><div class="grid grid-cols-1 gap-2 py-4 sm:grid-cols-3 sm:gap-4"><p class="font-semibold text-gray-200">halloween_mode</p><p class="col-span-2 text-gray-400">Be- vagy kikapcsolja a Halloween módot (alapértelmezett: 1).</p></div><div class="grid grid-cols-1 gap-2 py-4 sm:grid-cols-3 sm:gap-4"><p class="font-semibold text-gray-200">halloween_sound</p><p class="col-span-2 text-gray-400">Be- vagy kikapcsolja a kísérteties hangokat (alapértelmezett: 1).</p></div><div class="grid grid-cols-1 gap-2 py-4 sm:grid-cols-3 sm:gap-4"><p class="font-semibold text-gray-200">halloween_map</p><p class="col-span-2 text-gray-400">Beállítja a Halloween pályát (alapértelmezett: halloween_map).</p></div></div></div>
+                <div class="flex flex-col gap-4 rounded-xl border border-gray-700/50 bg-gray-800/20 p-6 scroll-animate" style="transition-delay: 150ms;"><h2 class="font-spooky text-4xl font-bold text-primary">Szükséges Játékmódok</h2><p class="text-gray-400">A plugin helyes működéséhez az alábbi játékmódok szükségesek:</p><div class="flex flex-col gap-3"><div class="flex items-center gap-3"><div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary"><svg fill="currentColor" height="20" viewBox="0 0 256 256" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M229.66,77.66l-96,96a8,8,0,0,1-11.32,0l-48-48a8,8,0,0,1,11.32-11.32L128,154.34l90.34-90.34a8,8,0,0,1,11.32,11.32Z"></path></svg></div><p class="text-gray-200">Classic Competitive</p></div><div class="flex items-center gap-3"><div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary"><svg fill="currentColor" height="20" viewBox="0 0 256 256" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M229.66,77.66l-96,96a8,8,0,0,1-11.32,0l-48-48a8,8,0,0,1,11.32-11.32L128,154.34l90.34-90.34a8,8,0,0,1,11.32,11.32Z"></path></svg></div><p class="text-gray-200">Deathmatch</p></div><div class="flex items-center gap-3"><div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary"><svg fill="currentColor" height="20" viewBox="0 0 256 256" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M229.66,77.66l-96,96a8,8,0,0,1-11.32,0l-48-48a8,8,0,0,1,11.32-11.32L128,154.34l90.34-90.34a8,8,0,0,1,11.32,11.32Z"></path></svg></div><p class="text-gray-200">Gun Game</p></div></div></div>
+            </div>
+
+            <!-- Letöltés és Telepítés -->
+            <div class="flex flex-col gap-4 rounded-xl border border-gray-700/50 bg-gray-800/20 p-6 scroll-animate" id="download"><h2 class="font-spooky text-4xl font-bold text-primary">Letöltés &amp; Telepítés</h2><p class="text-gray-400">Kövesd ezeket a lépéseket a Spooky CS 1.6 plugin szervereden való futtatásához.</p><div class="mt-4 flex flex-col gap-6"><div class="flex flex-col gap-4 sm:flex-row sm:items-start"><div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">1</div><div class="flex flex-col gap-1"><h3 class="font-semibold text-white">Töltsd le a Plugint</h3><p class="text-gray-400">Kattints az alábbi gombra a plugin fájlok letöltéséhez. Egy .zip archívumot kapsz, ami mindent tartalmaz.</p><button class="btn-shake mt-2 w-full rounded-lg bg-primary px-6 py-3 text-base font-bold text-white transition-colors hover:bg-primary/90 sm:w-auto">spooky_plugin.zip letöltése</button></div></div><div class="flex flex-col gap-4 sm:flex-row sm:items-start"><div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">2</div><div class="flex flex-col gap-1"><h3 class="font-semibold text-white">Csomagold ki a Fájlokat</h3><p class="text-gray-400">Bontsd ki a letöltött archívumot. A következő mappákat fogod találni: `amxmodx` és `cstrike`.</p></div></div><div class="flex flex-col gap-4 sm:flex-row sm:items-start"><div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">3</div><div class="flex flex-col gap-1"><h3 class="font-semibold text-white">Másold a Szerver Könyvtárába</h3><p class="text-gray-400">Másold a kicsomagolt `amxmodx` és `cstrike` mappákat a Counter-Strike 1.6 szervered fő könyvtárába. Írd felül a meglévő fájlokat, ha kéri.</p></div></div><div class="flex flex-col gap-4 sm:flex-row sm:items-start"><div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">4</div><div class="flex flex-col gap-1"><h3 class="font-semibold text-white">Aktiváld a Plugint</h3><p class="text-gray-400">Nyisd meg a `plugins.ini` fájlt, ami az `amxmodx/configs/` mappában található. Adj hozzá egy új sort: `spooky_plugin.amxx`, hogy engedélyezd a plugint. Mentsd el a fájlt és indítsd újra a szervert.</p></div></div></div></div>
+
+            <!-- Fejlesztések -->
+            <div class="flex flex-col gap-4 rounded-xl border border-gray-700/50 bg-gray-800/20 p-6 scroll-animate"><h2 class="font-spooky text-4xl font-bold text-primary">Fejlesztések</h2><p class="text-gray-400">Kövesd nyomon a plugin legújabb frissítéseit és fejlesztéseit.</p><div class="mt-4 space-y-8 border-l-2 border-primary/30 pl-6"><div class="relative flex flex-col gap-1"><div class="absolute -left-[34px] top-1 flex size-6 items-center justify-center rounded-full bg-primary text-white ring-8 ring-background-dark"><svg class="bi bi-tag-fill" fill="currentColor" height="12" viewBox="0 0 16 16" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 3.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg></div><p class="font-semibold text-primary">Verzió 1.2.0</p><p class="text-gray-300">Új, kísérteties karaktermodellek és továbbfejlesztett környezeti hangok a még magával ragadóbb élményért.</p></div><div class="relative flex flex-col gap-1"><div class="absolute -left-[34px] top-1 flex size-6 items-center justify-center rounded-full bg-primary text-white ring-8 ring-background-dark"><svg class="bi bi-tag-fill" fill="currentColor" height="12" viewBox="0 0 16 16" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 3.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg></div><p class="font-semibold text-primary">Verzió 1.1.5</p><p class="text-gray-300">Javítva egy hiba, ami miatt a tökfejek nem jelentek meg bizonyos karaktermodelleken. A világítás beállítása az összes Halloween pályán.</p></div><div class="relative flex flex-col gap-1"><div class="absolute -left-[34px] top-1 flex size-6 items-center justify-center rounded-full bg-primary text-white ring-8 ring-background-dark"><svg class="bi bi-tag-fill" fill="currentColor" height="12" viewBox="0 0 16 16" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 3.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg></div><p class="font-semibold text-primary">Verzió 1.0.0</p><p class="text-gray-300">A Spooky CS 1.6 Plugin első kiadása. Tartalmaz egyedi Halloween pályákat, hangokat és játékmenet-finomításokat.</p></div></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ÚJ: Képgaléria Modal -->
+<div id="gallery-modal" class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 opacity-0 backdrop-blur-sm">
+    <img id="modal-image" src="" alt="Nagyított kép" class="block max-h-full max-w-full rounded-lg shadow-2xl">
+    <button id="modal-close" class="absolute top-4 right-4 text-white hover:text-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    /**
+     * SpookyPage App
+     * Egy központi objektum, ami összefogja az oldal összes interaktív funkcióját.
+     * Ez a struktúra segít a kód tisztán tartásában és könnyebb szerkeszthetőségében.
+     */
+    const SpookyPage = {
+        // Állapotok tárolása
+        isMusicPlaying: false,
+        
+        // DOM elemek gyorsítótárazása
+        elements: {},
+
+        // Tone.js hangmotor elemei
+        audio: {},
+
+        /**
+         * Inicializáló függvény, ami az oldal betöltődésekor lefut.
+         * Elindítja az összes többi beállító funkciót.
+         */
+        init() {
+            this.cacheDOMElements();
+            this.setupEventListeners();
+            
+            this.setupScrollAnimations();
+            this.setupTypingEffect();
+            this.setupAudioEngine();
+            this.setupCursorParticles();
+            this.setupLightningEffect();
+        },
+
+        /**
+         * Összegyűjti az összes szükséges DOM elemet egy helyre a könnyebb elérés érdekében.
+         */
+        cacheDOMElements() {
+            this.elements = {
+                mainTitle: document.getElementById('main-title'),
+                musicToggle: document.getElementById('music-toggle'),
+                musicOnIcon: document.getElementById('music-on-icon'),
+                musicOffIcon: document.getElementById('music-off-icon'),
+                particleCanvas: document.getElementById('cursor-particles'),
+                lightningDiv: document.getElementById('lightning'),
+                gallery: {
+                    mainImage: document.getElementById('main-image'),
+                    thumbnails: document.querySelectorAll('.thumbnail'),
+                    modal: document.getElementById('gallery-modal'),
+                    modalImage: document.getElementById('modal-image'),
+                    modalClose: document.getElementById('modal-close'),
+                },
+                scrollAnimatedItems: document.querySelectorAll('.scroll-animate'),
+            };
+        },
+
+        /**
+         * Beállítja az összes eseményfigyelőt (pl. gombnyomások, egérmozgás).
+         */
+        setupEventListeners() {
+            this.elements.musicToggle.addEventListener('click', () => this.toggleMusic());
+            
+            // Galéria eseményfigyelők
+            this.elements.gallery.thumbnails.forEach(thumb => {
+                thumb.addEventListener('click', () => {
+                    this.elements.gallery.mainImage.src = thumb.dataset.full;
+                });
+            });
+            this.elements.gallery.mainImage.addEventListener('click', () => this.openGalleryModal());
+            this.elements.gallery.modalClose.addEventListener('click', () => this.closeGalleryModal());
+            this.elements.gallery.modal.addEventListener('click', (e) => {
+                if (e.target === this.elements.gallery.modal) {
+                    this.closeGalleryModal();
+                }
+            });
+
+            // Egérmozgás és ablak átméretezés a részecskékhez
+            document.addEventListener('mousemove', (e) => this.createParticle(e));
+            window.addEventListener('resize', () => this.resizeParticleCanvas());
+        },
+
+        /**
+         * Intersection Observer beállítása a görgetésre beúszó elemekhez.
+         */
+        setupScrollAnimations() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            this.elements.scrollAnimatedItems.forEach(el => observer.observe(el));
+        },
+
+        /**
+         * "Írógép" effektus beállítása a főcímhez.
+         */
+        setupTypingEffect() {
+            const text = "Spooky CS 1.6 Plugin";
+            let index = 0;
+            this.elements.mainTitle.textContent = "";
+            
+            const type = () => {
+                if (index < text.length) {
+                    this.elements.mainTitle.textContent += text.charAt(index);
+                    this.elements.mainTitle.classList.add('typing');
+                    index++;
+                    setTimeout(type, 100);
+                } else {
+                    this.elements.mainTitle.classList.remove('typing');
+                }
+            }
+            setTimeout(type, 500);
+        },
+        
+        /**
+         * A Tone.js hangmotor és a hangeffektek inicializálása.
+         */
+        setupAudioEngine() {
+            this.audio.ambientSynth = new Tone.AMSynth({
+                harmonicity: 1.5,
+                envelope: { attack: 4, decay: 0.1, sustain: 1, release: 4 },
+                modulation: { type: "sine" },
+                modulationEnvelope: { attack: 4, decay: 0.1, sustain: 1, release: 4 }
+            }).toDestination();
+            
+            this.audio.wind = new Tone.Noise("brown");
+            const autoFilter = new Tone.AutoFilter({
+                frequency: "4m",
+                baseFrequency: 200,
+                octaves: 4
+            }).toDestination().start();
+            this.audio.wind.connect(autoFilter);
+
+            this.audio.thunder = new Tone.NoiseSynth({
+                noise: { type: 'white' },
+                envelope: { attack: 0.005, decay: 0.2, sustain: 0 }
+            }).toDestination();
+        },
+
+        /**
+         * Zene lejátszásának ki- és bekapcsolása.
+         */
+        async toggleMusic() {
+            if (!this.isMusicPlaying) {
+                await Tone.start();
+                this.audio.ambientSynth.triggerAttack("C2");
+                this.audio.wind.start();
+                
+                this.isMusicPlaying = true;
+                this.elements.musicOnIcon.classList.remove('hidden');
+                this.elements.musicOffIcon.classList.add('hidden');
+            } else {
+                this.audio.ambientSynth.triggerRelease();
+                this.audio.wind.stop();
+                
+                this.isMusicPlaying = false;
+                this.elements.musicOnIcon.classList.add('hidden');
+                this.elements.musicOffIcon.classList.remove('hidden');
+            }
+        },
+
+        /**
+         * Az egeret követő részecske-effektus beállítása és animálása.
+         */
+        setupCursorParticles() {
+            this.particleCtx = this.elements.particleCanvas.getContext('2d');
+            this.particles = [];
+            this.resizeParticleCanvas();
+            this.animateParticles();
+        },
+        
+        resizeParticleCanvas() {
+            this.elements.particleCanvas.width = window.innerWidth;
+            this.elements.particleCanvas.height = window.innerHeight;
+        },
+
+        createParticle(e) {
+            this.particles.push({
+                x: e.clientX,
+                y: e.clientY,
+                size: Math.random() * 2 + 1,
+                opacity: 1,
+                color: `rgba(194, 87, 10, ${Math.random() * 0.5 + 0.5})`
+            });
+        },
+
+        animateParticles() {
+            this.particleCtx.clearRect(0, 0, this.elements.particleCanvas.width, this.elements.particleCanvas.height);
+            for (let i = 0; i < this.particles.length; i++) {
+                let p = this.particles[i];
+                this.particleCtx.fillStyle = p.color;
+                this.particleCtx.globalAlpha = p.opacity;
+                this.particleCtx.beginPath();
+                this.particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                this.particleCtx.fill();
+                p.opacity -= 0.02;
+                p.size -= 0.02;
+                if (p.opacity <= 0 || p.size <= 0) {
+                    this.particles.splice(i, 1);
+                    i--;
+                }
+            }
+            requestAnimationFrame(() => this.animateParticles());
+        },
+
+        /**
+         * Képgaléria funkciók.
+         */
+        openGalleryModal() {
+            this.elements.gallery.modalImage.src = this.elements.gallery.mainImage.src;
+            this.elements.gallery.modal.classList.remove('pointer-events-none', 'opacity-0');
+        },
+
+        closeGalleryModal() {
+            this.elements.gallery.modal.classList.add('pointer-events-none', 'opacity-0');
+        },
+
+        /**
+         * Véletlenszerű villámlás effektus és hang beállítása.
+         */
+        setupLightningEffect() {
+            const trigger = () => {
+                this.elements.lightningDiv.classList.add('flash');
+                if (this.isMusicPlaying) {
+                     this.audio.thunder.triggerAttackRelease("1n");
+                }
+                setTimeout(() => {
+                    this.elements.lightningDiv.classList.remove('flash');
+                }, 300);
+            };
+
+            const randomLightning = () => {
+                trigger();
+                const randomInterval = Math.random() * 15000 + 10000;
+                setTimeout(randomLightning, randomInterval);
+            }
+            setTimeout(randomLightning, 5000);
+        }
+    };
+
+    // Az alkalmazás elindítása
+    SpookyPage.init();
+});
+</script>
+
+</body>
+</html>
+
