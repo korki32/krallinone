@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Műszak és Fizetés Kalkulátor</title>
+    <title>Műszak és Fizetés Kalkulátor V3.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -116,6 +116,12 @@
 
         .day.overtime {
             background-color: #dc2626;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .day.sick-leave {
+            background-color: #14b8a6; /* Teal color */
             font-weight: 600;
             color: white;
         }
@@ -441,11 +447,11 @@
                     <p class="text-gray-400 font-medium">Szabadságidő:</p>
                     <p id="vacationHours" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
                 </div>
-                <div class="bg-gray-800 p-4 rounded-lg">
-                    <p class="text-gray-400 font-medium">Összes bónusz:</p>
-                    <p id="totalBonus" class="text-xl font-bold text-white mt-1">0 Ft</p>
+                 <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Táppénz:</p>
+                    <p id="sickLeaveBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
                 </div>
-                <div id="totalBenefits-container" class="bg-gray-800 p-4 rounded-lg hidden">
+                <div id="totalBenefits-container" class="bg-gray-800 p-4 rounded-lg">
                     <p class="text-gray-400 font-medium">Összes juttatás:</p>
                     <p id="totalBenefits" class="text-xl font-bold text-white mt-1">0 Ft</p>
                 </div>
@@ -477,33 +483,51 @@
         <div class="modal-content text-white">
             <button class="close-btn" onclick="document.getElementById('shiftModal').style.display='none';">&times;</button>
             <h3 class="text-xl font-bold mb-4">Munkaidő megadása</h3>
-            <div id="shift-inputs" class="space-y-4">
-                <div class="mb-4">
+            <div id="shift-inputs" class="space-y-4 mb-4">
+                <div>
                     <label for="startTime" class="block text-gray-400 font-medium mb-1">Kezdő óra</label>
                     <input type="time" id="startTime" class="w-full p-3 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
                 </div>
-                <div class="mb-4">
+                <div>
                     <label for="endTime" class="block text-gray-400 font-medium mb-1">Befejező óra</label>
                     <input type="time" id="endTime" class="w-full p-3 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
                 </div>
             </div>
-            <div class="mb-4 flex flex-col space-y-2">
+            <div class="flex flex-col space-y-3">
                 <div class="flex items-center justify-between overtime-container">
                     <label for="overtimeCheckbox" class="flex items-center">
                         <input type="checkbox" id="overtimeCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
                         <span class="font-medium">Túlóra</span>
                     </label>
-                    <input type="number" id="overtimeHoursInput" value="8" class="w-24 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                    <div class="flex items-center">
+                        <input type="number" id="overtimeHoursInput" value="8" class="w-20 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                        <span class="ml-2 w-8 text-gray-400">óra</span>
+                    </div>
                 </div>
                 <div class="flex items-center justify-between vacation-container">
                     <label for="vacationCheckbox" class="flex items-center">
                         <input type="checkbox" id="vacationCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
                         <span class="font-medium">Szabadság</span>
                     </label>
-                    <input type="number" id="vacationHoursInput" value="8" class="w-24 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                    <div class="flex items-center">
+                        <input type="number" id="vacationHoursInput" value="8" class="w-20 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                        <span class="ml-2 w-8 text-gray-400">óra</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between sick-leave-container">
+                    <label for="sickLeaveCheckbox" class="flex items-center">
+                        <input type="checkbox" id="sickLeaveCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
+                        <span class="font-medium">Táppénz</span>
+                    </label>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="sickLeaveHoursInput" value="8" class="w-16 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                        <span class="-ml-1 text-gray-400">óra</span>
+                        <input type="number" id="sickLeavePercentInput" value="70" class="w-16 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                        <span class="-ml-1 text-gray-400">%</span>
+                    </div>
                 </div>
             </div>
-            <div class="flex justify-between space-x-2">
+            <div class="flex justify-between space-x-2 mt-6">
                 <button id="saveShiftBtn" class="w-full bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200">Mentés</button>
                 <button id="cancelShiftBtn" class="w-full bg-red-600 text-white font-bold p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">Törlés</button>
             </div>
@@ -628,7 +652,6 @@
             const weekendBreakdownEl = document.getElementById('weekendBreakdown');
             const overtimeBreakdownEl = document.getElementById('overtimeBreakdown');
             const vacationHoursEl = document.getElementById('vacationHours');
-            const totalBonusEl = document.getElementById('totalBonus');
             const nettoOutputEl = document.getElementById('nettoOutput');
             const totalBenefitsEl = document.getElementById('totalBenefits');
             const totalBenefitsContainer = document.getElementById('totalBenefits-container');
@@ -653,6 +676,10 @@
             const saveAndContinueBtn = document.getElementById('saveAndContinueBtn');
             const continueWithoutSavingBtn = document.getElementById('continueWithoutSavingBtn');
             const closePdfModalBtn = document.querySelector('#pdfConfirmModal .close-btn');
+            const sickLeaveCheckbox = document.getElementById('sickLeaveCheckbox');
+            const sickLeaveHoursInput = document.getElementById('sickLeaveHoursInput');
+            const sickLeavePercentInput = document.getElementById('sickLeavePercentInput');
+            const sickLeaveBreakdownEl = document.getElementById('sickLeaveBreakdown');
 
             // Hozzáadott elemek a Juttatásokhoz
             const benefitsContainer = document.getElementById('benefits-container');
@@ -889,7 +916,13 @@
                     if (selectedDays[dateString]) {
                         const shiftData = selectedDays[dateString];
                         dayDiv.classList.add('selected');
-                        if (shiftData.isVacation) {
+                        if (shiftData.isSickLeave) {
+                            dayDiv.classList.add('sick-leave');
+                            const hoursSpan = document.createElement('span');
+                            hoursSpan.textContent = `${shiftData.sickLeaveHours || 0} óra`;
+                            hoursSpan.classList.add('hours', 'mt-1');
+                            dayDiv.appendChild(hoursSpan);
+                        } else if (shiftData.isVacation) {
                             dayDiv.classList.add('vacation');
                             const hoursSpan = document.createElement('span');
                             hoursSpan.textContent = `${shiftData.vacationHours || 0} óra`;
@@ -920,27 +953,19 @@
 
                     dayDiv.addEventListener('click', () => {
                         activeDate = dateString;
-                        const shiftData = selectedDays[activeDate] || { startTime: '09:00', endTime: '17:00', isOvertime: false, isVacation: false };
+                        const shiftData = selectedDays[activeDate] || { startTime: '09:00', endTime: '17:00', isOvertime: false, isVacation: false, isSickLeave: false };
                         startTimeInput.value = shiftData.startTime;
                         endTimeInput.value = shiftData.endTime;
                         overtimeCheckbox.checked = shiftData.isOvertime;
                         vacationCheckbox.checked = shiftData.isVacation;
+                        sickLeaveCheckbox.checked = shiftData.isSickLeave;
                         overtimeHoursInput.value = shiftData.overtimeHours || 8;
                         vacationHoursInput.value = shiftData.vacationHours || 8;
+                        sickLeaveHoursInput.value = shiftData.sickLeaveHours || 8;
+                        sickLeavePercentInput.value = shiftData.sickLeavePercent || 70;
+                        
                         shiftModal.style.display = 'flex';
-                        
-                        overtimeHoursInput.classList.toggle('disabled-input', !overtimeCheckbox.checked);
-                        vacationHoursInput.classList.toggle('disabled-input', !vacationCheckbox.checked);
-                        
-                        startTimeInput.disabled = overtimeCheckbox.checked || vacationCheckbox.checked;
-                        endTimeInput.disabled = overtimeCheckbox.checked || vacationCheckbox.checked;
-                        if (overtimeCheckbox.checked || vacationCheckbox.checked) {
-                            startTimeInput.classList.add('disabled-input');
-                            endTimeInput.classList.add('disabled-input');
-                        } else {
-                            startTimeInput.classList.remove('disabled-input');
-                            endTimeInput.classList.remove('disabled-input');
-                        }
+                        updateModalInputsState();
                     });
                     calendarDaysEl.appendChild(dayDiv);
                 }
@@ -978,7 +1003,8 @@
                 let vacationBrutto = 0;
                 let totalBenefitsValue = 0;
                 let savings = 0;
-                let totalBonus = 0;
+                let sickLeaveBrutto = 0;
+                let totalSickLeaveHours = 0;
 
                 let totalNightHours = 0;
                 let totalEveningHours = 0;
@@ -990,7 +1016,6 @@
                     const valueInput = div.querySelector('input[type="number"]');
                     totalBenefitsValue += parseFloat(valueInput.value) || 0;
                 });
-                totalBonus = totalBenefitsValue; 
 
                 for (const date in selectedDays) {
                     const shiftData = selectedDays[date];
@@ -998,6 +1023,11 @@
                         const vacationHours = parseFloat(shiftData.vacationHours) || 0;
                         totalVacationHours += vacationHours;
                         vacationBrutto += vacationHours * vacationHourlyRate;
+                    } else if (shiftData.isSickLeave) {
+                        const sickHours = parseFloat(shiftData.sickLeaveHours) || 0;
+                        const sickPercent = (parseFloat(shiftData.sickLeavePercent) || 0) / 100;
+                        totalSickLeaveHours += sickHours;
+                        sickLeaveBrutto += sickHours * hourlyRate * sickPercent;
                     } else if (shiftData.isOvertime) {
                         const overtimeHours = parseFloat(shiftData.overtimeHours) || 0;
                         totalHours += overtimeHours;
@@ -1070,8 +1100,7 @@
                     }
                 }
 
-                // A túlórát a pótlékok után adjuk hozzá, de az alapbér része
-                const totalBrutto = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto + totalBonus;
+                const totalBrutto = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto + sickLeaveBrutto + totalBenefitsValue;
 
                 // Adózás és járulékok számítása
                 let netto = 0;
@@ -1090,7 +1119,7 @@
                     const tbContributionRate = 0.185;
                     
                     let taxBase = totalBrutto;
-                    let contributionBase = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto; // Juttatások nem járulékkötelesek
+                    let contributionBase = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto + sickLeaveBrutto; // Juttatások nem járulékkötelesek
                     
                     if(isRetiredEmployee) {
                         contributionBase = 0; // Nyugdíjasnak nincs TB
@@ -1169,19 +1198,19 @@
                 animateValue(weekendBreakdownEl, weekendBrutto, " Ft", false, totalWeekendHours.toFixed(1), " óra");
                 animateValue(overtimeBreakdownEl, overtimeBrutto, " Ft", false, totalOvertimeHours, " óra");
                 animateValue(vacationHoursEl, vacationBrutto, " Ft", false, totalVacationHours, " óra");
-                animateValue(totalBonusEl, totalBonus, " Ft");
+                animateValue(sickLeaveBreakdownEl, sickLeaveBrutto, " Ft", false, totalSickLeaveHours, " óra");
                 animateValue(nettoOutputEl, netto, " Ft");
                 animateValue(totalSavingsEl, savings, " Ft");
 
                 if (totalBenefitsValue > 0) {
-                    totalBenefitsEl.textContent = formatCurrency(totalBenefitsValue);
                     totalBenefitsContainer.classList.remove('hidden');
+                    animateValue(totalBenefitsEl, totalBenefitsValue, " Ft");
                 } else {
                     totalBenefitsContainer.classList.add('hidden');
                 }
 
                 // Diagram frissítése
-                updateChart(baseBrutto, nightBrutto, eveningBrutto, weekendBrutto, overtimeBrutto, vacationBrutto, totalBonus);
+                updateChart(baseBrutto, nightBrutto, eveningBrutto, weekendBrutto, overtimeBrutto, vacationBrutto, sickLeaveBrutto, totalBenefitsValue);
             };
 
             // Animációs funkció a számokhoz
@@ -1246,7 +1275,7 @@
 
 
             // Funkció a diagram frissítéséhez
-            const updateChart = (base, night, evening, weekend, overtime, vacation, bonus) => {
+            const updateChart = (base, night, evening, weekend, overtime, vacation, sickLeave, benefitsValue) => {
                 d3.select("#chart-container svg").remove();
                 
                 const data = [
@@ -1256,7 +1285,8 @@
                     { label: "Hétvégi pótlék", value: weekend },
                     { label: "Túlóra pótlék", value: overtime },
                     { label: "Szabadság", value: vacation },
-                    { label: "Juttatások", value: bonus },
+                    { label: "Táppénz", value: sickLeave },
+                    { label: "Juttatások", value: benefitsValue },
                 ].filter(d => d.value > 0.1); // Kis értékeket ne jelenítsen meg
 
                 if(data.length === 0) return;
@@ -1368,42 +1398,47 @@
                 monthChangeDirection = 1;
                 pdfConfirmModal.style.display = 'flex';
             });
+            
+            function updateModalInputsState() {
+                const isOvertime = overtimeCheckbox.checked;
+                const isVacation = vacationCheckbox.checked;
+                const isSickLeave = sickLeaveCheckbox.checked;
+                const isSpecialDay = isOvertime || isVacation || isSickLeave;
+
+                startTimeInput.disabled = isSpecialDay;
+                endTimeInput.disabled = isSpecialDay;
+                startTimeInput.classList.toggle('disabled-input', isSpecialDay);
+                endTimeInput.classList.toggle('disabled-input', isSpecialDay);
+
+                overtimeHoursInput.classList.toggle('disabled-input', !isOvertime);
+                vacationHoursInput.classList.toggle('disabled-input', !isVacation);
+                sickLeaveHoursInput.classList.toggle('disabled-input', !isSickLeave);
+                sickLeavePercentInput.classList.toggle('disabled-input', !isSickLeave);
+            }
 
             // Hozzáadott eseménykezelők a shift modalhoz
             overtimeCheckbox.addEventListener('change', () => {
                 if (overtimeCheckbox.checked) {
                     vacationCheckbox.checked = false;
-                    overtimeHoursInput.classList.remove('disabled-input');
-                    vacationHoursInput.classList.add('disabled-input');
-                    startTimeInput.disabled = true;
-                    endTimeInput.disabled = true;
-                    startTimeInput.classList.add('disabled-input');
-                    endTimeInput.classList.add('disabled-input');
-                } else {
-                    overtimeHoursInput.classList.add('disabled-input');
-                    startTimeInput.disabled = false;
-                    endTimeInput.disabled = false;
-                    startTimeInput.classList.remove('disabled-input');
-                    endTimeInput.classList.remove('disabled-input');
+                    sickLeaveCheckbox.checked = false;
                 }
+                updateModalInputsState();
             });
 
             vacationCheckbox.addEventListener('change', () => {
                 if (vacationCheckbox.checked) {
                     overtimeCheckbox.checked = false;
-                    vacationHoursInput.classList.remove('disabled-input');
-                    overtimeHoursInput.classList.add('disabled-input');
-                    startTimeInput.disabled = true;
-                    endTimeInput.disabled = true;
-                    startTimeInput.classList.add('disabled-input');
-                    endTimeInput.classList.add('disabled-input');
-                } else {
-                    vacationHoursInput.classList.add('disabled-input');
-                    startTimeInput.disabled = false;
-                    endTimeInput.disabled = false;
-                    startTimeInput.classList.remove('disabled-input');
-                    endTimeInput.classList.remove('disabled-input');
+                    sickLeaveCheckbox.checked = false;
                 }
+                updateModalInputsState();
+            });
+
+            sickLeaveCheckbox.addEventListener('change', () => {
+                if (sickLeaveCheckbox.checked) {
+                    overtimeCheckbox.checked = false;
+                    vacationCheckbox.checked = false;
+                }
+                updateModalInputsState();
             });
 
             saveShiftBtn.addEventListener('click', () => {
@@ -1412,8 +1447,11 @@
                     endTime: endTimeInput.value,
                     isOvertime: overtimeCheckbox.checked,
                     isVacation: vacationCheckbox.checked,
+                    isSickLeave: sickLeaveCheckbox.checked,
                     overtimeHours: parseFloat(overtimeHoursInput.value) || 0,
-                    vacationHours: parseFloat(vacationHoursInput.value) || 0
+                    vacationHours: parseFloat(vacationHoursInput.value) || 0,
+                    sickLeaveHours: parseFloat(sickLeaveHoursInput.value) || 0,
+                    sickLeavePercent: parseFloat(sickLeavePercentInput.value) || 0
                 };
 
                 const start = new Date(`2000-01-01T${shiftData.startTime}`);
@@ -1421,7 +1459,7 @@
                 if (end < start) end.setDate(end.getDate() + 1);
                 const workHours = (end - start) / (1000 * 60 * 60);
 
-                if (!shiftData.isOvertime && !shiftData.isVacation && workHours <= 0) {
+                if (!shiftData.isOvertime && !shiftData.isVacation && !shiftData.isSickLeave && workHours <= 0) {
                     delete selectedDays[activeDate];
                 } else {
                     selectedDays[activeDate] = shiftData;
@@ -1452,3 +1490,4 @@
     </script>
 </body>
 </html>
+
