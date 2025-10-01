@@ -12,6 +12,8 @@
             transition: transform 0.2s ease-out;
             /* A Canvas elemet blokk szintűvé tesszük */
             display: block;
+            /* Enyhe doboz árnyék a keréknek a mélységért */
+            box-shadow: 0 0 20px rgba(255, 70, 85, 0.5);
         }
 
         /* A jelző pozícionálása a kerék tetejére */
@@ -76,7 +78,7 @@
                     PÖRGETÉS
                 </button>
                 <p class="mt-4 text-xs text-gray-400 max-w-xs">
-                    TIPP: Kattints az ügynök képekre lent, hogy ki- vagy bekapcsold őket a keréken!
+                    TIPP: Kattints az ügynök képekre lent, hogy ki- vagy bekapcsold őket a keréken, vagy kattints a kategória fejlécére az összes váltásához!
                 </p>
                 <p id="result-text" class="mt-4 text-2xl font-bold text-green-400"></p>
             </div>
@@ -97,6 +99,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // --- KONSTANSOK ÉS ADATSTRUKTÚRA ---
+            const AGENT_STORAGE_KEY = 'valorantAgentWheelState';
+
             // A VALORANT ÜGYNÖKÖK DEFINÍCIÓJA KATEGÓRIÁKRA OSZTVA
             const agentData = {
                 'Initiator': [
@@ -136,12 +141,51 @@
                 ]
             };
             
-            // Az összes ügynök listája a Canvas rajzolásához (kategóriák nélkül)
+            // Az összes ügynök listája a Canvas rajzolásához (kategóriák nélkül, alapértelmezett állapot)
             let agents = [];
             for (const role in agentData) {
                 agents = agents.concat(agentData[role].map(a => ({ ...a, role, excluded: false })));
             }
 
+            // --- SEGÉDFÜGGVÉNYEK LOCAL STORAGE-HEZ ---
+
+            /**
+             * Elmenti az ügynökök aktuális "excluded" állapotát a Local Storage-ba.
+             */
+            function saveAgentState() {
+                const stateToSave = agents.map(a => ({ name: a.name, excluded: a.excluded }));
+                try {
+                    localStorage.setItem(AGENT_STORAGE_KEY, JSON.stringify(stateToSave));
+                } catch (e) {
+                    console.error("Hiba a LocalStorage mentésekor:", e);
+                }
+            }
+
+            /**
+             * Betölti az ügynökök állapotát a Local Storage-ból, és összeveti az alap adatokkal.
+             */
+            function loadAgentState() {
+                try {
+                    const storedState = localStorage.getItem(AGENT_STORAGE_KEY);
+                    if (storedState) {
+                        const parsedState = JSON.parse(storedState);
+                        
+                        // Összevonjuk a betöltött állapotot a jelenlegi ügynök adatokkal
+                        parsedState.forEach(storedAgent => {
+                            const existingAgent = agents.find(a => a.name === storedAgent.name);
+                            if (existingAgent) {
+                                // Csak a logikailag helyes állapotot vesszük át (boolean)
+                                existingAgent.excluded = !!storedAgent.excluded;
+                            }
+                        });
+                    }
+                } catch (e) {
+                    // Ha a LocalStorage tartalom sérült (pl. nem érvényes JSON)
+                    console.error("Hiba a LocalStorage betöltésekor. Az alapértelmezett állapotot használjuk.", e);
+                }
+            }
+
+            // --- DOM ELEMEK ÉS ÁLLAPOT VÁLTOZÓK ---
             const canvas = document.getElementById('wheel');
             const ctx = canvas.getContext('2d');
             const spinButton = document.getElementById('spin');
@@ -152,6 +196,7 @@
             const radius = canvas.width / 2;
             let currentAngle = 0;
             let spinning = false;
+
 
             /**
              * Agent kategóriák dinamikus renderelése a HTML-be
@@ -171,10 +216,11 @@
                     agentClassDiv.className = 'agent-class p-4 bg-valo-gray bg-opacity-90 rounded-lg shadow-xl';
                     
                     agentClassDiv.innerHTML = `
-                        <div class="flex items-center justify-center mb-4">
-                            <!-- Az ikonokhoz nincs URL a kódban, ezért a behelyettesített placeholder-t használjuk -->
-                            <img src="${roleIcons[role]}" alt="${role} Icon" class="w-10 h-10 mr-3 agent-role-icon">
-                            <h2 class="text-2xl font-bold text-valo-red">${role}</h2>
+                        <!-- Kategória Fejléc: Kattintható az összes ügynök ki/bekapcsolásához -->
+                        <div class="role-toggle-header flex items-center justify-center mb-4 cursor-pointer transition duration-200 hover:scale-[1.02]" data-role="${role}">
+                            <img src="${roleIcons[role]}" alt="${role} Icon" class="w-10 h-10 mr-3 agent-role-icon" 
+                                onerror="this.src='https://placehold.co/40x40/FF4655/0F1923?text=${role.substring(0, 1)}'"> <!-- Placeholder ikon, ha az URL nem működik -->
+                            <h2 class="text-2xl font-bold text-valo-red uppercase">${role}</h2>
                         </div>
                         <div class="agent-container flex flex-wrap justify-center gap-4">
                             ${roleAgents.map(agent => {
@@ -182,7 +228,8 @@
                                 const isInactive = fullAgent.excluded ? 'inactive' : '';
                                 return `
                                     <div class="agent flex flex-col items-center cursor-pointer transition duration-200 hover:scale-105" data-agent-name="${agent.name}">
-                                        <img src="${agent.image}" alt="${agent.name}" class="agent-image w-20 h-20 rounded-xl border-2 border-green-500 object-cover ${isInactive}">
+                                        <img src="${agent.image}" alt="${agent.name}" class="agent-image w-20 h-20 rounded-xl border-2 border-valo-red object-cover ${isInactive}" 
+                                            onerror="this.onerror=null; this.src='https://placehold.co/80x80/0F1923/FFFFFF?text=${agent.name.substring(0, 3)}'"> <!-- Placeholder kép, ha az URL nem működik -->
                                         <p class="text-sm mt-1">${agent.name}</p>
                                     </div>
                                 `;
@@ -192,7 +239,7 @@
                     container.appendChild(agentClassDiv);
                 }
 
-                // Eseménykezelők hozzáadása a képekhez
+                // Eseménykezelők hozzáadása az egyes ügynök képekhez (SINGLE AGENT TOGGLE)
                 container.querySelectorAll('.agent').forEach(agentDiv => {
                     agentDiv.addEventListener('click', function () {
                         const agentName = this.getAttribute('data-agent-name');
@@ -203,13 +250,45 @@
                             agents[agentIndex].excluded = !agents[agentIndex].excluded;
                             img.classList.toggle('inactive', agents[agentIndex].excluded);
                             drawWheel(); // Újra rajzoljuk a kereket az aktuális agent listával
+                            saveAgentState(); // Mentjük az új állapotot
                         }
+                    });
+                });
+
+                // Eseménykezelő a kategória fejlécekhez (ROLE TOGGLE)
+                container.querySelectorAll('.role-toggle-header').forEach(header => {
+                    header.addEventListener('click', function() {
+                        const role = this.getAttribute('data-role');
+                        const roleAgents = agents.filter(a => a.role === role);
+                        
+                        // Logika: ha BÁRMELYIK ügynök inaktív, mindent aktiválunk. Különben (ha mindenki aktív), mindent inaktiválunk.
+                        const shouldActivateAll = roleAgents.some(a => a.excluded);
+
+                        // Végigfutás az ügynökökön és az állapot beállítása
+                        roleAgents.forEach(agent => {
+                            agent.excluded = !shouldActivateAll;
+                        });
+
+                        // Frissítjük a DOM-ot az adott kategórián belül
+                        const agentDivs = container.querySelectorAll(`[data-role="${role}"] ~ .agent-container .agent`);
+                        agentDivs.forEach(div => {
+                            const agentName = div.getAttribute('data-agent-name');
+                            const agentState = agents.find(a => a.name === agentName);
+                            const img = div.querySelector('.agent-image');
+
+                            if (agentState) {
+                                img.classList.toggle('inactive', agentState.excluded);
+                            }
+                        });
+
+                        drawWheel();
+                        saveAgentState();
                     });
                 });
             }
 
             /**
-             * A kerék rajzolása a Canvas-ra
+             * A kerék rajzolása a Canvas-ra (FELJAVÍTOTT VIZUÁLIS MEGJELENÉS)
              */
             function drawWheel() {
                 const activeAgents = agents.filter(agent => !agent.excluded);
@@ -224,8 +303,9 @@
                 }
 
                 const angleStep = (2 * Math.PI) / activeAgents.length;
+                // Valorant-témájú színek: Piros és Sötétszürke
+                const colors = ['#FF4655', '#1F2937']; 
 
-                // Az egész kerék elforgatása a Canvas-on belül (így nem kell a CSS-t frissíteni)
                 ctx.save();
                 ctx.translate(radius, radius);
                 ctx.rotate(currentAngle);
@@ -235,27 +315,53 @@
                     
                     // Szelet rajzolása
                     ctx.beginPath();
-                    ctx.moveTo(0, 0); // Mozgás a középpontba (mivel elforgattuk az egészet, a (0,0) a középpont)
+                    ctx.moveTo(0, 0); 
                     ctx.arc(0, 0, radius, angle, angle + angleStep);
                     ctx.lineTo(0, 0);
-                    // Színek váltakozása
-                    ctx.fillStyle = index % 2 === 0 ? 'rgba(50, 50, 50, 1)' : 'rgba(70, 70, 70, 1)'; 
+                    
+                    // Szín beállítása
+                    ctx.fillStyle = colors[index % colors.length]; 
                     ctx.fill();
 
                     // Szelet határa
-                    ctx.strokeStyle = '#0F1923'; // Valorant dark
-                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#0F1923'; // Valorant sötét
+                    ctx.lineWidth = 4; // Vastagabb vonal
                     ctx.stroke();
 
                     // Szöveg rajzolása (ügynök neve)
                     ctx.save();
-                    ctx.rotate(angle + angleStep / 2);
+                    ctx.rotate(angle + angleStep / 2); // Forgatás a szelet közepére
+                    
                     ctx.textAlign = 'right';
-                    ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 16px Inter, sans-serif';
-                    ctx.fillText(agent.name, radius * 0.9, 5); // Szöveg pozíciója a kerület közelében
-                    ctx.restore();
+                    ctx.textBaseline = 'middle'; // Középre igazítás
+                    // Piros szeleten fehér szöveg, sötétszürke szeleten piros szöveg a kontraszt miatt
+                    ctx.fillStyle = index % 2 === 0 ? '#FFFFFF' : '#FF4655'; 
+                    ctx.font = 'bold 20px Inter, sans-serif'; // Nagyobb, vastagabb betű
+                    
+                    // Elegánsabb árnyék a szöveghez
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                    ctx.shadowBlur = 5;
+                    ctx.shadowOffsetX = 2;
+                    ctx.shadowOffsetY = 2;
+
+                    ctx.fillText(agent.name.toUpperCase(), radius * 0.9, 0); 
+                    
+                    ctx.restore(); // Visszaállítjuk a szövegstílust
                 });
+
+                // --- Középső kör (hub) hozzáadása a kerék közepére ---
+                // Árnyék eltávolítása a kör rajzolásához, hogy csak a szövegen legyen árnyék
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, radius * 0.15, 0, 2 * Math.PI);
+                ctx.fillStyle = '#0F1923'; // Sötét központ
+                ctx.fill();
+                ctx.strokeStyle = '#FF4655';
+                ctx.lineWidth = 5;
+                ctx.stroke();
 
                 ctx.restore(); // Visszaállítjuk a Canvas állapotát
             }
@@ -291,6 +397,7 @@
 
                         // Eredmény meghatározása
                         determineWinner(finalAngle);
+                        startContinuousSpin(); // Újraindítjuk a lassú pörgést
                     }
                 }
 
@@ -301,6 +408,8 @@
              * Folyamatos, lassú forgás a kezdeti állapothoz
              */
             function startContinuousSpin() {
+                if (spinning) return; // Ne indítsuk újra, ha már pörög
+
                 const spinSpeed = 0.005; // Nagyon lassú forgási sebesség
 
                 function animateContinuous() {
@@ -311,7 +420,10 @@
                     }
                 }
 
-                animateContinuous();
+                // Elindítjuk az animációs loopot, ha még nem pörög
+                if (!spinning) {
+                    requestAnimationFrame(animateContinuous);
+                }
             }
 
             /**
@@ -361,10 +473,11 @@
                 spinWheel(spinAngle, spinDuration);
             });
 
-            // Initializálás
-            renderAgentList();
-            drawWheel();
-            startContinuousSpin();
+            // --- INITIALIZÁLÁS ---
+            loadAgentState(); // 1. Betöltjük az állapotot
+            renderAgentList(); // 2. Megjelenítjük a listát (a betöltött állapot alapján)
+            drawWheel(); // 3. Rajzoljuk a kereket
+            startContinuousSpin(); // 4. Elindítjuk a lassú pörgést
         });
     </script>
 </body>
