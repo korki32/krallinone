@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Műszak és Fizetés Kalkulátor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: #0d1117;
+        }
+
+        .glass-panel {
+            background-color: rgba(24, 30, 41, 0.85);
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 10;
+            border: 1px solid #374151;
+        }
+
+        #futuristic-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        /* Custom styles to override Tailwind for the new theme */
+        .container {
+            width: 100%;
+            max-width: 60rem;
+            padding: 2rem;
+            display: grid;
+            gap: 2rem;
+            grid-template-areas: "header" "main" "results";
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-areas: "header header" "main main" "results results";
+            }
+        }
+
+        .header {
+            grid-area: header;
+        }
+
+        .main-content {
+            grid-area: main;
+        }
+
+        .results-container {
+            grid-area: results;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .main-content {
+                flex-direction: row;
+            }
+        }
+
+        .calendar-container {
+            flex: 1;
+        }
+
+        .controls-container {
+            flex: 1;
+        }
+
+        .day {
+            min-height: 3.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+            font-size: 0.875rem;
+            color: #d1d5db;
+        }
+
+        .day:hover:not(.empty-day) {
+            transform: scale(1.05);
+        }
+
+        /* Vizuális módosítások a felhasználó kérése alapján */
+        .day.selected {
+            background-color: #1e40af;
+            font-weight: 600;
+            color: white;
+        }
+
+        .day.vacation {
+            background-color: #f59e0b;
+            font-weight: 600;
+            color: white;
+        }
+
+        .day.overtime {
+            background-color: #dc2626;
+            font-weight: 600;
+            color: white;
+        }
+
+        .day span.hours {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: rgba(31, 41, 55, 0.95);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 24rem;
+            border: 1px solid #4b5563;
+            position: relative;
+            /* Hozzáadva a bezárás gomb pozícionálásához */
+        }
+
+        /* Stílusok a bezárás gombhoz */
+        .close-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            font-size: 1.5rem;
+            line-height: 1;
+            color: #9ca3af;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s;
+            font-weight: bold;
+        }
+
+        .close-btn:hover {
+            color: #e5e7eb;
+        }
+
+        .message-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 110;
+            background-color: #1f2937;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            border: 1px solid #4b5563;
+        }
+
+        .info-icon {
+            cursor: help;
+            color: #9ca3af;
+            margin-left: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .disabled-input {
+            background-color: #4b5563;
+            cursor: not-allowed;
+        }
+
+        /* Stílusok a D3.js diagramhoz */
+        #chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: #1f2937;
+            padding: 8px 12px;
+            border-radius: 6px;
+            pointer-events: none;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 200;
+            border: 1px solid #4b5563;
+        }
+        
+        .bar {
+            fill: #6d28d9;
+            transition: fill 0.3s ease;
+        }
+
+        .bar:hover {
+            fill: #8b5cf6;
+        }
+
+        .axis text {
+            fill: #9ca3af;
+        }
+
+        /* Új stílusok az animációhoz és a kiemeléshez */
+        .highlight-card {
+            background: linear-gradient(135deg, #1f2937, #374151);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #4b5563;
+            animation: pulse-border 2s infinite cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        @keyframes pulse-border {
+            0% {
+                box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(109, 40, 217, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(109, 40, 217, 0);
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start py-8 px-4">
+    <canvas id="futuristic-canvas"></canvas>
+    <div class="container glass-panel rounded-2xl">
+        <div class="header">
+            <h1 class="text-3xl font-bold text-white">Fizetéskalkulátor</h1>
+        </div>
+        <div class="main-content">
+            <div class="calendar-container">
+                <div class="flex items-center justify-between mb-4">
+                    <button id="prevBtn" class="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h2 id="currentMonth" class="text-2xl font-bold text-white"></h2>
+                    <button id="nextBtn" class="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-400 text-sm">
+                    <div class="p-2">H</div>
+                    <div class="p-2">K</div>
+                    <div class="p-2">Sze</div>
+                    <div class="p-2">Cs</div>
+                    <div class="p-2">P</div>
+                    <div class="p-2">Szo</div>
+                    <div class="p-2">V</div>
+                </div>
+                <div id="calendarDays" class="grid grid-cols-7 gap-1 text-center mt-2"></div>
+            </div>
+            <div class="controls-container">
+                <h2 class="text-2xl font-bold text-white mb-6">Beállítások</h2>
+                <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <div>
+                        <label for="hourlyRate" class="block text-gray-400 font-medium mb-1 text-sm">Alap órabér (Ft)</label>
+                        <input type="number" id="hourlyRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="vacationHourlyRate" class="block text-gray-400 font-medium mb-1 text-sm">Szabadság órabére (Ft)</label>
+                        <input type="number" id="vacationHourlyRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-medium mb-1 text-sm">Éjszakai pótlék (%)</label>
+                        <input type="number" id="nightRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="nightStart" class="block text-gray-400 font-medium mb-1 text-sm">Éjszakai pótlék (kezdő óra)</label>
+                        <input type="number" id="nightStart" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="nightEnd" class="block text-gray-400 font-medium mb-1 text-sm">Éjszakai pótlék (befejező óra)</label>
+                        <input type="number" id="nightEnd" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-medium mb-1 text-sm">Délutáni pótlék (%)</label>
+                        <input type="number" id="eveningRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="eveningStart" class="block text-gray-400 font-medium mb-1 text-sm">Délutáni pótlék (kezdő óra)</label>
+                        <input type="number" id="eveningStart" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="eveningEnd" class="block text-gray-400 font-medium mb-1 text-sm">Délutáni pótlék (befejező óra)</label>
+                        <input type="number" id="eveningEnd" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-medium mb-1 text-sm">Hétvégi pótlék (%)</label>
+                        <input type="number" id="weekendRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="weekendOption" class="block text-gray-400 font-medium mb-1 text-sm">Hétvégi pótlék napjai</label>
+                        <select id="weekendOption" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="all">Szombat és Vasárnap</option>
+                            <option value="saturday">Szombat</option>
+                            <option value="sunday">Vasárnap</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-medium mb-1 text-sm">Túlóra pótlék (%)</label>
+                        <input type="number" id="overtimeRate" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <hr class="my-4 border-gray-600">
+                    <h3 class="text-xl font-bold text-white mb-2">Juttatások</h3>
+                    <div id="benefits-container" class="space-y-4">
+                        </div>
+                    <button id="addBenefitBtn" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        Új juttatás hozzáadása
+                    </button>
+                    <hr class="my-4 border-gray-600">
+                    <h3 class="text-xl font-bold text-white mb-2">Adó- és Járulékkedvezmények</h3>
+                    <div class="space-y-2 text-gray-300">
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="ekho" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>EKHO adózás</span>
+                            </label>
+                            <button class="info-icon" data-info="ekho">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="under25" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>25 év alatti adómentesség</span>
+                            </label>
+                            <button class="info-icon" data-info="under25">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="under30mother" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>30 év alatti anyuka</span>
+                            </label>
+                            <button class="info-icon" data-info="under30mother">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="married" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>Friss házasok</span>
+                            </label>
+                            <button class="info-icon" data-info="married">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="personalDeduction" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>Személyi kedvezmény</span>
+                            </label>
+                            <button class="info-icon" data-info="personalDeduction">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="retiredEmployee" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>Nyugdíjas munkavállaló</span>
+                            </label>
+                            <button class="info-icon" data-info="retiredEmployee">i</button>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="mother4plus" class="rounded text-purple-500 focus:ring-purple-500 mr-2 bg-gray-700 border-gray-600">
+                                <span>4+ gyermeket nevelő anyák</span>
+                            </label>
+                            <button class="info-icon" data-info="mother4plus">i</button>
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200 mt-4">
+                        Számítás indítása
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="results-container">
+            <h2 class="text-2xl font-bold text-white mb-6">Összesítés</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Összes munkaóra:</p>
+                    <p id="totalHours" class="text-xl font-bold text-white mt-1">0 óra</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Alap bruttó:</p>
+                    <p id="baseBrutto" class="text-xl font-bold text-white mt-1">0 Ft</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Éjszakai pótlék:</p>
+                    <p id="nightBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Délutáni pótlék:</p>
+                    <p id="eveningBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Hétvégi pótlék:</p>
+                    <p id="weekendBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Túlóra pótlék:</p>
+                    <p id="overtimeBreakdown" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Szabadságidő:</p>
+                    <p id="vacationHours" class="text-xl font-bold text-white mt-1">0 óra (0 Ft)</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-400 font-medium">Összes bónusz:</p>
+                    <p id="totalBonus" class="text-xl font-bold text-white mt-1">0 Ft</p>
+                </div>
+                <div id="totalBenefits-container" class="bg-gray-800 p-4 rounded-lg hidden">
+                    <p class="text-gray-400 font-medium">Összes juttatás:</p>
+                    <p id="totalBenefits" class="text-xl font-bold text-white mt-1">0 Ft</p>
+                </div>
+                <div class="bg-purple-600 text-white p-4 rounded-lg col-span-1 md:col-span-2 lg:col-span-3 text-center highlight-card">
+                    <p class="font-medium">Várható Nettó Fizetés:</p>
+                    <p id="nettoOutput" class="text-3xl font-bold mt-1">0 Ft</p>
+                </div>
+            </div>
+            <div id="savings-breakdown-container" class="mt-8 bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-xl font-bold text-white mb-4">Megtakarítási részletező</h3>
+                <div id="savings-list" class="space-y-2">
+                    <p class="text-gray-400" id="savings-placeholder">Jelölj be kedvezményeket a részletekhez.</p>
+                </div>
+                <div class="mt-4 border-t border-gray-700 pt-4">
+                    <p class="font-medium text-gray-400">Teljes megtakarítás:</p>
+                    <p id="totalSavings" class="text-2xl font-bold text-green-400 mt-1">0 Ft</p>
+                </div>
+            </div>
+            <div id="chart-panel" class="mt-8 bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-xl font-bold text-white mb-4">Bruttó Fizetés Megoszlása</h3>
+                <div id="chart-container"></div>
+            </div>
+        </div>
+        <div class="mt-8 pt-4 border-t border-gray-700 text-center text-xs text-gray-500">
+            <p>&copy; 2024 Korki32</p>
+        </div>
+    </div>
+    <div id="shiftModal" class="modal">
+        <div class="modal-content text-white">
+            <button class="close-btn" onclick="document.getElementById('shiftModal').style.display='none';">&times;</button>
+            <h3 class="text-xl font-bold mb-4">Munkaidő megadása</h3>
+            <div id="shift-inputs" class="space-y-4">
+                <div class="mb-4">
+                    <label for="startTime" class="block text-gray-400 font-medium mb-1">Kezdő óra</label>
+                    <input type="time" id="startTime" class="w-full p-3 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div class="mb-4">
+                    <label for="endTime" class="block text-gray-400 font-medium mb-1">Befejező óra</label>
+                    <input type="time" id="endTime" class="w-full p-3 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            </div>
+            <div class="mb-4 flex flex-col space-y-2">
+                <div class="flex items-center justify-between overtime-container">
+                    <label for="overtimeCheckbox" class="flex items-center">
+                        <input type="checkbox" id="overtimeCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
+                        <span class="font-medium">Túlóra</span>
+                    </label>
+                    <input type="number" id="overtimeHoursInput" value="8" class="w-24 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                </div>
+                <div class="flex items-center justify-between vacation-container">
+                    <label for="vacationCheckbox" class="flex items-center">
+                        <input type="checkbox" id="vacationCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
+                        <span class="font-medium">Szabadság</span>
+                    </label>
+                    <input type="number" id="vacationHoursInput" value="8" class="w-24 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
+                </div>
+            </div>
+            <div class="flex justify-between space-x-2">
+                <button id="saveShiftBtn" class="w-full bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200">Mentés</button>
+                <button id="cancelShiftBtn" class="w-full bg-red-600 text-white font-bold p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">Törlés</button>
+            </div>
+        </div>
+    </div>
+    <div id="pdfConfirmModal" class="modal">
+        <div class="modal-content text-white text-center">
+            <button class="close-btn" onclick="document.getElementById('pdfConfirmModal').style.display='none';">&times;</button>
+            <h3 class="text-xl font-bold mb-4">Adatok mentése</h3>
+            <p class="mb-6">Szeretnéd elmenteni a havi adatokat PDF-be, mielőtt új hónapra váltasz?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="saveAndContinueBtn" class="bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200">Igen, mentés</button>
+                <button id="continueWithoutSavingBtn" class="bg-red-600 text-white font-bold p-3 rounded-lg hover:bg-red-700 transition-colors duration-200">Nem, folytatás</button>
+            </div>
+        </div>
+    </div>
+    <div id="messageBox" class="message-box text-white">
+        <p id="messageText" class="text-lg font-medium mb-4"></p>
+        <button id="closeMessageBtn" class="bg-purple-600 px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors duration-200">OK</button>
+    </div>
+    <div id="tooltip" class="tooltip"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('futuristic-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const particleCount = 200;
+            function resizeCanvas() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = (Math.random() - 0.5) * 0.2;
+                    this.radius = Math.random() * 1.5;
+                    this.color = `rgba(44, 192, 235, ${Math.random() * 0.5 + 0.1})`;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(44, 192, 235, ${1 - distance / 100})`;
+                            ctx.lineWidth = 0.2;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+
+            resizeCanvas();
+            initParticles();
+            window.addEventListener('resize', resizeCanvas);
+            animate();
+            // Calculator logic starts here
+            const calendarDaysEl = document.getElementById('calendarDays');
+            const currentMonthEl = document.getElementById('currentMonth');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const hourlyRateInput = document.getElementById('hourlyRate');
+            const vacationHourlyRateInput = document.getElementById('vacationHourlyRate');
+            const nightRateInput = document.getElementById('nightRate');
+            const nightStartInput = document.getElementById('nightStart');
+            const nightEndInput = document.getElementById('nightEnd');
+            const eveningRateInput = document.getElementById('eveningRate');
+            const eveningStartInput = document.getElementById('eveningStart');
+            const eveningEndInput = document.getElementById('eveningEnd');
+            const weekendRateInput = document.getElementById('weekendRate');
+            const weekendOptionSelect = document.getElementById('weekendOption');
+            const overtimeRateInput = document.getElementById('overtimeRate');
+            const ekhoCheckbox = document.getElementById('ekho');
+            const under25Checkbox = document.getElementById('under25');
+            const under30motherCheckbox = document.getElementById('under30mother');
+            const marriedCheckbox = document.getElementById('married');
+            const personalDeductionCheckbox = document.getElementById('personalDeduction');
+            const retiredEmployeeCheckbox = document.getElementById('retiredEmployee');
+            const mother4plusCheckbox = document.getElementById('mother4plus');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const totalHoursEl = document.getElementById('totalHours');
+            const baseBruttoEl = document.getElementById('baseBrutto');
+            const nightBreakdownEl = document.getElementById('nightBreakdown');
+            const eveningBreakdownEl = document.getElementById('eveningBreakdown');
+            const weekendBreakdownEl = document.getElementById('weekendBreakdown');
+            const overtimeBreakdownEl = document.getElementById('overtimeBreakdown');
+            const vacationHoursEl = document.getElementById('vacationHours');
+            const totalBonusEl = document.getElementById('totalBonus');
+            const nettoOutputEl = document.getElementById('nettoOutput');
+            const totalBenefitsEl = document.getElementById('totalBenefits');
+            const totalBenefitsContainer = document.getElementById('totalBenefits-container');
+            const totalSavingsEl = document.getElementById('totalSavings');
+            const savingsListEl = document.getElementById('savings-list');
+            const savingsPlaceholderEl = document.getElementById('savings-placeholder');
+            const shiftModal = document.getElementById('shiftModal');
+            const shiftInputs = document.getElementById('shift-inputs');
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+            const overtimeCheckbox = document.getElementById('overtimeCheckbox');
+            const overtimeHoursInput = document.getElementById('overtimeHoursInput');
+            const vacationCheckbox = document.getElementById('vacationCheckbox');
+            const vacationHoursInput = document.getElementById('vacationHoursInput');
+            const saveShiftBtn = document.getElementById('saveShiftBtn');
+            const cancelShiftBtn = document.getElementById('cancelShiftBtn');
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            const closeMessageBtn = document.getElementById('closeMessageBtn');
+            const infoButtons = document.querySelectorAll('.info-icon');
+            const pdfConfirmModal = document.getElementById('pdfConfirmModal');
+            const saveAndContinueBtn = document.getElementById('saveAndContinueBtn');
+            const continueWithoutSavingBtn = document.getElementById('continueWithoutSavingBtn');
+            const closePdfModalBtn = document.querySelector('#pdfConfirmModal .close-btn');
+
+            // Hozzáadott elemek a Juttatásokhoz
+            const benefitsContainer = document.getElementById('benefits-container');
+            const addBenefitBtn = document.getElementById('addBenefitBtn');
+            
+            // Az új Juttatások mezők tárolása
+            let benefits = {};
+            let benefitCounter = 0;
+
+            const settingsInputs = [
+                hourlyRateInput,
+                vacationHourlyRateInput,
+                nightRateInput,
+                nightStartInput,
+                nightEndInput,
+                eveningRateInput,
+                eveningStartInput,
+                eveningEndInput,
+                weekendRateInput,
+                overtimeRateInput,
+                weekendOptionSelect,
+            ];
+            const settingsCheckboxes = [
+                ekhoCheckbox,
+                under25Checkbox,
+                under30motherCheckbox,
+                marriedCheckbox,
+                personalDeductionCheckbox,
+                retiredEmployeeCheckbox,
+                mother4plusCheckbox,
+            ];
+
+            let currentDate = new Date();
+            let selectedDays = {};
+            let activeDate = null;
+            let monthChangeDirection = 0; // -1: prev, 1: next
+
+            const formatCurrency = (amount) => {
+                return `${Math.round(amount).toLocaleString('hu-HU')} Ft`;
+            };
+
+            const showMessageBox = (message) => {
+                messageText.textContent = message;
+                messageBox.style.display = 'block';
+            };
+
+            const hideMessageBox = () => {
+                messageBox.style.display = 'none';
+            };
+            closeMessageBtn.addEventListener('click', hideMessageBox);
+
+            infoButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const infoType = e.target.dataset.info;
+                    let message = "";
+                    switch (infoType) {
+                        case 'ekho':
+                            message = "Az Egyszerűsített Közteherviselési Hozzájárulás (EKHO) egy adózási mód, amely helyettesíti a normál SZJA-t és a legtöbb járulékot. Külön szabályok vonatkoznak rá.";
+                            break;
+                        case 'under25':
+                            message = "A 25 év alattiak mentesülnek a személyi jövedelemadó (SZJA) fizetése alól a bruttó átlagkereset mértékéig.";
+                            break;
+                        case 'under30mother':
+                            message = "A 30 év alatti, gyermeket vállaló anyák adómentességet kapnak a fizetésükre a bruttó átlagkereset mértékéig.";
+                            break;
+                        case 'married':
+                            message = "A friss házasok havonta adóalap-kedvezményt vehetnek igénybe a házasságkötést követő 24 hónapon keresztül.";
+                            break;
+                        case 'personalDeduction':
+                            message = "A személyi kedvezményre jogosító betegségekkel élők (pl. cukorbetegség, laktóz- vagy gluténérzékenység) adóalap-kedvezményt vehetnek igénybe.";
+                            break;
+                        case 'retiredEmployee':
+                            message = "A nyugdíjas munkavállalók mentesülnek a 18.5%-os TB-járulék fizetése alól, csak a 15%-os SZJA-t kell fizetniük.";
+                            break;
+                        case 'mother4plus':
+                            message = "A 4 vagy több gyermeket nevelő anyák teljes mértékben mentesülnek a személyi jövedelemadó (SZJA) fizetése alól.";
+                            break;
+                    }
+                    showMessageBox(message);
+                });
+            });
+
+            const createBenefitField = (id, name, value) => {
+                const benefitDiv = document.createElement('div');
+                benefitDiv.classList.add('flex', 'items-end', 'space-x-2', 'benefit-field');
+                benefitDiv.dataset.id = id;
+
+                benefitDiv.innerHTML = `
+                    <div class="flex-1">
+                        <label for="benefitName-${id}" class="block text-gray-400 font-medium mb-1 text-sm">Juttatás neve</label>
+                        <input type="text" id="benefitName-${id}" value="${name || ''}" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div class="flex-1">
+                        <label for="benefitValue-${id}" class="block text-gray-400 font-medium mb-1 text-sm">Összeg (Ft)</label>
+                        <input type="number" id="benefitValue-${id}" value="${value || 0}" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <button class="remove-benefit-btn p-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                `;
+                benefitsContainer.appendChild(benefitDiv);
+            };
+
+            addBenefitBtn.addEventListener('click', () => {
+                benefitCounter++;
+                createBenefitField(benefitCounter, '', 0);
+                saveSettings();
+            });
+
+            benefitsContainer.addEventListener('click', (e) => {
+                if (e.target.closest('.remove-benefit-btn')) {
+                    const benefitDiv = e.target.closest('.benefit-field');
+                    const id = benefitDiv.dataset.id;
+                    delete benefits[id];
+                    benefitDiv.remove();
+                    saveSettings();
+                    calculate();
+                }
+            });
+
+            // Funkció a beállítások betöltéséhez a localStorage-ból
+            const loadSettings = () => {
+                const settings = JSON.parse(localStorage.getItem('calculatorSettings'));
+                if (settings) {
+                    settingsInputs.forEach(input => {
+                        if (settings[input.id] !== undefined) {
+                            input.value = settings[input.id];
+                        }
+                    });
+                    settingsCheckboxes.forEach(checkbox => {
+                        if (settings[checkbox.id] !== undefined) {
+                            checkbox.checked = settings[checkbox.id];
+                        }
+                    });
+                    
+                    // Juttatások betöltése
+                    benefits = settings.benefits || {};
+                    Object.keys(benefits).forEach(id => {
+                        createBenefitField(id, benefits[id].name, benefits[id].value);
+                    });
+                    // Frissítjük a számlálót, hogy ne legyen ID ütközés
+                    if (Object.keys(benefits).length > 0) {
+                        benefitCounter = Math.max(...Object.keys(benefits).map(id => parseInt(id)))
+                    }
+
+                } else {
+                    // Alapértelmezett értékek, ha még nincs mentve semmi
+                    hourlyRateInput.value = 1500;
+                    vacationHourlyRateInput.value = 1500;
+                    nightRateInput.value = 25;
+                    nightStartInput.value = 22;
+                    nightEndInput.value = 6;
+                    eveningRateInput.value = 15;
+                    eveningStartInput.value = 18;
+                    eveningEndInput.value = 22;
+                    weekendRateInput.value = 50;
+                    overtimeRateInput.value = 50;
+                    weekendOptionSelect.value = 'all';
+                }
+            };
+
+            // Funkció a beállítások mentéséhez a localStorage-ba
+            const saveSettings = () => {
+                const settings = {};
+                settingsInputs.forEach(input => {
+                    settings[input.id] = input.value;
+                });
+                settingsCheckboxes.forEach(checkbox => {
+                    settings[checkbox.id] = checkbox.checked;
+                });
+
+                // Juttatások mentése
+                const benefitsData = {};
+                document.querySelectorAll('.benefit-field').forEach(div => {
+                    const id = div.dataset.id;
+                    const nameInput = document.getElementById(`benefitName-${id}`);
+                    const valueInput = document.getElementById(`benefitValue-${id}`);
+                    benefitsData[id] = {
+                        name: nameInput.value,
+                        value: parseFloat(valueInput.value) || 0
+                    };
+                });
+                settings.benefits = benefitsData;
+                localStorage.setItem('calculatorSettings', JSON.stringify(settings));
+            };
+
+            // Havi adatok mentése a localStorage-ba
+            const saveMonthlyData = () => {
+                const key = `calculatorData-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+                localStorage.setItem(key, JSON.stringify(selectedDays));
+            };
+
+            // Havi adatok betöltése a localStorage-ból
+            const loadMonthlyData = () => {
+                const key = `calculatorData-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+                const savedData = localStorage.getItem(key);
+                if (savedData) {
+                    selectedDays = JSON.parse(savedData);
+                } else {
+                    selectedDays = {};
+                }
+            };
+
+            const renderCalendar = () => {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+                const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
+                currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+                calendarDaysEl.innerHTML = '';
+
+                let startDayIndex = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+
+                for (let i = 0; i < startDayIndex; i++) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.classList.add('empty-day', 'p-2');
+                    calendarDaysEl.appendChild(emptyDiv);
+                }
+
+                for (let i = 1; i <= lastDayOfMonth; i++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.classList.add('day', 'rounded-lg', 'bg-gray-800', 'hover:bg-gray-700', 'transition-colors');
+                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    dayDiv.dataset.date = dateString;
+
+                    const dayNumber = document.createElement('span');
+                    dayNumber.textContent = i;
+                    dayNumber.classList.add('day-number', 'font-bold');
+                    dayDiv.appendChild(dayNumber);
+
+                    if (selectedDays[dateString]) {
+                        const shiftData = selectedDays[dateString];
+                        dayDiv.classList.add('selected');
+                        if (shiftData.isVacation) {
+                            dayDiv.classList.add('vacation');
+                            const hoursSpan = document.createElement('span');
+                            hoursSpan.textContent = `${shiftData.vacationHours || 0} óra`;
+                            hoursSpan.classList.add('hours', 'mt-1');
+                            dayDiv.appendChild(hoursSpan);
+                        } else if (shiftData.isOvertime) {
+                            dayDiv.classList.add('overtime');
+                            const hoursSpan = document.createElement('span');
+                            hoursSpan.textContent = `${shiftData.overtimeHours || 0} óra`;
+                            hoursSpan.classList.add('hours', 'mt-1');
+                            dayDiv.appendChild(hoursSpan);
+                        } else {
+                            const hoursSpan = document.createElement('span');
+                            let workHours = 0;
+                            if (shiftData.startTime && shiftData.endTime) {
+                                const start = new Date(`2000-01-01T${shiftData.startTime}`);
+                                const end = new Date(`2000-01-01T${shiftData.endTime}`);
+                                if (end < start) end.setDate(end.getDate() + 1);
+                                workHours = (end - start) / (1000 * 60 * 60);
+                            }
+                            hoursSpan.textContent = `${Math.round(workHours)} óra`;
+                            hoursSpan.classList.add('hours', 'mt-1');
+                            dayDiv.appendChild(hoursSpan);
+                        }
+                    } else {
+                         dayDiv.classList.add('hover:bg-gray-700');
+                    }
+
+                    dayDiv.addEventListener('click', () => {
+                        activeDate = dateString;
+                        const shiftData = selectedDays[activeDate] || { startTime: '09:00', endTime: '17:00', isOvertime: false, isVacation: false };
+                        startTimeInput.value = shiftData.startTime;
+                        endTimeInput.value = shiftData.endTime;
+                        overtimeCheckbox.checked = shiftData.isOvertime;
+                        vacationCheckbox.checked = shiftData.isVacation;
+                        overtimeHoursInput.value = shiftData.overtimeHours || 8;
+                        vacationHoursInput.value = shiftData.vacationHours || 8;
+                        shiftModal.style.display = 'flex';
+                        
+                        overtimeHoursInput.classList.toggle('disabled-input', !overtimeCheckbox.checked);
+                        vacationHoursInput.classList.toggle('disabled-input', !vacationCheckbox.checked);
+                        
+                        startTimeInput.disabled = overtimeCheckbox.checked || vacationCheckbox.checked;
+                        endTimeInput.disabled = overtimeCheckbox.checked || vacationCheckbox.checked;
+                        if (overtimeCheckbox.checked || vacationCheckbox.checked) {
+                            startTimeInput.classList.add('disabled-input');
+                            endTimeInput.classList.add('disabled-input');
+                        } else {
+                            startTimeInput.classList.remove('disabled-input');
+                            endTimeInput.classList.remove('disabled-input');
+                        }
+                    });
+                    calendarDaysEl.appendChild(dayDiv);
+                }
+            };
+
+            const calculate = () => {
+                // Input values
+                const hourlyRate = parseFloat(hourlyRateInput.value) || 0;
+                const vacationHourlyRate = parseFloat(vacationHourlyRateInput.value) || 0;
+                const nightRate = (parseFloat(nightRateInput.value) || 0) / 100;
+                const nightStart = parseFloat(nightStartInput.value) || 0;
+                const nightEnd = parseFloat(nightEndInput.value) || 0;
+                const eveningRate = (parseFloat(eveningRateInput.value) || 0) / 100;
+                const eveningStart = parseFloat(eveningStartInput.value) || 0;
+                const eveningEnd = parseFloat(eveningEndInput.value) || 0;
+                const weekendRate = (parseFloat(weekendRateInput.value) || 0) / 100;
+                const overtimeRate = (parseFloat(overtimeRateInput.value) || 0) / 100;
+                const weekendOption = weekendOptionSelect.value;
+                const isUnder25 = under25Checkbox.checked;
+                const isUnder30mother = under30motherCheckbox.checked;
+                const isMarried = marriedCheckbox.checked;
+                const hasPersonalDeduction = personalDeductionCheckbox.checked;
+                const isRetiredEmployee = retiredEmployeeCheckbox.checked;
+                const isMother4plus = mother4plusCheckbox.checked;
+                const isEKHO = ekhoCheckbox.checked;
+                
+                // Calculation variables
+                let totalHours = 0;
+                let baseBrutto = 0;
+                let nightBrutto = 0;
+                let eveningBrutto = 0;
+                let weekendBrutto = 0;
+                let overtimeBrutto = 0;
+                let totalVacationHours = 0;
+                let vacationBrutto = 0;
+                let totalBenefitsValue = 0;
+                let savings = 0;
+                let totalBonus = 0;
+
+                let totalNightHours = 0;
+                let totalEveningHours = 0;
+                let totalWeekendHours = 0;
+                let totalOvertimeHours = 0;
+
+                // Dinamikus juttatások összesítése
+                document.querySelectorAll('.benefit-field').forEach(div => {
+                    const valueInput = div.querySelector('input[type="number"]');
+                    totalBenefitsValue += parseFloat(valueInput.value) || 0;
+                });
+                totalBonus = totalBenefitsValue; 
+
+                for (const date in selectedDays) {
+                    const shiftData = selectedDays[date];
+                    if (shiftData.isVacation) {
+                        const vacationHours = parseFloat(shiftData.vacationHours) || 0;
+                        totalVacationHours += vacationHours;
+                        vacationBrutto += vacationHours * vacationHourlyRate;
+                    } else if (shiftData.isOvertime) {
+                        const overtimeHours = parseFloat(shiftData.overtimeHours) || 0;
+                        totalHours += overtimeHours;
+                        totalOvertimeHours += overtimeHours;
+                        baseBrutto += overtimeHours * hourlyRate;
+                        overtimeBrutto += overtimeHours * hourlyRate * overtimeRate;
+                    } else if (shiftData.startTime && shiftData.endTime) {
+                        const start = new Date(`${date}T${shiftData.startTime}`);
+                        const end = new Date(`${date}T${shiftData.endTime}`);
+
+                        if (end <= start) {
+                            end.setDate(end.getDate() + 1);
+                        }
+                        
+                        const workHours = (end - start) / (1000 * 60 * 60);
+                        if (workHours <= 0) continue;
+
+                        totalHours += workHours;
+                        baseBrutto += workHours * hourlyRate;
+                        
+                        let nightHours = 0;
+                        let eveningHours = 0;
+                        let weekendHours = 0;
+
+                        let currentHour = new Date(start);
+                        while (currentHour < end) {
+                            const h = currentHour.getHours();
+                            
+                            const nextHour = new Date(currentHour);
+                            nextHour.setHours(nextHour.getHours() + 1);
+                            const overlapStart = Math.max(currentHour, start);
+                            const overlapEnd = Math.min(nextHour, end);
+                            const overlapFraction = (overlapEnd - overlapStart) / (1000 * 60 * 60);
+
+                            if (overlapFraction > 0) {
+                                // Délutáni pótlék
+                                if (eveningStart < eveningEnd) { // Pl. 18-22
+                                    if (h >= eveningStart && h < eveningEnd) eveningHours += overlapFraction;
+                                } else { // Pl. 22-06 (délutánra nem jellemző, de a logika kezeli)
+                                    if (h >= eveningStart || h < eveningEnd) eveningHours += overlapFraction;
+                                }
+
+                                // Éjszakai pótlék
+                                if (nightStart < nightEnd) { // Pl. 00-06
+                                    if (h >= nightStart && h < nightEnd) nightHours += overlapFraction;
+                                } else { // Pl. 22-06
+                                    if (h >= nightStart || h < nightEnd) nightHours += overlapFraction;
+                                }
+                                
+                                // Hétvégi pótlék
+                                const dayOfWeek = currentHour.getDay(); // 0=vasárnap, 6=szombat
+                                const isWeekendDay = (weekendOption === 'all' && (dayOfWeek === 0 || dayOfWeek === 6)) ||
+                                                    (weekendOption === 'saturday' && dayOfWeek === 6) ||
+                                                    (weekendOption === 'sunday' && dayOfWeek === 0);
+                                if (isWeekendDay) {
+                                    weekendHours += overlapFraction;
+                                }
+                            }
+                            
+                            currentHour.setHours(currentHour.getHours() + 1);
+                        }
+
+                        nightBrutto += nightHours * hourlyRate * nightRate;
+                        eveningBrutto += eveningHours * hourlyRate * eveningRate;
+                        weekendBrutto += weekendHours * hourlyRate * weekendRate;
+
+                        totalNightHours += nightHours;
+                        totalEveningHours += eveningHours;
+                        totalWeekendHours += weekendHours;
+                    }
+                }
+
+                // A túlórát a pótlékok után adjuk hozzá, de az alapbér része
+                const totalBrutto = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto + totalBonus;
+
+                // Adózás és járulékok számítása
+                let netto = 0;
+                savingsListEl.innerHTML = '';
+                savingsPlaceholderEl.classList.remove('hidden');
+
+                if (isEKHO) {
+                    const ekhoRate = 0.13;
+                    const income = totalBrutto;
+                    const contribution = income * ekhoRate;
+                    netto = income - contribution;
+                    savings = 0;
+                } else {
+                    const socialContributionTaxRate = 0.13;
+                    const personalIncomeTaxRate = 0.15;
+                    const tbContributionRate = 0.185;
+                    
+                    let taxBase = totalBrutto;
+                    let contributionBase = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto; // Juttatások nem járulékkötelesek
+                    
+                    if(isRetiredEmployee) {
+                        contributionBase = 0; // Nyugdíjasnak nincs TB
+                    }
+
+                    // Kedvezmények
+                    let taxBaseReduction = 0;
+                    savingsPlaceholderEl.classList.add('hidden');
+
+                    if(isMother4plus){
+                         const fullExemption = taxBase;
+                         taxBaseReduction += fullExemption;
+                         const listItem = document.createElement('p');
+                         listItem.classList.add('text-gray-300');
+                         listItem.textContent = `4+ gyermeket nevelő anyák kedvezménye: ${formatCurrency(fullExemption * personalIncomeTaxRate)}`;
+                         savingsListEl.appendChild(listItem);
+                    } else {
+                        if (isUnder25) {
+                            const maxExemption = 576601; 
+                            const exemption = Math.min(taxBase, maxExemption);
+                            taxBaseReduction += exemption;
+                            const listItem = document.createElement('p');
+                            listItem.classList.add('text-gray-300');
+                            listItem.textContent = `25 év alatti kedvezmény: ${formatCurrency(exemption * personalIncomeTaxRate)}`;
+                            savingsListEl.appendChild(listItem);
+                        }
+                        if (isUnder30mother) {
+                           const maxExemption = 576601;
+                           const currentTaxBase = taxBase - taxBaseReduction;
+                           if(currentTaxBase > 0) {
+                                const exemption = Math.min(currentTaxBase, maxExemption);
+                                taxBaseReduction += exemption;
+                                const listItem = document.createElement('p');
+                                listItem.classList.add('text-gray-300');
+                                listItem.textContent = `30 év alatti anyák kedvezménye: ${formatCurrency(exemption * personalIncomeTaxRate)}`;
+                                savingsListEl.appendChild(listItem);
+                           }
+                        }
+                    }
+
+                    if (isMarried) {
+                        taxBaseReduction += 33335;
+                        const listItem = document.createElement('p');
+                        listItem.classList.add('text-gray-300');
+                        listItem.textContent = `Friss házasok kedvezménye: ${formatCurrency(5000)}`;
+                        savingsListEl.appendChild(listItem);
+                    }
+                    if (hasPersonalDeduction) {
+                        taxBaseReduction += 88933; 
+                        const listItem = document.createElement('p');
+                        listItem.classList.add('text-gray-300');
+                        listItem.textContent = `Személyi kedvezmény: ${formatCurrency(13340)}`;
+                        savingsListEl.appendChild(listItem);
+                    }
+                    
+                    if(savingsListEl.innerHTML === '') {
+                        savingsPlaceholderEl.classList.remove('hidden');
+                    }
+                    
+                    const finalTaxBase = Math.max(0, taxBase - taxBaseReduction);
+                    const personalIncomeTax = finalTaxBase * personalIncomeTaxRate;
+                    const socialContributionTax = contributionBase * socialContributionTaxRate;
+                    const tbContribution = contributionBase * tbContributionRate;
+
+                    netto = totalBrutto - personalIncomeTax - tbContribution;
+                    savings = (taxBase - finalTaxBase) * personalIncomeTaxRate;
+                    if(isMarried) savings += 5000;
+                    if(hasPersonalDeduction) savings += 13340;
+                }
+                
+                // Frissítés a képernyőn, animációval
+                animateValue(totalHoursEl, totalHours, " óra", true);
+                animateValue(baseBruttoEl, baseBrutto, " Ft");
+                animateValue(nightBreakdownEl, nightBrutto, " Ft", false, totalNightHours.toFixed(1), " óra");
+                animateValue(eveningBreakdownEl, eveningBrutto, " Ft", false, totalEveningHours.toFixed(1), " óra");
+                animateValue(weekendBreakdownEl, weekendBrutto, " Ft", false, totalWeekendHours.toFixed(1), " óra");
+                animateValue(overtimeBreakdownEl, overtimeBrutto, " Ft", false, totalOvertimeHours, " óra");
+                animateValue(vacationHoursEl, vacationBrutto, " Ft", false, totalVacationHours, " óra");
+                animateValue(totalBonusEl, totalBonus, " Ft");
+                animateValue(nettoOutputEl, netto, " Ft");
+                animateValue(totalSavingsEl, savings, " Ft");
+
+                if (totalBenefitsValue > 0) {
+                    totalBenefitsEl.textContent = formatCurrency(totalBenefitsValue);
+                    totalBenefitsContainer.classList.remove('hidden');
+                } else {
+                    totalBenefitsContainer.classList.add('hidden');
+                }
+
+                // Diagram frissítése
+                updateChart(baseBrutto, nightBrutto, eveningBrutto, weekendBrutto, overtimeBrutto, vacationBrutto, totalBonus);
+            };
+
+            // Animációs funkció a számokhoz
+            function animateValue(obj, end, suffix, isHours = false, prefixValue = null, prefixSuffix = null) {
+                let start = parseFloat(obj.textContent.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
+                let duration = 1000;
+                let startTime = null;
+
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    let progress = timestamp - startTime;
+                    let value = start + (end - start) * Math.min(progress / duration, 1);
+                    let formattedValue = Math.round(value).toLocaleString('hu-HU');
+                    
+                    if (isHours) {
+                         obj.textContent = `${Math.round(value)} ${suffix}`;
+                    } else if (prefixValue !== null) {
+                        obj.textContent = `${prefixValue} ${prefixSuffix} (${formattedValue} ${suffix})`;
+                    } else {
+                        obj.textContent = `${formattedValue} ${suffix}`;
+                    }
+
+                    if (progress < duration) {
+                        requestAnimationFrame(step);
+                    } else {
+                         if (isHours) {
+                            obj.textContent = `${Math.round(end)} ${suffix}`;
+                         } else if (prefixValue !== null) {
+                            obj.textContent = `${prefixValue} ${prefixSuffix} (${Math.round(end).toLocaleString('hu-HU')} ${suffix})`;
+                         } else {
+                            obj.textContent = `${Math.round(end).toLocaleString('hu-HU')} ${suffix}`;
+                         }
+                    }
+                }
+
+                requestAnimationFrame(step);
+            }
+
+            // Eseménykezelők a számítás indításához és a mentéshez
+            calculateBtn.addEventListener('click', calculate);
+            document.querySelectorAll('#hourlyRate, #vacationHourlyRate, #nightRate, #nightStart, #nightEnd, #eveningRate, #eveningStart, #eveningEnd, #weekendRate, #overtimeRate, #weekendOption').forEach(el => {
+                el.addEventListener('change', () => {
+                    saveSettings();
+                    calculate();
+                });
+            });
+
+            document.querySelectorAll('input[type="checkbox"], select').forEach(el => {
+                el.addEventListener('change', () => {
+                    saveSettings();
+                    calculate();
+                });
+            });
+
+            // Eseménykezelő az újonnan hozzáadott juttatási mezők értékének változására
+            benefitsContainer.addEventListener('change', (e) => {
+                if (e.target.closest('.benefit-field')) {
+                    saveSettings();
+                    calculate();
+                }
+            });
+
+
+            // Funkció a diagram frissítéséhez
+            const updateChart = (base, night, evening, weekend, overtime, vacation, bonus) => {
+                d3.select("#chart-container svg").remove();
+                
+                const data = [
+                    { label: "Alap Bruttó", value: base },
+                    { label: "Éjszakai pótlék", value: night },
+                    { label: "Délutáni pótlék", value: evening },
+                    { label: "Hétvégi pótlék", value: weekend },
+                    { label: "Túlóra pótlék", value: overtime },
+                    { label: "Szabadság", value: vacation },
+                    { label: "Juttatások", value: bonus },
+                ].filter(d => d.value > 0.1); // Kis értékeket ne jelenítsen meg
+
+                if(data.length === 0) return;
+
+                const margin = { top: 20, right: 30, bottom: 40, left: 100 };
+                const fullWidth = Math.min(500, document.getElementById('chart-panel').clientWidth);
+                const fullHeight = data.length * 40 + margin.top + margin.bottom;
+                const width = fullWidth - margin.left - margin.right;
+                const height = fullHeight - margin.top - margin.bottom;
+
+                const svg = d3.select("#chart-container").append("svg")
+                    .attr("width", fullWidth)
+                    .attr("height", fullHeight)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.value)])
+                    .range([0, width]);
+
+                const y = d3.scaleBand()
+                    .domain(data.map(d => d.label))
+                    .range([0, height])
+                    .padding(0.2);
+                
+                const color = d3.scaleOrdinal(d3.schemePaired);
+                
+                // Add X axis
+                const xAxis = svg.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x).ticks(5).tickFormat(d => `${d / 1000}k`))
+                    .attr("class", "axis");
+
+                // Add Y axis
+                const yAxis = svg.append("g")
+                    .call(d3.axisLeft(y))
+                    .attr("class", "axis");
+                
+                yAxis.selectAll("text").style("font-size", "12px");
+
+                // Bars
+                const bars = svg.selectAll(".bar")
+                    .data(data)
+                    .join("rect")
+                    .attr("class", "bar")
+                    .attr("x", x(0))
+                    .attr("y", d => y(d.label))
+                    .attr("height", y.bandwidth())
+                    .attr("fill", (d,i) => color(i))
+                    .attr("width", 0);
+
+                bars.transition()
+                    .duration(1000)
+                    .attr("width", d => x(d.value));
+
+
+                // Tooltip
+                const tooltip = d3.select("#tooltip");
+                svg.selectAll(".bar")
+                    .on("mouseover", (event, d) => {
+                        tooltip.style("opacity", 1)
+                            .html(`<strong>${d.label}</strong><br>${formatCurrency(d.value)}`);
+                    })
+                    .on("mousemove", (event) => {
+                        tooltip.style("left", `${event.pageX + 10}px`)
+                               .style("top", `${event.pageY - 20}px`);
+                    })
+                    .on("mouseout", () => {
+                        tooltip.style("opacity", 0);
+                    });
+            };
+
+            // Hozzáadott eseménykezelők a PDF mentéshez
+            saveAndContinueBtn.addEventListener('click', () => {
+                const resultsContainer = document.querySelector('.results-container');
+                html2canvas(resultsContainer, {
+                    backgroundColor: '#0d1117'
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`fizetes-osszefoglalo-${currentDate.getFullYear()}-${currentDate.getMonth() + 1}.pdf`);
+                    pdfConfirmModal.style.display = 'none';
+                    currentDate.setMonth(currentDate.getMonth() + monthChangeDirection);
+                    loadMonthlyData();
+                    renderCalendar();
+                    calculate();
+                });
+            });
+
+            continueWithoutSavingBtn.addEventListener('click', () => {
+                pdfConfirmModal.style.display = 'none';
+                currentDate.setMonth(currentDate.getMonth() + monthChangeDirection);
+                loadMonthlyData();
+                renderCalendar();
+                calculate();
+            });
+
+            prevBtn.addEventListener('click', () => {
+                monthChangeDirection = -1;
+                pdfConfirmModal.style.display = 'flex';
+            });
+
+            nextBtn.addEventListener('click', () => {
+                monthChangeDirection = 1;
+                pdfConfirmModal.style.display = 'flex';
+            });
+
+            // Hozzáadott eseménykezelők a shift modalhoz
+            overtimeCheckbox.addEventListener('change', () => {
+                if (overtimeCheckbox.checked) {
+                    vacationCheckbox.checked = false;
+                    overtimeHoursInput.classList.remove('disabled-input');
+                    vacationHoursInput.classList.add('disabled-input');
+                    startTimeInput.disabled = true;
+                    endTimeInput.disabled = true;
+                    startTimeInput.classList.add('disabled-input');
+                    endTimeInput.classList.add('disabled-input');
+                } else {
+                    overtimeHoursInput.classList.add('disabled-input');
+                    startTimeInput.disabled = false;
+                    endTimeInput.disabled = false;
+                    startTimeInput.classList.remove('disabled-input');
+                    endTimeInput.classList.remove('disabled-input');
+                }
+            });
+
+            vacationCheckbox.addEventListener('change', () => {
+                if (vacationCheckbox.checked) {
+                    overtimeCheckbox.checked = false;
+                    vacationHoursInput.classList.remove('disabled-input');
+                    overtimeHoursInput.classList.add('disabled-input');
+                    startTimeInput.disabled = true;
+                    endTimeInput.disabled = true;
+                    startTimeInput.classList.add('disabled-input');
+                    endTimeInput.classList.add('disabled-input');
+                } else {
+                    vacationHoursInput.classList.add('disabled-input');
+                    startTimeInput.disabled = false;
+                    endTimeInput.disabled = false;
+                    startTimeInput.classList.remove('disabled-input');
+                    endTimeInput.classList.remove('disabled-input');
+                }
+            });
+
+            saveShiftBtn.addEventListener('click', () => {
+                const shiftData = {
+                    startTime: startTimeInput.value,
+                    endTime: endTimeInput.value,
+                    isOvertime: overtimeCheckbox.checked,
+                    isVacation: vacationCheckbox.checked,
+                    overtimeHours: parseFloat(overtimeHoursInput.value) || 0,
+                    vacationHours: parseFloat(vacationHoursInput.value) || 0
+                };
+
+                const start = new Date(`2000-01-01T${shiftData.startTime}`);
+                const end = new Date(`2000-01-01T${shiftData.endTime}`);
+                if (end < start) end.setDate(end.getDate() + 1);
+                const workHours = (end - start) / (1000 * 60 * 60);
+
+                if (!shiftData.isOvertime && !shiftData.isVacation && workHours <= 0) {
+                    delete selectedDays[activeDate];
+                } else {
+                    selectedDays[activeDate] = shiftData;
+                }
+                shiftModal.style.display = 'none';
+                saveMonthlyData(); // Munkaórák mentése
+                renderCalendar();
+                calculate();
+            });
+
+            cancelShiftBtn.addEventListener('click', () => {
+                if (activeDate) delete selectedDays[activeDate];
+                shiftModal.style.display = 'none';
+                saveMonthlyData(); // Módosítás mentése
+                renderCalendar();
+                calculate();
+            });
+
+            // Eseménykezelők a számítás indításához és a mentéshez
+            calculateBtn.addEventListener('click', calculate);
+
+            // Kezdeti renderelés és adatok betöltése
+            loadSettings();
+            loadMonthlyData();
+            renderCalendar();
+            calculate();
+        });
+    </script>
+</body>
+</html>
