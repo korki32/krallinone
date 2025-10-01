@@ -3,39 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valorant Agent Wheel</title>
-    <!-- Tailwind CSS betöltése reszponzív stílusokhoz -->
+    <title>Valorant Agent Wheel — Responsive + Winner Anim + Stats</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-        /* Egyedi Canvas stílus, hogy kör alakú legyen és a tartóelemen belül maradjon */
+        /* Canvas és UI stílusok */
         #wheel {
             transition: transform 0.2s ease-out;
-            /* A Canvas elemet blokk szintűvé tesszük */
             display: block;
-            /* Enyhe doboz árnyék a keréknek a mélységért */
             box-shadow: 0 0 20px rgba(255, 70, 85, 0.5);
         }
 
-        /* A jelző pozícionálása a kerék tetejére */
         #indicator {
             position: absolute;
-            top: -20px; 
+            top: -26px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 2.5rem; /* Nagyobb méret */
-            color: #FF4655; /* Valorant piros szín */
+            font-size: 2.5rem;
+            color: #FF4655;
             text-shadow: 0 0 10px rgba(255, 70, 85, 0.8);
             z-index: 10;
-            pointer-events: none; 
+            pointer-events: none;
         }
 
-        /* Stílus az inaktív ügynököknek */
         .agent-image.inactive {
-            border-color: #FF4655 !important; /* Piros keret */
+            border-color: #FF4655 !important;
             filter: grayscale(80%) brightness(50%);
             opacity: 0.5;
         }
+
+        /* Nyertes kiemelés */
+        .winner-highlight {
+            animation: winner-glow 1.8s ease-in-out;
+            border-radius: 0.5rem;
+            transform: translateZ(0) scale(1.03);
+            box-shadow: 0 0 30px rgba(255,70,85,0.9), 0 0 6px rgba(255,255,255,0.9) inset;
+            z-index: 50;
+        }
+
+        @keyframes winner-glow {
+            0% { box-shadow: 0 0 6px rgba(255,70,85,0.6); }
+            50% { box-shadow: 0 0 30px rgba(255,70,85,0.95); }
+            100% { box-shadow: 0 0 6px rgba(255,70,85,0.6); }
+        }
+
+        /* Kisebb képernyőn kicsit szebb margin */
+        @media (max-width: 640px) {
+            #indicator { font-size: 2rem; top: -22px; }
+        }
+
+        /* Kisebb segéd stílusok */
+        .role-stats { font-size: 0.9rem; color: #cbd5e1; margin-left: 0.6rem; }
     </style>
+
     <script>
         tailwind.config = {
             theme: {
@@ -52,11 +73,13 @@
             }
         }
     </script>
+
+    <!-- Canvas Confetti (browser build) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body class="bg-valo-dark text-white min-h-screen flex flex-col font-sans" 
       style="background-image: url('images/valorant/valorant_background.jpg'); background-size: cover; background-attachment: fixed;">
     
-    <!-- AUDIO ELEMEK (a böngésző biztonsági korlátai miatt az audio fájlokat a felhasználóknak maguknak kell elérhetővé tenniük) -->
     <audio id="spin-sound" src="sounds/valorant/spin.mp3" preload="auto"></audio>
     <audio id="stop-sound" src="sounds/valorant/stop.mp3" preload="auto"></audio>
 
@@ -68,9 +91,9 @@
         
         <!-- PÖRGETŐ KERÉK ÉS GOMB SZAKASZ -->
         <section class="w-full lg:w-2/5 p-4 bg-valo-dark bg-opacity-90 rounded-xl shadow-2xl mb-6 lg:mb-0 lg:mr-8 flex flex-col items-center">
-            <div class="wheel-container relative flex flex-col items-center justify-center">
-                <div class="wheel-wrapper relative w-full max-w-lg aspect-square">
-                    <canvas id="wheel" width="500" height="500" class="rounded-full bg-black border-4 border-valo-red"></canvas>
+            <div id="wheel-container" class="wheel-container relative flex flex-col items-center justify-center w-full max-w-lg">
+                <div class="wheel-wrapper relative w-full">
+                    <canvas id="wheel" class="rounded-full bg-black border-4 border-valo-red"></canvas>
                     <div id="indicator">▼</div>
                 </div>
                 <button id="spin" 
@@ -80,7 +103,7 @@
                 <p class="mt-4 text-xs text-gray-400 max-w-xs">
                     TIPP: Kattints az ügynök képekre lent, hogy ki- vagy bekapcsold őket a keréken, vagy kattints a kategória fejlécére az összes váltásához!
                 </p>
-                <p id="result-text" class="mt-4 text-2xl font-bold text-green-400"></p>
+                <p id="result-text" class="mt-4 text-2xl font-bold text-green-400" aria-live="assertive"></p>
             </div>
         </section>
 
@@ -94,7 +117,7 @@
     </main>
 
     <footer class="bg-black bg-opacity-70 text-center p-3 text-sm text-gray-400">
-        <p>&copy; 2024 Korki32. Átalakítva a Web Guru által, Tailwind CSS és egyfájlos architektúra használatával.</p>
+        <p>&copy; 2024 Korki32</p>
     </footer>
 
     <script>
@@ -102,7 +125,6 @@
             // --- KONSTANSOK ÉS ADATSTRUKTÚRA ---
             const AGENT_STORAGE_KEY = 'valorantAgentWheelState';
 
-            // A VALORANT ÜGYNÖKÖK DEFINÍCIÓJA KATEGÓRIÁKRA OSZTVA
             const agentData = {
                 'Initiator': [
                     { name: 'Sova', image: 'images/valorant/agent_sova.png' },
@@ -140,67 +162,49 @@
                     { name: 'Clove', image: 'images/valorant/agent_clove.png' }
                 ]
             };
-            
-            // Az összes ügynök listája a Canvas rajzolásához (kategóriák nélkül, alapértelmezett állapot)
+
             let agents = [];
             for (const role in agentData) {
                 agents = agents.concat(agentData[role].map(a => ({ ...a, role, excluded: false })));
             }
 
-            // --- SEGÉDFÜGGVÉNYEK LOCAL STORAGE-HEZ ---
-
-            /**
-             * Elmenti az ügynökök aktuális "excluded" állapotát a Local Storage-ba.
-             */
+            // --- LOCALSTORAGE SEGÉDFÜGGVÉNYEK ---
             function saveAgentState() {
                 const stateToSave = agents.map(a => ({ name: a.name, excluded: a.excluded }));
-                try {
-                    localStorage.setItem(AGENT_STORAGE_KEY, JSON.stringify(stateToSave));
-                } catch (e) {
-                    console.error("Hiba a LocalStorage mentésekor:", e);
-                }
+                try { localStorage.setItem(AGENT_STORAGE_KEY, JSON.stringify(stateToSave)); }
+                catch (e) { console.error('Hiba a LocalStorage mentésekor:', e); }
             }
 
-            /**
-             * Betölti az ügynökök állapotát a Local Storage-ból, és összeveti az alap adatokkal.
-             */
             function loadAgentState() {
                 try {
                     const storedState = localStorage.getItem(AGENT_STORAGE_KEY);
                     if (storedState) {
                         const parsedState = JSON.parse(storedState);
-                        
-                        // Összevonjuk a betöltött állapotot a jelenlegi ügynök adatokkal
                         parsedState.forEach(storedAgent => {
                             const existingAgent = agents.find(a => a.name === storedAgent.name);
-                            if (existingAgent) {
-                                // Csak a logikailag helyes állapotot vesszük át (boolean)
-                                existingAgent.excluded = !!storedAgent.excluded;
-                            }
+                            if (existingAgent) existingAgent.excluded = !!storedAgent.excluded;
                         });
                     }
                 } catch (e) {
-                    // Ha a LocalStorage tartalom sérült (pl. nem érvényes JSON)
-                    console.error("Hiba a LocalStorage betöltésekor. Az alapértelmezett állapotot használjuk.", e);
+                    console.error('Hiba a LocalStorage betöltésekor. Az alapértelmezett állapotot használjuk.', e);
                 }
             }
 
-            // --- DOM ELEMEK ÉS ÁLLAPOT VÁLTOZÓK ---
+            // --- DOM és canvas elemek ---
             const canvas = document.getElementById('wheel');
+            const canvasContainer = document.getElementById('wheel-container');
             const ctx = canvas.getContext('2d');
             const spinButton = document.getElementById('spin');
             const spinSound = document.getElementById('spin-sound');
             const stopSound = document.getElementById('stop-sound');
             const resultText = document.getElementById('result-text');
-            
-            const radius = canvas.width / 2;
+
             let currentAngle = 0;
             let spinning = false;
+            let devicePixelRatioCached = window.devicePixelRatio || 1;
+            let continuousSpinRAF = null;
 
-
-            /**
-             * Agent kategóriák dinamikus renderelése a HTML-be
-             */
+            // --- RENDER AGENT LIST ÉS STATS ---
             function renderAgentList() {
                 const container = document.getElementById('agent-list-container');
                 container.innerHTML = '';
@@ -212,15 +216,16 @@
                 };
 
                 for (const [role, roleAgents] of Object.entries(agentData)) {
+                    const total = roleAgents.length;
+                    const active = agents.filter(a => a.role === role && !a.excluded).length;
+
                     const agentClassDiv = document.createElement('div');
                     agentClassDiv.className = 'agent-class p-4 bg-valo-gray bg-opacity-90 rounded-lg shadow-xl';
-                    
                     agentClassDiv.innerHTML = `
-                        <!-- Kategória Fejléc: Kattintható az összes ügynök ki/bekapcsolásához -->
                         <div class="role-toggle-header flex items-center justify-center mb-4 cursor-pointer transition duration-200 hover:scale-[1.02]" data-role="${role}">
-                            <img src="${roleIcons[role]}" alt="${role} Icon" class="w-10 h-10 mr-3 agent-role-icon" 
-                                onerror="this.src='https://placehold.co/40x40/FF4655/0F1923?text=${role.substring(0, 1)}'"> <!-- Placeholder ikon, ha az URL nem működik -->
+                            <img src="${roleIcons[role]}" alt="${role} Icon" class="w-10 h-10 mr-3 agent-role-icon" onerror="this.src='https://placehold.co/40x40/FF4655/0F1923?text=${role.substring(0, 1)}'">
                             <h2 class="text-2xl font-bold text-valo-red uppercase">${role}</h2>
+                            <span class="role-stats">${active}/${total} aktív</span>
                         </div>
                         <div class="agent-container flex flex-wrap justify-center gap-4">
                             ${roleAgents.map(agent => {
@@ -228,18 +233,18 @@
                                 const isInactive = fullAgent.excluded ? 'inactive' : '';
                                 return `
                                     <div class="agent flex flex-col items-center cursor-pointer transition duration-200 hover:scale-105" data-agent-name="${agent.name}">
-                                        <img src="${agent.image}" alt="${agent.name}" class="agent-image w-20 h-20 rounded-xl border-2 border-valo-red object-cover ${isInactive}" 
-                                            onerror="this.onerror=null; this.src='https://placehold.co/80x80/0F1923/FFFFFF?text=${agent.name.substring(0, 3)}'"> <!-- Placeholder kép, ha az URL nem működik -->
+                                        <img src="${agent.image}" alt="${agent.name}" class="agent-image w-20 h-20 rounded-xl border-2 border-valo-red object-cover ${isInactive}" onerror="this.onerror=null; this.src='https://placehold.co/80x80/0F1923/FFFFFF?text=${agent.name.substring(0, 3)}'">
                                         <p class="text-sm mt-1">${agent.name}</p>
                                     </div>
                                 `;
                             }).join('')}
                         </div>
                     `;
+
                     container.appendChild(agentClassDiv);
                 }
 
-                // Eseménykezelők hozzáadása az egyes ügynök képekhez (SINGLE AGENT TOGGLE)
+                // Single agent toggle
                 container.querySelectorAll('.agent').forEach(agentDiv => {
                     agentDiv.addEventListener('click', function () {
                         const agentName = this.getAttribute('data-agent-name');
@@ -249,47 +254,71 @@
                         if (agentIndex !== -1) {
                             agents[agentIndex].excluded = !agents[agentIndex].excluded;
                             img.classList.toggle('inactive', agents[agentIndex].excluded);
-                            drawWheel(); // Újra rajzoljuk a kereket az aktuális agent listával
-                            saveAgentState(); // Mentjük az új állapotot
+                            drawWheel();
+                            saveAgentState();
+                            // update stats for that role
+                            updateRoleStats(agents[agentIndex].role);
                         }
                     });
                 });
 
-                // Eseménykezelő a kategória fejlécekhez (ROLE TOGGLE)
+                // Role toggle
                 container.querySelectorAll('.role-toggle-header').forEach(header => {
                     header.addEventListener('click', function() {
                         const role = this.getAttribute('data-role');
                         const roleAgents = agents.filter(a => a.role === role);
-                        
-                        // Logika: ha BÁRMELYIK ügynök inaktív, mindent aktiválunk. Különben (ha mindenki aktív), mindent inaktiválunk.
                         const shouldActivateAll = roleAgents.some(a => a.excluded);
+                        roleAgents.forEach(agent => { agent.excluded = !shouldActivateAll; });
 
-                        // Végigfutás az ügynökökön és az állapot beállítása
-                        roleAgents.forEach(agent => {
-                            agent.excluded = !shouldActivateAll;
-                        });
-
-                        // Frissítjük a DOM-ot az adott kategórián belül
-                        const agentDivs = container.querySelectorAll(`[data-role="${role}"] ~ .agent-container .agent`);
+                        // Update DOM images for this role
+                        const agentDivs = header.parentElement.querySelectorAll('.agent-container .agent');
                         agentDivs.forEach(div => {
                             const agentName = div.getAttribute('data-agent-name');
                             const agentState = agents.find(a => a.name === agentName);
                             const img = div.querySelector('.agent-image');
-
-                            if (agentState) {
-                                img.classList.toggle('inactive', agentState.excluded);
-                            }
+                            if (agentState) img.classList.toggle('inactive', agentState.excluded);
                         });
 
                         drawWheel();
                         saveAgentState();
+                        updateRoleStats(role);
                     });
                 });
             }
 
-            /**
-             * A kerék rajzolása a Canvas-ra (FELJAVÍTOTT VIZUÁLIS MEGJELENÉS)
-             */
+            function updateRoleStats(role) {
+                // Find the role header and update the text
+                const container = document.getElementById('agent-list-container');
+                const roleDiv = Array.from(container.querySelectorAll('.role-toggle-header')).find(h => h.getAttribute('data-role') === role);
+                if (!roleDiv) return;
+                const total = agentData[role].length;
+                const active = agents.filter(a => a.role === role && !a.excluded).length;
+                const statsSpan = roleDiv.querySelector('.role-stats');
+                if (statsSpan) statsSpan.textContent = `${active}/${total} aktív`;
+            }
+
+            // --- CANVAS MÉRETEZÉSE (RESPONSIVE + DPR) ---
+            function resizeCanvas() {
+                const containerWidth = Math.min(canvasContainer.clientWidth, 600); // max size
+                const dpr = window.devicePixelRatio || 1;
+                devicePixelRatioCached = dpr;
+
+                // Set CSS size
+                canvas.style.width = containerWidth + 'px';
+                canvas.style.height = containerWidth + 'px';
+
+                // Set actual pixel size for crisp rendering
+                canvas.width = Math.floor(containerWidth * dpr);
+                canvas.height = Math.floor(containerWidth * dpr);
+
+                drawWheel();
+            }
+
+            window.addEventListener('resize', function () {
+                resizeCanvas();
+            });
+
+            // --- KERÉK RAJZOLÁSA ---
             function drawWheel() {
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (activeAgents.length === 0) {
@@ -302,85 +331,73 @@
                     spinButton.disabled = false;
                 }
 
-                const angleStep = (2 * Math.PI) / activeAgents.length;
-                // Valorant-témájú színek: Piros és Sötétszürke
-                const colors = ['#FF4655', '#1F2937']; 
+                const dpr = devicePixelRatioCached || 1;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+                const radius = Math.min(canvas.width, canvas.height) / 2;
                 ctx.save();
                 ctx.translate(radius, radius);
                 ctx.rotate(currentAngle);
-                
+
+                const angleStep = (2 * Math.PI) / activeAgents.length;
+                const colors = ['#FF4655', '#1F2937'];
+
                 activeAgents.forEach((agent, index) => {
                     const angle = index * angleStep;
-                    
-                    // Szelet rajzolása
                     ctx.beginPath();
-                    ctx.moveTo(0, 0); 
+                    ctx.moveTo(0, 0);
                     ctx.arc(0, 0, radius, angle, angle + angleStep);
                     ctx.lineTo(0, 0);
-                    
-                    // Szín beállítása
-                    ctx.fillStyle = colors[index % colors.length]; 
+
+                    ctx.fillStyle = colors[index % colors.length];
                     ctx.fill();
 
-                    // Szelet határa
-                    ctx.strokeStyle = '#0F1923'; // Valorant sötét
-                    ctx.lineWidth = 4; // Vastagabb vonal
+                    ctx.strokeStyle = '#0F1923';
+                    ctx.lineWidth = 4 * dpr;
                     ctx.stroke();
 
-                    // Szöveg rajzolása (ügynök neve)
+                    // Szöveg
                     ctx.save();
-                    ctx.rotate(angle + angleStep / 2); // Forgatás a szelet közepére
-                    
+                    ctx.rotate(angle + angleStep / 2);
                     ctx.textAlign = 'right';
-                    ctx.textBaseline = 'middle'; // Középre igazítás
-                    // Piros szeleten fehér szöveg, sötétszürke szeleten piros szöveg a kontraszt miatt
-                    ctx.fillStyle = index % 2 === 0 ? '#FFFFFF' : '#FF4655'; 
-                    ctx.font = 'bold 20px Inter, sans-serif'; // Nagyobb, vastagabb betű
-                    
-                    // Elegánsabb árnyék a szöveghez
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = index % 2 === 0 ? '#FFFFFF' : '#FF4655';
+                    ctx.font = `bold ${Math.floor(16 * dpr)}px Inter, sans-serif`;
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                    ctx.shadowBlur = 5;
-                    ctx.shadowOffsetX = 2;
-                    ctx.shadowOffsetY = 2;
+                    ctx.shadowBlur = 5 * dpr;
+                    ctx.shadowOffsetX = 2 * dpr;
+                    ctx.shadowOffsetY = 2 * dpr;
 
-                    ctx.fillText(agent.name.toUpperCase(), radius * 0.9, 0); 
-                    
-                    ctx.restore(); // Visszaállítjuk a szövegstílust
+                    // A szöveg a szelet szélére kerül
+                    ctx.fillText(agent.name.toUpperCase(), radius * 0.9, 0);
+                    ctx.restore();
                 });
 
-                // --- Középső kör (hub) hozzáadása a kerék közepére ---
-                // Árnyék eltávolítása a kör rajzolásához, hogy csak a szövegen legyen árnyék
+                // Középső hub
                 ctx.shadowBlur = 0;
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
-                
                 ctx.beginPath();
                 ctx.arc(0, 0, radius * 0.15, 0, 2 * Math.PI);
-                ctx.fillStyle = '#0F1923'; // Sötét központ
+                ctx.fillStyle = '#0F1923';
                 ctx.fill();
                 ctx.strokeStyle = '#FF4655';
-                ctx.lineWidth = 5;
+                ctx.lineWidth = 5 * dpr;
                 ctx.stroke();
 
-                ctx.restore(); // Visszaállítjuk a Canvas állapotát
+                ctx.restore();
             }
 
-            /**
-             * A kerék animálása pörgetés közben
-             */
+            // --- PÖRGETÉS ANIMÁCIÓ ---
             function spinWheel(spinAngle, spinDuration) {
                 const startTime = Date.now();
                 const initialAngle = currentAngle;
+                const finalAngle = initialAngle + spinAngle;
 
-                // Be- és kifutási függvény a pörgetéshez (ease-out)
                 const easing = (progress) => {
-                    return progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress); 
+                    return progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
                 };
 
-                // A pörgetés végső szögének kiszámítása
-                const finalAngle = initialAngle + spinAngle;
-                
                 function animate() {
                     const elapsed = Date.now() - startTime;
                     const progress = Math.min(elapsed / spinDuration, 1);
@@ -388,96 +405,94 @@
 
                     currentAngle = initialAngle + spinAngle * easedProgress;
                     drawWheel();
-                    
+
                     if (progress < 1) {
                         requestAnimationFrame(animate);
                     } else {
-                        spinning = false; 
-                        stopSound.play().catch(e => console.error("Leállítási hang hiba:", e));
-
-                        // Eredmény meghatározása
+                        spinning = false;
+                        try { stopSound.play(); } catch (e) { /* hang nélküli fallback */ }
                         determineWinner(finalAngle);
-                        startContinuousSpin(); // Újraindítjuk a lassú pörgést
+                        startContinuousSpin();
                     }
                 }
 
                 animate();
             }
 
-            /**
-             * Folyamatos, lassú forgás a kezdeti állapothoz
-             */
+            // --- FOLYAMATOS LASSÚ FORGÁS ---
             function startContinuousSpin() {
-                if (spinning) return; // Ne indítsuk újra, ha már pörög
+                // cancel previous if any
+                if (continuousSpinRAF) cancelAnimationFrame(continuousSpinRAF);
 
-                const spinSpeed = 0.005; // Nagyon lassú forgási sebesség
+                const spinSpeed = 0.004;
 
-                function animateContinuous() {
+                function loop() {
                     if (!spinning) {
                         currentAngle += spinSpeed;
                         drawWheel();
-                        requestAnimationFrame(animateContinuous);
                     }
+                    continuousSpinRAF = requestAnimationFrame(loop);
                 }
 
-                // Elindítjuk az animációs loopot, ha még nem pörög
-                if (!spinning) {
-                    requestAnimationFrame(animateContinuous);
-                }
+                continuousSpinRAF = requestAnimationFrame(loop);
             }
 
-            /**
-             * A nyertes ügynök meghatározása a pörgetés végén
-             */
+            // --- NYERTES MEGHATÁROZÁSA ÉS ANIMÁCIÓ ---
             function determineWinner(finalAngle) {
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (activeAgents.length === 0) return;
 
-                // Az elforgatott szög normalizálása 0 és 2π közé
                 let normalizedAngle = finalAngle % (2 * Math.PI);
-                if (normalizedAngle < 0) {
-                    normalizedAngle += 2 * Math.PI;
-                }
-                
-                // A kerék forgása az óramutató járásával ellentétes
-                // Vissza kell invertálni, hogy a nyertes szektort kapjuk meg a 0-hoz képest.
-                // A jelző a kerék tetején (0 radian)
-                let indicatorAngle = (2 * Math.PI - normalizedAngle) % (2 * Math.PI);
+                if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
 
+                let indicatorAngle = (2 * Math.PI - normalizedAngle) % (2 * Math.PI);
                 const angleStep = (2 * Math.PI) / activeAgents.length;
                 let winningIndex = Math.floor(indicatorAngle / angleStep);
+                if (winningIndex >= activeAgents.length) winningIndex = activeAgents.length - 1;
 
-                // Biztosítjuk, hogy az index a tömb határain belül legyen
-                if (winningIndex >= activeAgents.length) {
-                    winningIndex = activeAgents.length - 1;
-                }
-                
                 const winner = activeAgents[winningIndex];
                 resultText.textContent = `A nyertes ügynök: ${winner.name}! (${winner.role})`;
+
+                // DOM kártya kiemelése
+                const winnerCard = document.querySelector(`[data-agent-name="${winner.name}"]`);
+                if (winnerCard) {
+                    // scroll a kártyához (mobilon láthatóvá tesszük)
+                    try { winnerCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+                    winnerCard.classList.add('winner-highlight');
+                    setTimeout(() => winnerCard.classList.remove('winner-highlight'), 2400);
+                }
+
+                // Confetti effekt
+                try {
+                    confetti({ particleCount: 140, spread: 80, origin: { y: 0.45 } });
+                    confetti({ particleCount: 80, spread: 120, origin: { y: 0.6 } });
+                } catch (e) {
+                    console.warn('Confetti hiba:', e);
+                }
             }
 
-            // Eseménykezelő a SPIN gombhoz
+            // --- SPIN GOMB ESEMÉNY ---
             spinButton.addEventListener('click', function () {
                 const activeAgents = agents.filter(agent => !agent.excluded);
-                if (spinning || activeAgents.length === 0) return; 
+                if (spinning || activeAgents.length === 0) return;
 
-                spinning = true; 
+                spinning = true;
                 resultText.textContent = 'Pörgetés...';
-                spinSound.play().catch(e => console.error("Pörgetési hang hiba:", e));
-                
-                // Gyors pörgetés (6-10 teljes fordulat)
-                const totalRevolutions = 6 + Math.random() * 4; 
+                try { spinSound.play(); } catch (e) {}
+
+                const totalRevolutions = 6 + Math.random() * 4;
                 const spinAngle = totalRevolutions * 2 * Math.PI;
-                const spinDuration = 6000 + Math.random() * 2000; // 6-8 másodperc
+                const spinDuration = 6000 + Math.random() * 2000;
 
                 spinWheel(spinAngle, spinDuration);
             });
 
             // --- INITIALIZÁLÁS ---
-            loadAgentState(); // 1. Betöltjük az állapotot
-            renderAgentList(); // 2. Megjelenítjük a listát (a betöltött állapot alapján)
-            drawWheel(); // 3. Rajzoljuk a kereket
-            startContinuousSpin(); // 4. Elindítjuk a lassú pörgést
+            loadAgentState();
+            renderAgentList();
+            resizeCanvas();
+            startContinuousSpin();
+
         });
     </script>
 </body>
