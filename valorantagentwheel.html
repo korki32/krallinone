@@ -8,13 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* Canvas és UI stílusok */
         #wheel {
             transition: transform 0.2s ease-out;
             display: block;
             box-shadow: 0 0 20px rgba(255, 70, 85, 0.5);
         }
-
         #indicator {
             position: absolute;
             top: -26px;
@@ -26,14 +24,11 @@
             z-index: 10;
             pointer-events: none;
         }
-
         .agent-image.inactive {
             border-color: #FF4655 !important;
             filter: grayscale(80%) brightness(50%);
             opacity: 0.5;
         }
-
-        /* Nyertes kiemelés */
         .winner-highlight {
             animation: winner-glow 1.8s ease-in-out;
             border-radius: 0.5rem;
@@ -41,19 +36,14 @@
             box-shadow: 0 0 30px rgba(255,70,85,0.9), 0 0 6px rgba(255,255,255,0.9) inset;
             z-index: 50;
         }
-
         @keyframes winner-glow {
             0% { box-shadow: 0 0 6px rgba(255,70,85,0.6); }
             50% { box-shadow: 0 0 30px rgba(255,70,85,0.95); }
             100% { box-shadow: 0 0 6px rgba(255,70,85,0.6); }
         }
-
-        /* Kisebb képernyőn kicsit szebb margin */
         @media (max-width: 640px) {
             #indicator { font-size: 2rem; top: -22px; }
         }
-
-        /* Kisebb segéd stílusok */
         .role-stats { font-size: 0.9rem; color: #cbd5e1; margin-left: 0.6rem; }
     </style>
 
@@ -66,15 +56,12 @@
                         'valo-dark': '#0F1923',
                         'valo-gray': '#2A343D',
                     },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
                 }
             }
         }
     </script>
 
-    <!-- Canvas Confetti (browser build) -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body class="bg-valo-dark text-white min-h-screen flex flex-col font-sans" 
@@ -88,8 +75,6 @@
     </header>
 
     <main class="flex-grow flex flex-col lg:flex-row items-start justify-center p-4 lg:p-8">
-        
-        <!-- PÖRGETŐ KERÉK ÉS GOMB SZAKASZ -->
         <section class="w-full lg:w-2/5 p-4 bg-valo-dark bg-opacity-90 rounded-xl shadow-2xl mb-6 lg:mb-0 lg:mr-8 flex flex-col items-center">
             <div id="wheel-container" class="wheel-container relative flex flex-col items-center justify-center w-full max-w-lg">
                 <div class="wheel-wrapper relative w-full">
@@ -101,19 +86,15 @@
                     PÖRGETÉS
                 </button>
                 <p class="mt-4 text-xs text-gray-400 max-w-xs">
-                    TIPP: Kattints az ügynök képekre lent, hogy ki- vagy bekapcsold őket a keréken, vagy kattints a kategória fejlécére az összes váltásához!
+                    TIPP: Kattints az ügynök képekre lent, hogy ki- vagy bekapcsold őket a keréken!
                 </p>
                 <p id="result-text" class="mt-4 text-2xl font-bold text-green-400" aria-live="assertive"></p>
             </div>
         </section>
 
-        <!-- ÜGYNÖK LISTA SZAKASZ -->
         <section class="w-full lg:w-3/5">
-            <div id="agent-list-container" class="space-y-6">
-                <!-- Ügynök Kategóriák generálása JS-ből -->
-            </div>
+            <div id="agent-list-container" class="space-y-6"></div>
         </section>
-
     </main>
 
     <footer class="bg-black bg-opacity-70 text-center p-3 text-sm text-gray-400">
@@ -122,9 +103,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- KONSTANSOK ÉS ADATSTRUKTÚRA ---
             const AGENT_STORAGE_KEY = 'valorantAgentWheelState';
-
             const agentData = {
                 'Initiator': [
                     { name: 'Sova', image: 'images/valorant/agent_sova.png' },
@@ -132,16 +111,14 @@
                     { name: 'Skye', image: 'images/valorant/agent_skye.png' },
                     { name: 'KAY/O', image: 'images/valorant/agent_kayo.png' },
                     { name: 'Fade', image: 'images/valorant/agent_fade.png' },
-                    { name: 'Gekko', image: 'images/valorant/agent_gekko.png' },
-                    { name: 'Tejo', image: 'images/valorant/agent_tejo.png' },
+                    { name: 'Gekko', image: 'images/valorant/agent_gekko.png' }
                 ],
                 'Sentinel': [
                     { name: 'Cypher', image: 'images/valorant/agent_cypher.png' },
                     { name: 'Sage', image: 'images/valorant/agent_sage.png' },
                     { name: 'Killjoy', image: 'images/valorant/agent_killjoy.png' },
                     { name: 'Chamber', image: 'images/valorant/agent_chamber.png' },
-                    { name: 'Deadlock', image: 'images/valorant/agent_deadlock.png' },
-                    { name: 'Vyse', image: 'images/valorant/agent_vyse.png' },
+                    { name: 'Deadlock', image: 'images/valorant/agent_deadlock.png' }
                 ],
                 'Duelist': [
                     { name: 'Jett', image: 'images/valorant/agent_jett.png' },
@@ -149,17 +126,14 @@
                     { name: 'Reyna', image: 'images/valorant/agent_reyna.png' },
                     { name: 'Raze', image: 'images/valorant/agent_raze.png' },
                     { name: 'Yoru', image: 'images/valorant/agent_yoru.png' },
-                    { name: 'Neon', image: 'images/valorant/agent_neon.png' },
-                    { name: 'Iso', image: 'images/valorant/agent_iso.png' },
-                    { name: 'Waylay', image: 'images/valorant/agent_waylay.png' },
+                    { name: 'Neon', image: 'images/valorant/agent_neon.png' }
                 ],
                 'Controller': [
                     { name: 'Brimstone', image: 'images/valorant/agent_brimstone.png' },
                     { name: 'Viper', image: 'images/valorant/agent_viper.png' },
                     { name: 'Omen', image: 'images/valorant/agent_omen.png' },
                     { name: 'Astra', image: 'images/valorant/agent_astra.png' },
-                    { name: 'Harbor', image: 'images/valorant/agent_harbor.png' },
-                    { name: 'Clove', image: 'images/valorant/agent_clove.png' }
+                    { name: 'Harbor', image: 'images/valorant/agent_harbor.png' }
                 ]
             };
 
@@ -168,31 +142,23 @@
                 agents = agents.concat(agentData[role].map(a => ({ ...a, role, excluded: false })));
             }
 
-            // --- LOCALSTORAGE SEGÉDFÜGGVÉNYEK ---
             function saveAgentState() {
                 const stateToSave = agents.map(a => ({ name: a.name, excluded: a.excluded }));
-                try { localStorage.setItem(AGENT_STORAGE_KEY, JSON.stringify(stateToSave)); }
-                catch (e) { console.error('Hiba a LocalStorage mentésekor:', e); }
+                localStorage.setItem(AGENT_STORAGE_KEY, JSON.stringify(stateToSave));
             }
 
             function loadAgentState() {
-                try {
-                    const storedState = localStorage.getItem(AGENT_STORAGE_KEY);
-                    if (storedState) {
-                        const parsedState = JSON.parse(storedState);
-                        parsedState.forEach(storedAgent => {
-                            const existingAgent = agents.find(a => a.name === storedAgent.name);
-                            if (existingAgent) existingAgent.excluded = !!storedAgent.excluded;
-                        });
-                    }
-                } catch (e) {
-                    console.error('Hiba a LocalStorage betöltésekor. Az alapértelmezett állapotot használjuk.', e);
+                const storedState = localStorage.getItem(AGENT_STORAGE_KEY);
+                if (storedState) {
+                    const parsedState = JSON.parse(storedState);
+                    parsedState.forEach(storedAgent => {
+                        const existingAgent = agents.find(a => a.name === storedAgent.name);
+                        if (existingAgent) existingAgent.excluded = !!storedAgent.excluded;
+                    });
                 }
             }
 
-            // --- DOM és canvas elemek ---
             const canvas = document.getElementById('wheel');
-            const canvasContainer = document.getElementById('wheel-container');
             const ctx = canvas.getContext('2d');
             const spinButton = document.getElementById('spin');
             const spinSound = document.getElementById('spin-sound');
@@ -201,140 +167,28 @@
 
             let currentAngle = 0;
             let spinning = false;
-            let devicePixelRatioCached = window.devicePixelRatio || 1;
-            let continuousSpinRAF = null;
 
-            // --- RENDER AGENT LIST ÉS STATS ---
-            function renderAgentList() {
-                const container = document.getElementById('agent-list-container');
-                container.innerHTML = '';
-                const roleIcons = {
-                    'Initiator': 'images/valorant/initiator_icon.png',
-                    'Sentinel': 'images/valorant/sentinel_icon.png',
-                    'Duelist': 'images/valorant/duelist_icon.png',
-                    'Controller': 'images/valorant/controller_icon.png',
-                };
-
-                for (const [role, roleAgents] of Object.entries(agentData)) {
-                    const total = roleAgents.length;
-                    const active = agents.filter(a => a.role === role && !a.excluded).length;
-
-                    const agentClassDiv = document.createElement('div');
-                    agentClassDiv.className = 'agent-class p-4 bg-valo-gray bg-opacity-90 rounded-lg shadow-xl';
-                    agentClassDiv.innerHTML = `
-                        <div class="role-toggle-header flex items-center justify-center mb-4 cursor-pointer transition duration-200 hover:scale-[1.02]" data-role="${role}">
-                            <img src="${roleIcons[role]}" alt="${role} Icon" class="w-10 h-10 mr-3 agent-role-icon" onerror="this.src='https://placehold.co/40x40/FF4655/0F1923?text=${role.substring(0, 1)}'">
-                            <h2 class="text-2xl font-bold text-valo-red uppercase">${role}</h2>
-                            <span class="role-stats">${active}/${total} aktív</span>
-                        </div>
-                        <div class="agent-container flex flex-wrap justify-center gap-4">
-                            ${roleAgents.map(agent => {
-                                const fullAgent = agents.find(a => a.name === agent.name);
-                                const isInactive = fullAgent.excluded ? 'inactive' : '';
-                                return `
-                                    <div class="agent flex flex-col items-center cursor-pointer transition duration-200 hover:scale-105" data-agent-name="${agent.name}">
-                                        <img src="${agent.image}" alt="${agent.name}" class="agent-image w-20 h-20 rounded-xl border-2 border-valo-red object-cover ${isInactive}" onerror="this.onerror=null; this.src='https://placehold.co/80x80/0F1923/FFFFFF?text=${agent.name.substring(0, 3)}'">
-                                        <p class="text-sm mt-1">${agent.name}</p>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    `;
-
-                    container.appendChild(agentClassDiv);
-                }
-
-                // Single agent toggle
-                container.querySelectorAll('.agent').forEach(agentDiv => {
-                    agentDiv.addEventListener('click', function () {
-                        const agentName = this.getAttribute('data-agent-name');
-                        const img = this.querySelector('.agent-image');
-                        const agentIndex = agents.findIndex(a => a.name === agentName);
-
-                        if (agentIndex !== -1) {
-                            agents[agentIndex].excluded = !agents[agentIndex].excluded;
-                            img.classList.toggle('inactive', agents[agentIndex].excluded);
-                            drawWheel();
-                            saveAgentState();
-                            // update stats for that role
-                            updateRoleStats(agents[agentIndex].role);
-                        }
-                    });
-                });
-
-                // Role toggle
-                container.querySelectorAll('.role-toggle-header').forEach(header => {
-                    header.addEventListener('click', function() {
-                        const role = this.getAttribute('data-role');
-                        const roleAgents = agents.filter(a => a.role === role);
-                        const shouldActivateAll = roleAgents.some(a => a.excluded);
-                        roleAgents.forEach(agent => { agent.excluded = !shouldActivateAll; });
-
-                        // Update DOM images for this role
-                        const agentDivs = header.parentElement.querySelectorAll('.agent-container .agent');
-                        agentDivs.forEach(div => {
-                            const agentName = div.getAttribute('data-agent-name');
-                            const agentState = agents.find(a => a.name === agentName);
-                            const img = div.querySelector('.agent-image');
-                            if (agentState) img.classList.toggle('inactive', agentState.excluded);
-                        });
-
-                        drawWheel();
-                        saveAgentState();
-                        updateRoleStats(role);
-                    });
-                });
-            }
-
-            function updateRoleStats(role) {
-                // Find the role header and update the text
-                const container = document.getElementById('agent-list-container');
-                const roleDiv = Array.from(container.querySelectorAll('.role-toggle-header')).find(h => h.getAttribute('data-role') === role);
-                if (!roleDiv) return;
-                const total = agentData[role].length;
-                const active = agents.filter(a => a.role === role && !a.excluded).length;
-                const statsSpan = roleDiv.querySelector('.role-stats');
-                if (statsSpan) statsSpan.textContent = `${active}/${total} aktív`;
-            }
-
-            // --- CANVAS MÉRETEZÉSE (RESPONSIVE + DPR) ---
             function resizeCanvas() {
-                const containerWidth = Math.min(canvasContainer.clientWidth, 600); // max size
-                const dpr = window.devicePixelRatio || 1;
-                devicePixelRatioCached = dpr;
-
-                // Set CSS size
-                canvas.style.width = containerWidth + 'px';
-                canvas.style.height = containerWidth + 'px';
-
-                // Set actual pixel size for crisp rendering
-                canvas.width = Math.floor(containerWidth * dpr);
-                canvas.height = Math.floor(containerWidth * dpr);
-
+                const size = Math.min(window.innerWidth * 0.8, 500);
+                canvas.width = size;
+                canvas.height = size;
                 drawWheel();
             }
 
-            window.addEventListener('resize', function () {
-                resizeCanvas();
-            });
+            window.addEventListener('resize', resizeCanvas);
 
-            // --- KERÉK RAJZOLÁSA ---
             function drawWheel() {
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (activeAgents.length === 0) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    resultText.textContent = 'Nincs aktív ügynök! Engedélyezz legalább egyet.';
+                    resultText.textContent = 'Nincs aktív ügynök!';
                     spinButton.disabled = true;
                     return;
-                } else {
-                    resultText.textContent = '';
-                    spinButton.disabled = false;
                 }
+                spinButton.disabled = false;
 
-                const dpr = devicePixelRatioCached || 1;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                const radius = Math.min(canvas.width, canvas.height) / 2;
+                const radius = canvas.width / 2;
                 ctx.save();
                 ctx.translate(radius, radius);
                 ctx.rotate(currentAngle);
@@ -342,157 +196,78 @@
                 const angleStep = (2 * Math.PI) / activeAgents.length;
                 const colors = ['#FF4655', '#1F2937'];
 
-                activeAgents.forEach((agent, index) => {
-                    const angle = index * angleStep;
+                activeAgents.forEach((agent, i) => {
+                    const startAngle = i * angleStep;
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
-                    ctx.arc(0, 0, radius, angle, angle + angleStep);
-                    ctx.lineTo(0, 0);
-
-                    ctx.fillStyle = colors[index % colors.length];
+                    ctx.arc(0, 0, radius, startAngle, startAngle + angleStep);
+                    ctx.closePath();
+                    ctx.fillStyle = colors[i % colors.length];
                     ctx.fill();
-
                     ctx.strokeStyle = '#0F1923';
-                    ctx.lineWidth = 4 * dpr;
+                    ctx.lineWidth = 2;
                     ctx.stroke();
-
-                    // Szöveg
                     ctx.save();
-                    ctx.rotate(angle + angleStep / 2);
+                    ctx.rotate(startAngle + angleStep / 2);
                     ctx.textAlign = 'right';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillStyle = index % 2 === 0 ? '#FFFFFF' : '#FF4655';
-                    ctx.font = `bold ${Math.floor(16 * dpr)}px Inter, sans-serif`;
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                    ctx.shadowBlur = 5 * dpr;
-                    ctx.shadowOffsetX = 2 * dpr;
-                    ctx.shadowOffsetY = 2 * dpr;
-
-                    // A szöveg a szelet szélére kerül
-                    ctx.fillText(agent.name.toUpperCase(), radius * 0.9, 0);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 14px Inter';
+                    ctx.fillText(agent.name, radius - 10, 0);
                     ctx.restore();
                 });
-
-                // Középső hub
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 0;
-                ctx.beginPath();
-                ctx.arc(0, 0, radius * 0.15, 0, 2 * Math.PI);
-                ctx.fillStyle = '#0F1923';
-                ctx.fill();
-                ctx.strokeStyle = '#FF4655';
-                ctx.lineWidth = 5 * dpr;
-                ctx.stroke();
 
                 ctx.restore();
             }
 
-            // --- PÖRGETÉS ANIMÁCIÓ ---
-            function spinWheel(spinAngle, spinDuration) {
+            function spinWheel(spinAngle, spinDuration, winnerIndex) {
                 const startTime = Date.now();
                 const initialAngle = currentAngle;
-                const finalAngle = initialAngle + spinAngle;
-
-                const easing = (progress) => {
-                    return progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-                };
+                const finalAngle = initialAngle + spinAngle - (winnerIndex * ((2 * Math.PI) / agents.filter(a => !a.excluded).length));
 
                 function animate() {
                     const elapsed = Date.now() - startTime;
                     const progress = Math.min(elapsed / spinDuration, 1);
-                    const easedProgress = easing(progress);
-
-                    currentAngle = initialAngle + spinAngle * easedProgress;
+                    currentAngle = initialAngle + (finalAngle - initialAngle) * (1 - Math.pow(1 - progress, 3));
                     drawWheel();
 
-                    if (progress < 1) {
-                        requestAnimationFrame(animate);
-                    } else {
+                    if (progress < 1) requestAnimationFrame(animate);
+                    else {
                         spinning = false;
-                        try { stopSound.play(); } catch (e) { /* hang nélküli fallback */ }
-                        determineWinner(finalAngle);
-                        startContinuousSpin();
+                        stopSound.play();
+                        determineWinner(winnerIndex);
                     }
                 }
-
                 animate();
             }
 
-            // --- FOLYAMATOS LASSÚ FORGÁS ---
-            function startContinuousSpin() {
-                // cancel previous if any
-                if (continuousSpinRAF) cancelAnimationFrame(continuousSpinRAF);
-
-                const spinSpeed = 0.004;
-
-                function loop() {
-                    if (!spinning) {
-                        currentAngle += spinSpeed;
-                        drawWheel();
-                    }
-                    continuousSpinRAF = requestAnimationFrame(loop);
-                }
-
-                continuousSpinRAF = requestAnimationFrame(loop);
-            }
-
-            // --- NYERTES MEGHATÁROZÁSA ÉS ANIMÁCIÓ ---
-            function determineWinner(finalAngle) {
+            function determineWinner(index) {
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (activeAgents.length === 0) return;
-
-                let normalizedAngle = finalAngle % (2 * Math.PI);
-                if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
-
-                let indicatorAngle = (2 * Math.PI - normalizedAngle) % (2 * Math.PI);
-                const angleStep = (2 * Math.PI) / activeAgents.length;
-                let winningIndex = Math.floor(indicatorAngle / angleStep);
-                if (winningIndex >= activeAgents.length) winningIndex = activeAgents.length - 1;
-
-                const winner = activeAgents[winningIndex];
-                resultText.textContent = `A nyertes ügynök: ${winner.name}! (${winner.role})`;
-
-                // DOM kártya kiemelése
+                const winner = activeAgents[index];
+                resultText.textContent = `Nyertes: ${winner.name} (${winner.role})`;
                 const winnerCard = document.querySelector(`[data-agent-name="${winner.name}"]`);
                 if (winnerCard) {
-                    // scroll a kártyához (mobilon láthatóvá tesszük)
-                    try { winnerCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
                     winnerCard.classList.add('winner-highlight');
                     setTimeout(() => winnerCard.classList.remove('winner-highlight'), 2400);
                 }
-
-                // Confetti effekt
-                try {
-                    confetti({ particleCount: 140, spread: 80, origin: { y: 0.45 } });
-                    confetti({ particleCount: 80, spread: 120, origin: { y: 0.6 } });
-                } catch (e) {
-                    console.warn('Confetti hiba:', e);
-                }
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             }
 
-            // --- SPIN GOMB ESEMÉNY ---
-            spinButton.addEventListener('click', function () {
+            spinButton.addEventListener('click', () => {
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (spinning || activeAgents.length === 0) return;
-
                 spinning = true;
-                resultText.textContent = 'Pörgetés...';
-                try { spinSound.play(); } catch (e) {}
+                spinSound.play();
 
-                const totalRevolutions = 6 + Math.random() * 4;
-                const spinAngle = totalRevolutions * 2 * Math.PI;
-                const spinDuration = 6000 + Math.random() * 2000;
+                const winnerIndex = Math.floor(Math.random() * activeAgents.length);
+                const spinAngle = (6 + Math.random() * 3) * 2 * Math.PI;
+                const spinDuration = 5000 + Math.random() * 2000;
 
-                spinWheel(spinAngle, spinDuration);
+                spinWheel(spinAngle, spinDuration, winnerIndex);
             });
 
-            // --- INITIALIZÁLÁS ---
             loadAgentState();
-            renderAgentList();
             resizeCanvas();
-            startContinuousSpin();
-
         });
     </script>
 </body>
