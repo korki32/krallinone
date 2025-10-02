@@ -124,6 +124,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             // --- KONSTANSOK ÉS ADATSTRUKTÚRA ---
             const AGENT_STORAGE_KEY = 'valorantAgentWheelState';
+            const TWO_PI = 2 * Math.PI;
 
             const agentData = {
                 'Initiator': [
@@ -301,6 +302,7 @@
             function removeWinnerHighlight() {
                  if (lastWinnerName) {
                     const lastWinnerCard = document.querySelector(`[data-agent-name="${lastWinnerName}"]`);
+                    // Ellenőrizzük, hogy a kártya létezik-e 
                     if (lastWinnerCard) {
                         lastWinnerCard.classList.remove('winner-highlight');
                     }
@@ -338,7 +340,7 @@
                     spinButton.disabled = true;
                     return;
                 } else {
-                    if (!spinning) resultText.textContent = 'Készen áll a pörgetésre.';
+                    if (!spinning && !lastWinnerName) resultText.textContent = 'Készen áll a pörgetésre.';
                     spinButton.disabled = false;
                 }
 
@@ -351,7 +353,7 @@
                 ctx.translate(radius, radius);
                 ctx.rotate(currentAngle);
 
-                const angleStep = (2 * Math.PI) / activeAgents.length;
+                const angleStep = TWO_PI / activeAgents.length;
                 const colors = ['#FF4655', '#1F2937'];
 
                 activeAgents.forEach((agent, index) => {
@@ -390,7 +392,7 @@
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
                 ctx.beginPath();
-                ctx.arc(0, 0, radius * 0.15, 0, 2 * Math.PI);
+                ctx.arc(0, 0, radius * 0.15, 0, TWO_PI);
                 ctx.fillStyle = '#0F1923';
                 ctx.fill();
                 ctx.strokeStyle = '#FF4655';
@@ -404,11 +406,10 @@
             function spinWheel(spinAngle, spinDuration) {
                 const startTime = Date.now();
                 const initialAngle = currentAngle;
-                // A tényleges végállás (a kerék abszolút elforgatása)
                 const finalAngle = initialAngle + spinAngle; 
 
                 const easing = (progress) => {
-                    // Célzott lassítás: Cubic-Out lassítás
+                    // Cubic-Out lassítás a simább megállásért
                     return progress === 1 ? 1 : 1 - Math.pow(1 - progress, 3);
                 };
 
@@ -417,18 +418,16 @@
                     const progress = Math.min(elapsed / spinDuration, 1);
                     const easedProgress = easing(progress);
 
-                    // Frissítjük a currentAngle-t a sima animáció érdekében
                     currentAngle = initialAngle + spinAngle * easedProgress;
                     drawWheel();
 
                     if (progress < 1) {
                         requestAnimationFrame(animate);
                     } else {
-                        // --- JAVÍTVA: A KERÉK NEM PÖRÖG TOVÁBB ---
                         spinning = false;
                         try { stopSound.play(); } catch (e) { /* hang nélküli fallback */ }
-                        determineWinner(finalAngle); // Meghatározzuk a nyertest a végállás alapján
-                        // NEM hívjuk meg a startContinuousSpin-t, a kerék MEGÁLL!
+                        determineWinner(finalAngle);
+                        startContinuousSpin(); // ÚJRAINDÍTJA a lassú pörgést a győzelem után!
                     }
                 }
 
@@ -439,10 +438,11 @@
             function startContinuousSpin() {
                 if (continuousSpinRAF) cancelAnimationFrame(continuousSpinRAF);
 
-                const spinSpeed = 0.002; // Finomabb lassú pörgés
+                const spinSpeed = 0.002; // Nagyon lassú, folyamatos forgás
 
                 function loop() {
-                    if (!spinning) {
+                    // JAVÍTVA: Csak a fő pörgetést ellenőrizzük. A nyertes után is pörög.
+                    if (!spinning) { 
                         currentAngle += spinSpeed;
                         drawWheel();
                     }
@@ -457,32 +457,32 @@
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (activeAgents.length === 0) return;
 
-                // 1. Normalizáljuk az abszolút végállást 0 és 2*PI közé.
-                let normalizedAngle = finalAngle % (2 * Math.PI);
-                if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
+                // ANGULARIS ELTOLÁS KORREKCIÓJA: Az indikátor 12 óránál van (PI/2 rad CCW eltolás a rajzolás kezdőpontjához képest).
+                const indicatorOffset = Math.PI / 2; 
 
-                // 2. Kiszámoljuk a jelzőhöz képesti szöget. A jelző (▼) a 0. pozíciónál van.
-                // A kerék az óramutató járásával ellentétesen forog, ezért a 2*PI - normalizedAngle adja meg a szeletek szögtartományát.
-                let indicatorAngle = (2 * Math.PI - normalizedAngle) % (2 * Math.PI);
-                const angleStep = (2 * Math.PI) / activeAgents.length;
+                // 1. Eltoljuk a végső szöget, mintha a jelző 3 óránál lenne.
+                let normalizedAngle = (finalAngle + indicatorOffset) % TWO_PI;
+                if (normalizedAngle < 0) normalizedAngle += TWO_PI;
+
+                // 2. Invertáljuk az irányt (2*PI - szög) a CCW rajzolású szegmens indexének lekéréséhez.
+                let angleInSegmentSpace = (TWO_PI - normalizedAngle) % TWO_PI;
+
+                const angleStep = TWO_PI / activeAgents.length;
+                let winningIndex = Math.floor(angleInSegmentSpace / angleStep);
                 
-                // 3. Kiszámoljuk a nyertes indexet
-                let winningIndex = Math.floor(indicatorAngle / angleStep);
-                // Biztosítjuk, hogy az index a tömb határain belül legyen
-                if (winningIndex >= activeAgents.length) winningIndex = activeAgents.length - 1; 
+                // Index korrekció
+                if (winningIndex >= activeAgents.length) winningIndex = activeAgents.length - 1;
 
                 const winner = activeAgents[winningIndex];
                 resultText.textContent = `A nyertes ügynök: ${winner.name}! (${winner.role})`;
 
                 // DOM kártya kiemelése
-                removeWinnerHighlight(); // Előző kiemelés eltávolítása
+                removeWinnerHighlight();
                 const winnerCard = document.querySelector(`[data-agent-name="${winner.name}"]`);
                 if (winnerCard) {
-                    lastWinnerName = winner.name; // Nyertes név mentése a későbbi eltávolításhoz
+                    lastWinnerName = winner.name;
                     try { winnerCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
                     winnerCard.classList.add('winner-highlight');
-                    // A winner-highlight animációja most már végtelen (CSS-ben módosítva), 
-                    // így addig látszik, amíg a felhasználó nem pörget újra/nem változtatja az ügynököt.
                 }
 
                 // Confetti effekt
@@ -499,12 +499,12 @@
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (spinning || activeAgents.length === 0) return;
 
-                // --- JAVÍTVA: MEGSZÜNTETJÜK A KEZDETI LASSÚ PÖRGÉST ---
+                // Stop continuous spin before starting the main spin
                 if (continuousSpinRAF) {
                     cancelAnimationFrame(continuousSpinRAF);
                     continuousSpinRAF = null;
                 }
-                removeWinnerHighlight(); // Előző nyertes kiemelésének eltávolítása
+                removeWinnerHighlight(); 
 
                 spinning = true;
                 resultText.textContent = 'Pörgetés...';
@@ -512,7 +512,7 @@
 
                 // Minimum 6 teljes fordulat plusz random fordulat.
                 const totalRevolutions = 6 + Math.random() * 4; 
-                const spinAngle = totalRevolutions * 2 * Math.PI;
+                const spinAngle = totalRevolutions * TWO_PI;
                 const spinDuration = 6000 + Math.random() * 2000;
 
                 spinWheel(spinAngle, spinDuration);
