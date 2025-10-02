@@ -35,7 +35,7 @@
 
         /* Nyertes kiemelés */
         .winner-highlight {
-            animation: winner-glow 1.8s ease-in-out;
+            animation: winner-glow 1.8s ease-in-out infinite; /* Végtelenítés, hogy látványos maradjon */
             border-radius: 0.5rem;
             transform: translateZ(0) scale(1.03);
             box-shadow: 0 0 30px rgba(255,70,85,0.9), 0 0 6px rgba(255,255,255,0.9) inset;
@@ -203,6 +203,7 @@
             let spinning = false;
             let devicePixelRatioCached = window.devicePixelRatio || 1;
             let continuousSpinRAF = null;
+            let lastWinnerName = null; // A nyertes kártya kiemelésének céljából
 
             // --- RENDER AGENT LIST ÉS STATS ---
             function renderAgentList() {
@@ -221,8 +222,7 @@
 
                     const agentClassDiv = document.createElement('div');
                     agentClassDiv.className = 'agent-class p-4 bg-valo-gray bg-opacity-90 rounded-lg shadow-xl';
-                    agentClassDiv.innerHTML = `
-                        <div class="role-toggle-header flex items-center justify-center mb-4 cursor-pointer transition duration-200 hover:scale-[1.02]" data-role="${role}">
+                    agentClassDiv.innerHTML = `<div class="role-toggle-header flex items-center justify-center mb-4 cursor-pointer transition duration-200 hover:scale-[1.02]" data-role="${role}">
                             <img src="${roleIcons[role]}" alt="${role} Icon" class="w-10 h-10 mr-3 agent-role-icon" onerror="this.src='https://placehold.co/40x40/FF4655/0F1923?text=${role.substring(0, 1)}'">
                             <h2 class="text-2xl font-bold text-valo-red uppercase">${role}</h2>
                             <span class="role-stats">${active}/${total} aktív</span>
@@ -231,32 +231,31 @@
                             ${roleAgents.map(agent => {
                                 const fullAgent = agents.find(a => a.name === agent.name);
                                 const isInactive = fullAgent.excluded ? 'inactive' : '';
-                                return `
-                                    <div class="agent flex flex-col items-center cursor-pointer transition duration-200 hover:scale-105" data-agent-name="${agent.name}">
+                                return `<div class="agent flex flex-col items-center cursor-pointer transition duration-200 hover:scale-105" data-agent-name="${agent.name}">
                                         <img src="${agent.image}" alt="${agent.name}" class="agent-image w-20 h-20 rounded-xl border-2 border-valo-red object-cover ${isInactive}" onerror="this.onerror=null; this.src='https://placehold.co/80x80/0F1923/FFFFFF?text=${agent.name.substring(0, 3)}'">
                                         <p class="text-sm mt-1">${agent.name}</p>
-                                    </div>
-                                `;
+                                    </div>`;
                             }).join('')}
-                        </div>
-                    `;
-
+                        </div>`;
                     container.appendChild(agentClassDiv);
                 }
 
                 // Single agent toggle
                 container.querySelectorAll('.agent').forEach(agentDiv => {
                     agentDiv.addEventListener('click', function () {
+                        if (spinning) return; // Ne engedélyezzük a pörgetés alatt
                         const agentName = this.getAttribute('data-agent-name');
                         const img = this.querySelector('.agent-image');
                         const agentIndex = agents.findIndex(a => a.name === agentName);
+                        
+                        // Nyertes kiemelés eltávolítása, ha aktív
+                        removeWinnerHighlight();
 
                         if (agentIndex !== -1) {
                             agents[agentIndex].excluded = !agents[agentIndex].excluded;
                             img.classList.toggle('inactive', agents[agentIndex].excluded);
                             drawWheel();
                             saveAgentState();
-                            // update stats for that role
                             updateRoleStats(agents[agentIndex].role);
                         }
                     });
@@ -265,10 +264,13 @@
                 // Role toggle
                 container.querySelectorAll('.role-toggle-header').forEach(header => {
                     header.addEventListener('click', function() {
+                        if (spinning) return; // Ne engedélyezzük a pörgetés alatt
                         const role = this.getAttribute('data-role');
                         const roleAgents = agents.filter(a => a.role === role);
                         const shouldActivateAll = roleAgents.some(a => a.excluded);
                         roleAgents.forEach(agent => { agent.excluded = !shouldActivateAll; });
+
+                        removeWinnerHighlight();
 
                         // Update DOM images for this role
                         const agentDivs = header.parentElement.querySelectorAll('.agent-container .agent');
@@ -287,7 +289,6 @@
             }
 
             function updateRoleStats(role) {
-                // Find the role header and update the text
                 const container = document.getElementById('agent-list-container');
                 const roleDiv = Array.from(container.querySelectorAll('.role-toggle-header')).find(h => h.getAttribute('data-role') === role);
                 if (!roleDiv) return;
@@ -295,6 +296,16 @@
                 const active = agents.filter(a => a.role === role && !a.excluded).length;
                 const statsSpan = roleDiv.querySelector('.role-stats');
                 if (statsSpan) statsSpan.textContent = `${active}/${total} aktív`;
+            }
+            
+            function removeWinnerHighlight() {
+                 if (lastWinnerName) {
+                    const lastWinnerCard = document.querySelector(`[data-agent-name="${lastWinnerName}"]`);
+                    if (lastWinnerCard) {
+                        lastWinnerCard.classList.remove('winner-highlight');
+                    }
+                    lastWinnerName = null;
+                }
             }
 
             // --- CANVAS MÉRETEZÉSE (RESPONSIVE + DPR) ---
@@ -327,7 +338,7 @@
                     spinButton.disabled = true;
                     return;
                 } else {
-                    resultText.textContent = '';
+                    if (!spinning) resultText.textContent = 'Készen áll a pörgetésre.';
                     spinButton.disabled = false;
                 }
 
@@ -336,6 +347,7 @@
 
                 const radius = Math.min(canvas.width, canvas.height) / 2;
                 ctx.save();
+                // A kerék elforgatása a tárolt szöggel
                 ctx.translate(radius, radius);
                 ctx.rotate(currentAngle);
 
@@ -392,10 +404,12 @@
             function spinWheel(spinAngle, spinDuration) {
                 const startTime = Date.now();
                 const initialAngle = currentAngle;
-                const finalAngle = initialAngle + spinAngle;
+                // A tényleges végállás (a kerék abszolút elforgatása)
+                const finalAngle = initialAngle + spinAngle; 
 
                 const easing = (progress) => {
-                    return progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                    // Célzott lassítás: Cubic-Out lassítás
+                    return progress === 1 ? 1 : 1 - Math.pow(1 - progress, 3);
                 };
 
                 function animate() {
@@ -403,28 +417,29 @@
                     const progress = Math.min(elapsed / spinDuration, 1);
                     const easedProgress = easing(progress);
 
+                    // Frissítjük a currentAngle-t a sima animáció érdekében
                     currentAngle = initialAngle + spinAngle * easedProgress;
                     drawWheel();
 
                     if (progress < 1) {
                         requestAnimationFrame(animate);
                     } else {
+                        // --- JAVÍTVA: A KERÉK NEM PÖRÖG TOVÁBB ---
                         spinning = false;
                         try { stopSound.play(); } catch (e) { /* hang nélküli fallback */ }
-                        determineWinner(finalAngle);
-                        startContinuousSpin();
+                        determineWinner(finalAngle); // Meghatározzuk a nyertest a végállás alapján
+                        // NEM hívjuk meg a startContinuousSpin-t, a kerék MEGÁLL!
                     }
                 }
 
                 animate();
             }
 
-            // --- FOLYAMATOS LASSÚ FORGÁS ---
+            // --- FOLYAMATOS LASSÚ FORGÁS (KEZDETI VÁRAKOZÓ ÁLLAPOT) ---
             function startContinuousSpin() {
-                // cancel previous if any
                 if (continuousSpinRAF) cancelAnimationFrame(continuousSpinRAF);
 
-                const spinSpeed = 0.004;
+                const spinSpeed = 0.002; // Finomabb lassú pörgés
 
                 function loop() {
                     if (!spinning) {
@@ -442,24 +457,32 @@
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (activeAgents.length === 0) return;
 
+                // 1. Normalizáljuk az abszolút végállást 0 és 2*PI közé.
                 let normalizedAngle = finalAngle % (2 * Math.PI);
                 if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
 
+                // 2. Kiszámoljuk a jelzőhöz képesti szöget. A jelző (▼) a 0. pozíciónál van.
+                // A kerék az óramutató járásával ellentétesen forog, ezért a 2*PI - normalizedAngle adja meg a szeletek szögtartományát.
                 let indicatorAngle = (2 * Math.PI - normalizedAngle) % (2 * Math.PI);
                 const angleStep = (2 * Math.PI) / activeAgents.length;
+                
+                // 3. Kiszámoljuk a nyertes indexet
                 let winningIndex = Math.floor(indicatorAngle / angleStep);
-                if (winningIndex >= activeAgents.length) winningIndex = activeAgents.length - 1;
+                // Biztosítjuk, hogy az index a tömb határain belül legyen
+                if (winningIndex >= activeAgents.length) winningIndex = activeAgents.length - 1; 
 
                 const winner = activeAgents[winningIndex];
                 resultText.textContent = `A nyertes ügynök: ${winner.name}! (${winner.role})`;
 
                 // DOM kártya kiemelése
+                removeWinnerHighlight(); // Előző kiemelés eltávolítása
                 const winnerCard = document.querySelector(`[data-agent-name="${winner.name}"]`);
                 if (winnerCard) {
-                    // scroll a kártyához (mobilon láthatóvá tesszük)
+                    lastWinnerName = winner.name; // Nyertes név mentése a későbbi eltávolításhoz
                     try { winnerCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
                     winnerCard.classList.add('winner-highlight');
-                    setTimeout(() => winnerCard.classList.remove('winner-highlight'), 2400);
+                    // A winner-highlight animációja most már végtelen (CSS-ben módosítva), 
+                    // így addig látszik, amíg a felhasználó nem pörget újra/nem változtatja az ügynököt.
                 }
 
                 // Confetti effekt
@@ -476,11 +499,19 @@
                 const activeAgents = agents.filter(agent => !agent.excluded);
                 if (spinning || activeAgents.length === 0) return;
 
+                // --- JAVÍTVA: MEGSZÜNTETJÜK A KEZDETI LASSÚ PÖRGÉST ---
+                if (continuousSpinRAF) {
+                    cancelAnimationFrame(continuousSpinRAF);
+                    continuousSpinRAF = null;
+                }
+                removeWinnerHighlight(); // Előző nyertes kiemelésének eltávolítása
+
                 spinning = true;
                 resultText.textContent = 'Pörgetés...';
                 try { spinSound.play(); } catch (e) {}
 
-                const totalRevolutions = 6 + Math.random() * 4;
+                // Minimum 6 teljes fordulat plusz random fordulat.
+                const totalRevolutions = 6 + Math.random() * 4; 
                 const spinAngle = totalRevolutions * 2 * Math.PI;
                 const spinDuration = 6000 + Math.random() * 2000;
 
@@ -491,8 +522,7 @@
             loadAgentState();
             renderAgentList();
             resizeCanvas();
-            startContinuousSpin();
-
+            startContinuousSpin(); // Kezdeti lassú pörgés a felhasználói interakcióig
         });
     </script>
 </body>
