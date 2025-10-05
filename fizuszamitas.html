@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Műszak és Fizetés Kalkulátor V4.0</title>
+    <title>Műszak és Fizetés Kalkulátor V5</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -115,9 +115,8 @@
         }
 
         .day.overtime {
-            background-color: #dc2626;
-            font-weight: 600;
-            color: white;
+            /* A piros keret jelzi, hogy van túlóra a napon */
+            border: 2px solid #dc2626;
         }
         
         .day.sick-leave {
@@ -279,7 +278,7 @@
     <canvas id="futuristic-canvas"></canvas>
     <div class="container glass-panel rounded-2xl">
         <div class="header">
-            <h1 class="text-3xl font-bold text-white">Fizetéskalkulátor V4.0.0.</h1>
+            <h1 class="text-3xl font-bold text-white">Fizetéskalkulátor</h1>
         </div>
         <div class="main-content">
             <div class="calendar-container">
@@ -551,14 +550,22 @@
                 </div>
             </div>
             <div class="flex flex-col space-y-3">
-                <div class="flex items-center justify-between overtime-container">
-                    <label for="overtimeCheckbox" class="flex items-center">
-                        <input type="checkbox" id="overtimeCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
-                        <span class="font-medium">Túlóra</span>
-                    </label>
-                    <div class="flex items-center">
-                        <input type="number" id="overtimeHoursInput" value="8" class="w-20 p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-right">
-                        <span class="ml-2 w-8 text-gray-400">óra</span>
+                 <div class="flex flex-col space-y-2 overtime-container">
+                    <div class="flex items-center justify-between">
+                         <label for="overtimeCheckbox" class="flex items-center">
+                            <input type="checkbox" id="overtimeCheckbox" class="rounded text-purple-500 mr-2 bg-gray-700 border-gray-600">
+                            <span class="font-medium">Túlóra</span>
+                        </label>
+                    </div>
+                    <div id="overtime-inputs" class="hidden space-y-2 pl-6">
+                         <div>
+                            <label for="overtimeStartTime" class="block text-gray-400 font-medium mb-1 text-sm">Túlóra kezdete</label>
+                            <input type="time" id="overtimeStartTime" class="w-full p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label for="overtimeEndTime" class="block text-gray-400 font-medium mb-1 text-sm">Túlóra vége</label>
+                            <input type="time" id="overtimeEndTime" class="w-full p-2 bg-gray-700 border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center justify-between vacation-container">
@@ -720,7 +727,9 @@
             const startTimeInput = document.getElementById('startTime');
             const endTimeInput = document.getElementById('endTime');
             const overtimeCheckbox = document.getElementById('overtimeCheckbox');
-            const overtimeHoursInput = document.getElementById('overtimeHoursInput');
+            const overtimeInputsContainer = document.getElementById('overtime-inputs');
+            const overtimeStartTimeInput = document.getElementById('overtimeStartTime');
+            const overtimeEndTimeInput = document.getElementById('overtimeEndTime');
             const vacationCheckbox = document.getElementById('vacationCheckbox');
             const vacationHoursInput = document.getElementById('vacationHoursInput');
             const saveShiftBtn = document.getElementById('saveShiftBtn');
@@ -990,26 +999,16 @@
                     if (selectedDays[dateString]) {
                         const shiftData = selectedDays[dateString];
                         dayDiv.classList.add('selected');
+                        
+                        let displayString = '';
+                        
                         if (shiftData.isSickLeave) {
                             dayDiv.classList.add('sick-leave');
-                            const hoursSpan = document.createElement('span');
-                            hoursSpan.textContent = `${shiftData.sickLeaveHours || 0} óra`;
-                            hoursSpan.classList.add('hours', 'mt-1');
-                            dayDiv.appendChild(hoursSpan);
+                            displayString = `${shiftData.sickLeaveHours || 0} óra`;
                         } else if (shiftData.isVacation) {
                             dayDiv.classList.add('vacation');
-                            const hoursSpan = document.createElement('span');
-                            hoursSpan.textContent = `${shiftData.vacationHours || 0} óra`;
-                            hoursSpan.classList.add('hours', 'mt-1');
-                            dayDiv.appendChild(hoursSpan);
-                        } else if (shiftData.isOvertime) {
-                            dayDiv.classList.add('overtime');
-                            const hoursSpan = document.createElement('span');
-                            hoursSpan.textContent = `${shiftData.overtimeHours || 0} óra`;
-                            hoursSpan.classList.add('hours', 'mt-1');
-                            dayDiv.appendChild(hoursSpan);
+                            displayString = `${shiftData.vacationHours || 0} óra`;
                         } else {
-                            const hoursSpan = document.createElement('span');
                             let workHours = 0;
                             if (shiftData.startTime && shiftData.endTime) {
                                 const start = new Date(`2000-01-01T${shiftData.startTime}`);
@@ -1017,7 +1016,28 @@
                                 if (end < start) end.setDate(end.getDate() + 1);
                                 workHours = (end - start) / (1000 * 60 * 60);
                             }
-                            hoursSpan.textContent = `${Math.round(workHours)} óra`;
+
+                            let overtimeHours = 0;
+                            if (shiftData.isOvertime && shiftData.overtimeStartTime && shiftData.overtimeEndTime) {
+                                const ot_start = new Date(`2000-01-01T${shiftData.overtimeStartTime}`);
+                                const ot_end = new Date(`2000-01-01T${shiftData.overtimeEndTime}`);
+                                if (ot_end < ot_start) ot_end.setDate(ot_end.getDate() + 1);
+                                overtimeHours = (ot_end - ot_start) / (1000 * 60 * 60);
+                            }
+                            
+                            if (workHours > 0 || overtimeHours > 0) {
+                                 // A kijelzés alapja a normál munkaidő.
+                                 displayString = `${workHours.toFixed(1).replace('.0', '')} óra`;
+                                 if (overtimeHours > 0) {
+                                    dayDiv.classList.add('overtime'); // A keretet csak akkor adjuk hozzá, ha van túlóra.
+                                    displayString += ` (+${overtimeHours.toFixed(1).replace('.0','')}T)`;
+                                 }
+                            }
+                        }
+                        
+                        if (displayString) {
+                            const hoursSpan = document.createElement('span');
+                            hoursSpan.textContent = displayString;
                             hoursSpan.classList.add('hours', 'mt-1');
                             dayDiv.appendChild(hoursSpan);
                         }
@@ -1027,14 +1047,15 @@
 
                     dayDiv.addEventListener('click', () => {
                         activeDate = dateString;
-                        const shiftData = selectedDays[activeDate] || { startTime: '09:00', endTime: '17:00', isOvertime: false, isVacation: false, isSickLeave: false };
+                        const shiftData = selectedDays[activeDate] || { startTime: '09:00', endTime: '17:00', overtimeStartTime: '17:00', overtimeEndTime: '18:00' };
                         startTimeInput.value = shiftData.startTime;
                         endTimeInput.value = shiftData.endTime;
-                        overtimeCheckbox.checked = shiftData.isOvertime;
-                        vacationCheckbox.checked = shiftData.isVacation;
-                        sickLeaveCheckbox.checked = shiftData.isSickLeave;
-                        overtimeHoursInput.value = shiftData.overtimeHours || 8;
+                        overtimeCheckbox.checked = shiftData.isOvertime || false;
+                        overtimeStartTimeInput.value = shiftData.overtimeStartTime;
+                        overtimeEndTimeInput.value = shiftData.overtimeEndTime;
+                        vacationCheckbox.checked = shiftData.isVacation || false;
                         vacationHoursInput.value = shiftData.vacationHours || 8;
+                        sickLeaveCheckbox.checked = shiftData.isSickLeave || false;
                         sickLeaveHoursInput.value = shiftData.sickLeaveHours || 8;
                         sickLeavePercentInput.value = shiftData.sickLeavePercent || 70;
                         
@@ -1093,43 +1114,27 @@
 
                 for (const date in selectedDays) {
                     const shiftData = selectedDays[date];
+
                     if (shiftData.isVacation) {
                         const vacationHours = parseFloat(shiftData.vacationHours) || 0;
                         totalVacationHours += vacationHours;
                         vacationBrutto += vacationHours * vacationHourlyRate;
-                    } else if (shiftData.isSickLeave) {
+                        continue;
+                    }
+                     if (shiftData.isSickLeave) {
                         const sickHours = parseFloat(shiftData.sickLeaveHours) || 0;
                         const sickPercent = (parseFloat(shiftData.sickLeavePercent) || 0) / 100;
                         totalSickLeaveHours += sickHours;
                         sickLeaveBrutto += sickHours * hourlyRate * sickPercent;
-                    } else if (shiftData.isOvertime) {
-                        const overtimeHours = parseFloat(shiftData.overtimeHours) || 0;
-                        totalHours += overtimeHours;
-                        totalOvertimeHours += overtimeHours;
-                        baseBrutto += overtimeHours * hourlyRate;
-                        overtimeBrutto += overtimeHours * hourlyRate * overtimeRate;
-                    } else if (shiftData.startTime && shiftData.endTime) {
-                        const start = new Date(`${date}T${shiftData.startTime}`);
-                        const end = new Date(`${date}T${shiftData.endTime}`);
+                        continue;
+                    }
 
-                        if (end <= start) {
-                            end.setDate(end.getDate() + 1);
-                        }
-                        
-                        const workHours = (end - start) / (1000 * 60 * 60);
-                        if (workHours <= 0) continue;
-
-                        totalHours += workHours;
-                        baseBrutto += workHours * hourlyRate;
-                        
-                        let nightHours = 0;
-                        let eveningHours = 0;
-                        let weekendHours = 0;
-
+                    // Segédfüggvény a pótlékok számításához egy adott időintervallumban
+                    const calculateAllowances = (start, end) => {
+                        if (!start || !end || end <= start) return;
                         let currentHour = new Date(start);
                         while (currentHour < end) {
                             const h = currentHour.getHours();
-                            
                             const nextHour = new Date(currentHour);
                             nextHour.setHours(nextHour.getHours() + 1);
                             const overlapStart = Math.max(currentHour, start);
@@ -1137,42 +1142,56 @@
                             const overlapFraction = (overlapEnd - overlapStart) / (1000 * 60 * 60);
 
                             if (overlapFraction > 0) {
-                                // Délutáni pótlék
-                                if (eveningStart < eveningEnd) { // Pl. 18-22
-                                    if (h >= eveningStart && h < eveningEnd) eveningHours += overlapFraction;
-                                } else { // Pl. 22-06 (délutánra nem jellemző, de a logika kezeli)
-                                    if (h >= eveningStart || h < eveningEnd) eveningHours += overlapFraction;
+                                if (eveningStart < eveningEnd ? (h >= eveningStart && h < eveningEnd) : (h >= eveningStart || h < eveningEnd)) {
+                                    totalEveningHours += overlapFraction;
                                 }
-
-                                // Éjszakai pótlék
-                                if (nightStart < nightEnd) { // Pl. 00-06
-                                    if (h >= nightStart && h < nightEnd) nightHours += overlapFraction;
-                                } else { // Pl. 22-06
-                                    if (h >= nightStart || h < nightEnd) nightHours += overlapFraction;
+                                if (nightStart < nightEnd ? (h >= nightStart && h < nightEnd) : (h >= nightStart || h < nightEnd)) {
+                                    totalNightHours += overlapFraction;
                                 }
-                                
-                                // Hétvégi pótlék
-                                const dayOfWeek = currentHour.getDay(); // 0=vasárnap, 6=szombat
-                                const isWeekendDay = (weekendOption === 'all' && (dayOfWeek === 0 || dayOfWeek === 6)) ||
-                                                    (weekendOption === 'saturday' && dayOfWeek === 6) ||
-                                                    (weekendOption === 'sunday' && dayOfWeek === 0);
+                                const dayOfWeek = currentHour.getDay();
+                                const isWeekendDay = (weekendOption === 'all' && (dayOfWeek === 0 || dayOfWeek === 6)) || (weekendOption === 'saturday' && dayOfWeek === 6) || (weekendOption === 'sunday' && dayOfWeek === 0);
                                 if (isWeekendDay) {
-                                    weekendHours += overlapFraction;
+                                    totalWeekendHours += overlapFraction;
                                 }
                             }
-                            
                             currentHour.setHours(currentHour.getHours() + 1);
                         }
+                    };
 
-                        nightBrutto += nightHours * hourlyRate * nightRate;
-                        eveningBrutto += eveningHours * hourlyRate * eveningRate;
-                        weekendBrutto += weekendHours * hourlyRate * weekendRate;
+                    // Normál munkaidő
+                    if (shiftData.startTime && shiftData.endTime) {
+                        const start = new Date(`${date}T${shiftData.startTime}`);
+                        let end = new Date(`${date}T${shiftData.endTime}`);
+                        if (end < start) end.setDate(end.getDate() + 1);
+                        
+                        const workHours = (end - start) / (1000 * 60 * 60);
+                        if (workHours > 0) {
+                            totalHours += workHours;
+                            baseBrutto += workHours * hourlyRate;
+                            calculateAllowances(start, end);
+                        }
+                    }
 
-                        totalNightHours += nightHours;
-                        totalEveningHours += eveningHours;
-                        totalWeekendHours += weekendHours;
+                    // Túlóra
+                    if (shiftData.isOvertime && shiftData.overtimeStartTime && shiftData.overtimeEndTime) {
+                        const ot_start = new Date(`${date}T${shiftData.overtimeStartTime}`);
+                        let ot_end = new Date(`${date}T${shiftData.overtimeEndTime}`);
+                        if (ot_end < ot_start) ot_end.setDate(ot_end.getDate() + 1);
+                        
+                        const overtimeHours = (ot_end - ot_start) / (1000 * 60 * 60);
+                        if(overtimeHours > 0){
+                            totalHours += overtimeHours;
+                            totalOvertimeHours += overtimeHours;
+                            baseBrutto += overtimeHours * hourlyRate;
+                            overtimeBrutto += overtimeHours * hourlyRate * overtimeRate;
+                            calculateAllowances(ot_start, ot_end);
+                        }
                     }
                 }
+                
+                nightBrutto = totalNightHours * hourlyRate * nightRate;
+                eveningBrutto = totalEveningHours * hourlyRate * eveningRate;
+                weekendBrutto = totalWeekendHours * hourlyRate * weekendRate;
 
                 const totalBrutto = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto + sickLeaveBrutto + totalBenefitsValue;
 
@@ -1267,9 +1286,9 @@
                 // Frissítés a képernyőn, animációval
                 animateValue(totalHoursEl, totalHours, " óra", true);
                 animateValue(baseBruttoEl, baseBrutto, " Ft");
-                animateValue(nightBreakdownEl, nightBrutto, " Ft", false, totalNightHours.toFixed(1), " óra");
-                animateValue(eveningBreakdownEl, eveningBrutto, " Ft", false, totalEveningHours.toFixed(1), " óra");
-                animateValue(weekendBreakdownEl, weekendBrutto, " Ft", false, totalWeekendHours.toFixed(1), " óra");
+                animateValue(nightBreakdownEl, nightBrutto, " Ft", false, totalNightHours, " óra");
+                animateValue(eveningBreakdownEl, eveningBrutto, " Ft", false, totalEveningHours, " óra");
+                animateValue(weekendBreakdownEl, weekendBrutto, " Ft", false, totalWeekendHours, " óra");
                 animateValue(overtimeBreakdownEl, overtimeBrutto, " Ft", false, totalOvertimeHours, " óra");
                 animateValue(vacationHoursEl, vacationBrutto, " Ft", false, totalVacationHours, " óra");
                 animateValue(sickLeaveBreakdownEl, sickLeaveBrutto, " Ft", false, totalSickLeaveHours, " óra");
@@ -1300,9 +1319,9 @@
                     let formattedValue = Math.round(value).toLocaleString('hu-HU');
                     
                     if (isHours) {
-                         obj.textContent = `${Math.round(value)} ${suffix}`;
+                         obj.textContent = `${value.toFixed(1).replace('.0','')} ${suffix}`;
                     } else if (prefixValue !== null) {
-                        obj.textContent = `${prefixValue} ${prefixSuffix} (${formattedValue} ${suffix})`;
+                        obj.textContent = `${Number(prefixValue).toFixed(1).replace('.0','')} ${prefixSuffix} (${formattedValue} ${suffix})`;
                     } else {
                         obj.textContent = `${formattedValue} ${suffix}`;
                     }
@@ -1311,9 +1330,9 @@
                         requestAnimationFrame(step);
                     } else {
                          if (isHours) {
-                            obj.textContent = `${Math.round(end)} ${suffix}`;
+                            obj.textContent = `${end.toFixed(1).replace('.0','')} ${suffix}`;
                          } else if (prefixValue !== null) {
-                            obj.textContent = `${prefixValue} ${prefixSuffix} (${Math.round(end).toLocaleString('hu-HU')} ${suffix})`;
+                            obj.textContent = `${Number(prefixValue).toFixed(1).replace('.0','')} ${prefixSuffix} (${Math.round(end).toLocaleString('hu-HU')} ${suffix})`;
                          } else {
                             obj.textContent = `${Math.round(end).toLocaleString('hu-HU')} ${suffix}`;
                          }
@@ -1477,14 +1496,22 @@
                 const isOvertime = overtimeCheckbox.checked;
                 const isVacation = vacationCheckbox.checked;
                 const isSickLeave = sickLeaveCheckbox.checked;
-                const isSpecialDay = isOvertime || isVacation || isSickLeave;
+                
+                overtimeInputsContainer.classList.toggle('hidden', !isOvertime);
 
-                startTimeInput.disabled = isSpecialDay;
-                endTimeInput.disabled = isSpecialDay;
-                startTimeInput.classList.toggle('disabled-input', isSpecialDay);
-                endTimeInput.classList.toggle('disabled-input', isSpecialDay);
+                const isTimeInputDisabled = isVacation || isSickLeave;
 
-                overtimeHoursInput.classList.toggle('disabled-input', !isOvertime);
+                startTimeInput.disabled = isTimeInputDisabled;
+                endTimeInput.disabled = isTimeInputDisabled;
+                startTimeInput.classList.toggle('disabled-input', isTimeInputDisabled);
+                endTimeInput.classList.toggle('disabled-input', isTimeInputDisabled);
+                
+                overtimeCheckbox.disabled = isTimeInputDisabled;
+
+
+                vacationCheckbox.disabled = isSickLeave || (isOvertime);
+                sickLeaveCheckbox.disabled = isVacation || (isOvertime);
+
                 vacationHoursInput.classList.toggle('disabled-input', !isVacation);
                 sickLeaveHoursInput.classList.toggle('disabled-input', !isSickLeave);
                 sickLeavePercentInput.classList.toggle('disabled-input', !isSickLeave);
@@ -1520,9 +1547,10 @@
                     startTime: startTimeInput.value,
                     endTime: endTimeInput.value,
                     isOvertime: overtimeCheckbox.checked,
+                    overtimeStartTime: overtimeStartTimeInput.value,
+                    overtimeEndTime: overtimeEndTimeInput.value,
                     isVacation: vacationCheckbox.checked,
                     isSickLeave: sickLeaveCheckbox.checked,
-                    overtimeHours: parseFloat(overtimeHoursInput.value) || 0,
                     vacationHours: parseFloat(vacationHoursInput.value) || 0,
                     sickLeaveHours: parseFloat(sickLeaveHoursInput.value) || 0,
                     sickLeavePercent: parseFloat(sickLeavePercentInput.value) || 0
