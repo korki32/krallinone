@@ -115,8 +115,13 @@
         }
 
         .day.overtime {
-            /* A piros keret jelzi, hogy van túlóra a napon */
             border: 2px solid #dc2626;
+        }
+
+        .day.overtime-full {
+            background-color: #dc2626;
+            font-weight: 600;
+            color: white;
         }
         
         .day.sick-leave {
@@ -1055,11 +1060,15 @@
                             }
                             
                             if (workHours > 0 || overtimeHours > 0) {
-                                 displayString = `${workHours.toFixed(1).replace('.0', '')} óra`;
-                                 if (overtimeHours > 0) {
-                                    dayDiv.classList.add('overtime');
+                                displayString = `${workHours.toFixed(1).replace('.0', '')} óra`;
+                                if (overtimeHours > 0) {
+                                    if (workHours === 0 || isNaN(workHours)) {
+                                        dayDiv.classList.add('overtime-full');
+                                    } else {
+                                        dayDiv.classList.add('overtime');
+                                    }
                                     displayString += ` (+${overtimeHours.toFixed(1).replace('.0','')}T)`;
-                                 }
+                                }
                             }
                         }
                         
