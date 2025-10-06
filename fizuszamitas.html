@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Műszak és Fizetés Kalkulátor V5</title>
+    <title>Műszak és Fizetés Kalkulátor V6.1 - UI Frissítés</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -79,6 +79,12 @@
         .calendar-container {
             flex: 1;
         }
+        
+        .calendar-wrapper {
+             flex: 1;
+             display: flex;
+             flex-direction: column;
+        }
 
         .controls-container {
             flex: 1;
@@ -115,10 +121,15 @@
         }
 
         .day.overtime {
-            /* A piros keret jelzi, hogy van túlóra a napon */
             border: 2px solid #dc2626;
         }
         
+        .day.overtime-full {
+             background-color: #991b1b;
+             color: white;
+             font-weight: 600;
+        }
+
         .day.sick-leave {
             background-color: #14b8a6; /* Teal color */
             font-weight: 600;
@@ -155,7 +166,6 @@
             max-width: 24rem;
             border: 1px solid #4b5563;
             position: relative;
-            /* Hozzáadva a bezárás gomb pozícionálásához */
         }
 
         /* Stílusok a bezárás gombhoz */
@@ -209,7 +219,6 @@
             cursor: not-allowed;
         }
 
-        /* Stílusok a D3.js diagramhoz */
         #chart-container {
             display: flex;
             justify-content: center;
@@ -243,7 +252,6 @@
             fill: #9ca3af;
         }
 
-        /* Új stílusok az animációhoz és a kiemeléshez */
         .highlight-card {
             background: linear-gradient(135deg, #1f2937, #374151);
             position: relative;
@@ -264,13 +272,21 @@
             }
         }
         
-        /* Accordion Styles */
         .accordion-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
             background-color: rgba(17, 24, 39, 0.5);
             border-radius: 0.5rem;
+        }
+        .icon-btn {
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: background-color 0.2s;
+        }
+        .icon-btn:hover {
+            background-color: rgba(255,255,255,0.2);
         }
     </style>
 </head>
@@ -281,34 +297,75 @@
             <h1 class="text-3xl font-bold text-white">Fizetéskalkulátor</h1>
         </div>
         <div class="main-content">
-            <div class="calendar-container">
-                <div class="flex items-center justify-between mb-4">
-                    <button id="prevBtn" class="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
-                    <h2 id="currentMonth" class="text-2xl font-bold text-white"></h2>
-                    <button id="nextBtn" class="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
+            <div class="calendar-wrapper">
+                <div class="calendar-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <button id="prevBtn" class="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <h2 id="currentMonth" class="text-2xl font-bold text-white"></h2>
+                        <button id="nextBtn" class="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-400 text-sm">
+                        <div class="p-2">H</div>
+                        <div class="p-2">K</div>
+                        <div class="p-2">Sze</div>
+                        <div class="p-2">Cs</div>
+                        <div class="p-2">P</div>
+                        <div class="p-2">Szo</div>
+                        <div class="p-2">V</div>
+                    </div>
+                    <div id="calendarDays" class="grid grid-cols-7 gap-1 text-center mt-2"></div>
                 </div>
-                <div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-400 text-sm">
-                    <div class="p-2">H</div>
-                    <div class="p-2">K</div>
-                    <div class="p-2">Sze</div>
-                    <div class="p-2">Cs</div>
-                    <div class="p-2">P</div>
-                    <div class="p-2">Szo</div>
-                    <div class="p-2">V</div>
+
+                <!-- Profile Manager -->
+                <div class="profile-manager mt-6 p-4 bg-gray-900/50 rounded-lg">
+                    <h3 class="text-lg font-semibold text-white mb-3">Profilok</h3>
+                    <div class="space-y-3">
+                         <div id="profile-display-view">
+                            <label for="profileSelector" class="block text-gray-400 font-medium mb-1 text-sm">Aktív profil</label>
+                            <div class="flex items-center space-x-2">
+                                <select id="profileSelector" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
+                                <button id="editProfileBtn" class="icon-btn text-gray-300 hover:text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                                </button>
+                                <button id="deleteProfileBtn" class="icon-btn text-red-400 hover:text-red-300">
+                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="profile-edit-view" class="hidden">
+                             <label for="editProfileNameInput" class="block text-gray-400 font-medium mb-1 text-sm">Profil átnevezése</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" id="editProfileNameInput" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <button id="saveProfileNameBtn" class="icon-btn text-green-400 hover:text-green-300">
+                                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                </button>
+                                <button id="cancelEditProfileBtn" class="icon-btn text-gray-300 hover:text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-end space-x-2">
+                            <div class="flex-grow">
+                                <label for="newProfileName" class="block text-gray-400 font-medium mb-1 text-sm sr-only">Új profil neve</label>
+                                <input type="text" id="newProfileName" placeholder="Új profil létrehozása..." class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <button id="addProfileBtn" class="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">Hozzáad</button>
+                        </div>
+                    </div>
                 </div>
-                <div id="calendarDays" class="grid grid-cols-7 gap-1 text-center mt-2"></div>
+
             </div>
             <div class="controls-container">
                 <h2 class="text-2xl font-bold text-white mb-6">Beállítások</h2>
-                <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                <div class="space-y-6 pr-2">
 
                     <!-- Alapbérek Szekció -->
                     <div>
@@ -465,7 +522,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <button id="calculateBtn" class="w-full bg-green-600 text-white font-bold p-3 rounded-lg hover:bg-green-700 transition-colors duration-200 mt-4">
                         Számítás indítása
                     </button>
@@ -746,6 +803,22 @@
             const sickLeaveHoursInput = document.getElementById('sickLeaveHoursInput');
             const sickLeavePercentInput = document.getElementById('sickLeavePercentInput');
             const sickLeaveBreakdownEl = document.getElementById('sickLeaveBreakdown');
+            
+            // Profile UI elements
+            const profileSelector = document.getElementById('profileSelector');
+            const newProfileNameInput = document.getElementById('newProfileName');
+            const addProfileBtn = document.getElementById('addProfileBtn');
+            const deleteProfileBtn = document.getElementById('deleteProfileBtn');
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const profileDisplayView = document.getElementById('profile-display-view');
+            const profileEditView = document.getElementById('profile-edit-view');
+            const editProfileNameInput = document.getElementById('editProfileNameInput');
+            const saveProfileNameBtn = document.getElementById('saveProfileNameBtn');
+            const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
+
+            // Global variables for profiles
+            let activeProfile = 'Default';
+            let profiles = ['Default'];
 
             // Accordion logic
             const accordionToggles = document.querySelectorAll('.accordion-toggle');
@@ -753,7 +826,7 @@
                 button.addEventListener('click', () => {
                     const content = button.nextElementSibling;
                     const icon = button.querySelector('.chevron-icon');
-                    
+
                     if (content.style.maxHeight) {
                         content.style.maxHeight = null;
                         icon.style.transform = 'rotate(0deg)';
@@ -764,11 +837,9 @@
                 });
             });
 
-            // Hozzáadott elemek a Juttatásokhoz
             const benefitsContainer = document.getElementById('benefits-container');
             const addBenefitBtn = document.getElementById('addBenefitBtn');
-            
-            // Az új Juttatások mezők tárolása
+
             let benefits = {};
             let benefitCounter = 0;
 
@@ -819,27 +890,13 @@
                     const infoType = e.target.dataset.info;
                     let message = "";
                     switch (infoType) {
-                        case 'ekho':
-                            message = "Az Egyszerűsített Közteherviselési Hozzájárulás (EKHO) egy adózási mód, amely helyettesíti a normál SZJA-t és a legtöbb járulékot. Külön szabályok vonatkoznak rá.";
-                            break;
-                        case 'under25':
-                            message = "A 25 év alattiak mentesülnek a személyi jövedelemadó (SZJA) fizetése alól a bruttó átlagkereset mértékéig.";
-                            break;
-                        case 'under30mother':
-                            message = "A 30 év alatti, gyermeket vállaló anyák adómentességet kapnak a fizetésükre a bruttó átlagkereset mértékéig.";
-                            break;
-                        case 'married':
-                            message = "A friss házasok havonta adóalap-kedvezményt vehetnek igénybe a házasságkötést követő 24 hónapon keresztül.";
-                            break;
-                        case 'personalDeduction':
-                            message = "A személyi kedvezményre jogosító betegségekkel élők (pl. cukorbetegség, laktóz- vagy gluténérzékenység) adóalap-kedvezményt vehetnek igénybe.";
-                            break;
-                        case 'retiredEmployee':
-                            message = "A nyugdíjas munkavállalók mentesülnek a 18.5%-os TB-járulék fizetése alól, csak a 15%-os SZJA-t kell fizetniük.";
-                            break;
-                        case 'mother4plus':
-                            message = "A 4 vagy több gyermeket nevelő anyák teljes mértékben mentesülnek a személyi jövedelemadó (SZJA) fizetése alól.";
-                            break;
+                        case 'ekho': message = "Az Egyszerűsített Közteherviselési Hozzájárulás (EKHO) egy adózási mód, amely helyettesíti a normál SZJA-t és a legtöbb járulékot."; break;
+                        case 'under25': message = "A 25 év alattiak mentesülnek a személyi jövedelemadó (SZJA) fizetése alól a bruttó átlagkereset mértékéig."; break;
+                        case 'under30mother': message = "A 30 év alatti, gyermeket vállaló anyák adómentességet kapnak a fizetésükre a bruttó átlagkereset mértékéig."; break;
+                        case 'married': message = "A friss házasok havonta adóalap-kedvezményt vehetnek igénybe a házasságkötést követő 24 hónapon keresztül."; break;
+                        case 'personalDeduction': message = "A személyi kedvezményre jogosító betegségekkel élők adóalap-kedvezményt vehetnek igénybe."; break;
+                        case 'retiredEmployee': message = "A nyugdíjas munkavállalók mentesülnek a 18.5%-os TB-járulék fizetése alól, csak a 15%-os SZJA-t kell fizetniük."; break;
+                        case 'mother4plus': message = "A 4 vagy több gyermeket nevelő anyák teljes mértékben mentesülnek a személyi jövedelemadó (SZJA) fizetése alól."; break;
                     }
                     showMessageBox(message);
                 });
@@ -885,9 +942,13 @@
                 }
             });
 
-            // Funkció a beállítások betöltéséhez a localStorage-ból
+
             const loadSettings = () => {
-                const settings = JSON.parse(localStorage.getItem('calculatorSettings'));
+                const settings = JSON.parse(localStorage.getItem(`calculatorSettings_${activeProfile}`));
+                
+                benefitsContainer.innerHTML = '';
+                benefitCounter = 0;
+                
                 if (settings) {
                     settingsInputs.forEach(input => {
                         if (settings[input.id] !== undefined) {
@@ -899,19 +960,20 @@
                             checkbox.checked = settings[checkbox.id];
                         }
                     });
-                    
-                    // Juttatások betöltése
+
+
                     benefits = settings.benefits || {};
                     Object.keys(benefits).forEach(id => {
                         createBenefitField(id, benefits[id].name, benefits[id].value);
                     });
-                    // Frissítjük a számlálót, hogy ne legyen ID ütközés
+
                     if (Object.keys(benefits).length > 0) {
                         benefitCounter = Math.max(...Object.keys(benefits).map(id => parseInt(id)))
                     }
 
                 } else {
-                    // Alapértelmezett értékek, ha még nincs mentve semmi
+                    settingsInputs.forEach(input => input.value = '');
+                    settingsCheckboxes.forEach(checkbox => checkbox.checked = false);
                     hourlyRateInput.value = 1500;
                     vacationHourlyRateInput.value = 1500;
                     nightRateInput.value = 25;
@@ -926,7 +988,7 @@
                 }
             };
 
-            // Funkció a beállítások mentéséhez a localStorage-ba
+
             const saveSettings = () => {
                 const settings = {};
                 settingsInputs.forEach(input => {
@@ -936,7 +998,7 @@
                     settings[checkbox.id] = checkbox.checked;
                 });
 
-                // Juttatások mentése
+
                 const benefitsData = {};
                 document.querySelectorAll('.benefit-field').forEach(div => {
                     const id = div.dataset.id;
@@ -948,18 +1010,18 @@
                     };
                 });
                 settings.benefits = benefitsData;
-                localStorage.setItem('calculatorSettings', JSON.stringify(settings));
+                localStorage.setItem(`calculatorSettings_${activeProfile}`, JSON.stringify(settings));
             };
 
-            // Havi adatok mentése a localStorage-ba
+
             const saveMonthlyData = () => {
-                const key = `calculatorData-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+                const key = `calculatorData_${activeProfile}-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
                 localStorage.setItem(key, JSON.stringify(selectedDays));
             };
 
-            // Havi adatok betöltése a localStorage-ból
+
             const loadMonthlyData = () => {
-                const key = `calculatorData-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+                const key = `calculatorData_${activeProfile}-${currentDate.getFullYear()}-${currentDate.getMonth()}`;
                 const savedData = localStorage.getItem(key);
                 if (savedData) {
                     selectedDays = JSON.parse(savedData);
@@ -999,9 +1061,9 @@
                     if (selectedDays[dateString]) {
                         const shiftData = selectedDays[dateString];
                         dayDiv.classList.add('selected');
-                        
+
                         let displayString = '';
-                        
+
                         if (shiftData.isSickLeave) {
                             dayDiv.classList.add('sick-leave');
                             displayString = `${shiftData.sickLeaveHours || 0} óra`;
@@ -1011,30 +1073,40 @@
                         } else {
                             let workHours = 0;
                             if (shiftData.startTime && shiftData.endTime) {
-                                const start = new Date(`2000-01-01T${shiftData.startTime}`);
-                                const end = new Date(`2000-01-01T${shiftData.endTime}`);
-                                if (end < start) end.setDate(end.getDate() + 1);
-                                workHours = (end - start) / (1000 * 60 * 60);
+                                if (shiftData.startTime === shiftData.endTime) {
+                                    workHours = 0;
+                                } else {
+                                    const start = new Date(`2000-01-01T${shiftData.startTime}`);
+                                    let end = new Date(`2000-01-01T${shiftData.endTime}`);
+                                    if (end < start) end.setDate(end.getDate() + 1);
+                                    workHours = (end - start) / (1000 * 60 * 60);
+                                }
                             }
 
                             let overtimeHours = 0;
                             if (shiftData.isOvertime && shiftData.overtimeStartTime && shiftData.overtimeEndTime) {
                                 const ot_start = new Date(`2000-01-01T${shiftData.overtimeStartTime}`);
-                                const ot_end = new Date(`2000-01-01T${shiftData.overtimeEndTime}`);
+                                let ot_end = new Date(`2000-01-01T${shiftData.overtimeEndTime}`);
                                 if (ot_end < ot_start) ot_end.setDate(ot_end.getDate() + 1);
                                 overtimeHours = (ot_end - ot_start) / (1000 * 60 * 60);
                             }
-                            
+
                             if (workHours > 0 || overtimeHours > 0) {
-                                 // A kijelzés alapja a normál munkaidő.
-                                 displayString = `${workHours.toFixed(1).replace('.0', '')} óra`;
-                                 if (overtimeHours > 0) {
-                                    dayDiv.classList.add('overtime'); // A keretet csak akkor adjuk hozzá, ha van túlóra.
-                                    displayString += ` (+${overtimeHours.toFixed(1).replace('.0','')}T)`;
-                                 }
+                                let normalHoursText = workHours > 0 ? `${workHours.toFixed(1).replace('.0', '')} óra` : '';
+                                let overtimeText = overtimeHours > 0 ? `(+${overtimeHours.toFixed(1).replace('.0','')}T)` : '';
+                                
+                                displayString = `${normalHoursText} ${overtimeText}`.trim();
+
+                                if (overtimeHours > 0) {
+                                     if (workHours === 0 || isNaN(workHours)) {
+                                        dayDiv.classList.add('overtime-full');
+                                     } else {
+                                        dayDiv.classList.add('overtime');
+                                     }
+                                }
                             }
                         }
-                        
+
                         if (displayString) {
                             const hoursSpan = document.createElement('span');
                             hoursSpan.textContent = displayString;
@@ -1058,7 +1130,7 @@
                         sickLeaveCheckbox.checked = shiftData.isSickLeave || false;
                         sickLeaveHoursInput.value = shiftData.sickLeaveHours || 8;
                         sickLeavePercentInput.value = shiftData.sickLeavePercent || 70;
-                        
+
                         shiftModal.style.display = 'flex';
                         updateModalInputsState();
                     });
@@ -1067,7 +1139,6 @@
             };
 
             const calculate = () => {
-                // Input values
                 const hourlyRate = parseFloat(hourlyRateInput.value) || 0;
                 const vacationHourlyRate = parseFloat(vacationHourlyRateInput.value) || 0;
                 const nightRate = (parseFloat(nightRateInput.value) || 0) / 100;
@@ -1086,27 +1157,9 @@
                 const isRetiredEmployee = retiredEmployeeCheckbox.checked;
                 const isMother4plus = mother4plusCheckbox.checked;
                 const isEKHO = ekhoCheckbox.checked;
-                
-                // Calculation variables
-                let totalHours = 0;
-                let baseBrutto = 0;
-                let nightBrutto = 0;
-                let eveningBrutto = 0;
-                let weekendBrutto = 0;
-                let overtimeBrutto = 0;
-                let totalVacationHours = 0;
-                let vacationBrutto = 0;
-                let totalBenefitsValue = 0;
-                let savings = 0;
-                let sickLeaveBrutto = 0;
-                let totalSickLeaveHours = 0;
 
-                let totalNightHours = 0;
-                let totalEveningHours = 0;
-                let totalWeekendHours = 0;
-                let totalOvertimeHours = 0;
+                let totalHours = 0, baseBrutto = 0, nightBrutto = 0, eveningBrutto = 0, weekendBrutto = 0, overtimeBrutto = 0, totalVacationHours = 0, vacationBrutto = 0, totalBenefitsValue = 0, savings = 0, sickLeaveBrutto = 0, totalSickLeaveHours = 0, totalNightHours = 0, totalEveningHours = 0, totalWeekendHours = 0, totalOvertimeHours = 0;
 
-                // Dinamikus juttatások összesítése
                 document.querySelectorAll('.benefit-field').forEach(div => {
                     const valueInput = div.querySelector('input[type="number"]');
                     totalBenefitsValue += parseFloat(valueInput.value) || 0;
@@ -1129,7 +1182,6 @@
                         continue;
                     }
 
-                    // Segédfüggvény a pótlékok számításához egy adott időintervallumban
                     const calculateAllowances = (start, end) => {
                         if (!start || !end || end <= start) return;
                         let currentHour = new Date(start);
@@ -1158,8 +1210,7 @@
                         }
                     };
 
-                    // Normál munkaidő
-                    if (shiftData.startTime && shiftData.endTime) {
+                    if (shiftData.startTime && shiftData.endTime && shiftData.startTime !== shiftData.endTime) {
                         const start = new Date(`${date}T${shiftData.startTime}`);
                         let end = new Date(`${date}T${shiftData.endTime}`);
                         if (end < start) end.setDate(end.getDate() + 1);
@@ -1172,8 +1223,7 @@
                         }
                     }
 
-                    // Túlóra
-                    if (shiftData.isOvertime && shiftData.overtimeStartTime && shiftData.overtimeEndTime) {
+                    if (shiftData.isOvertime && shiftData.overtimeStartTime && shiftData.overtimeEndTime && shiftData.overtimeStartTime !== shiftData.overtimeEndTime) {
                         const ot_start = new Date(`${date}T${shiftData.overtimeStartTime}`);
                         let ot_end = new Date(`${date}T${shiftData.overtimeEndTime}`);
                         if (ot_end < ot_start) ot_end.setDate(ot_end.getDate() + 1);
@@ -1195,95 +1245,61 @@
 
                 const totalBrutto = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto + sickLeaveBrutto + totalBenefitsValue;
 
-                // Adózás és járulékok számítása
                 let netto = 0;
                 savingsListEl.innerHTML = '';
                 savingsPlaceholderEl.classList.remove('hidden');
 
                 if (isEKHO) {
-                    const ekhoRate = 0.13;
-                    const income = totalBrutto;
-                    const contribution = income * ekhoRate;
-                    netto = income - contribution;
+                    netto = totalBrutto * (1 - 0.13);
                     savings = 0;
                 } else {
-                    const socialContributionTaxRate = 0.13;
-                    const personalIncomeTaxRate = 0.15;
-                    const tbContributionRate = 0.185;
-                    
+                    const personalIncomeTaxRate = 0.15, tbContributionRate = 0.185;
                     let taxBase = totalBrutto;
-                    let contributionBase = baseBrutto + nightBrutto + eveningBrutto + weekendBrutto + overtimeBrutto + vacationBrutto + sickLeaveBrutto; // Juttatások nem járulékkötelesek
-                    
-                    if(isRetiredEmployee) {
-                        contributionBase = 0; // Nyugdíjasnak nincs TB
-                    }
+                    let contributionBase = totalBrutto - totalBenefitsValue;
+                    if(isRetiredEmployee) contributionBase = 0;
 
-                    // Kedvezmények
                     let taxBaseReduction = 0;
                     savingsPlaceholderEl.classList.add('hidden');
 
                     if(isMother4plus){
                          const fullExemption = taxBase;
                          taxBaseReduction += fullExemption;
-                         const listItem = document.createElement('p');
-                         listItem.classList.add('text-gray-300');
-                         listItem.textContent = `4+ gyermeket nevelő anyák kedvezménye: ${formatCurrency(fullExemption * personalIncomeTaxRate)}`;
-                         savingsListEl.appendChild(listItem);
+                         savingsListEl.innerHTML += `<p class="text-gray-300">4+ gyermekes anyák kedv.: ${formatCurrency(fullExemption * personalIncomeTaxRate)}</p>`;
                     } else {
                         if (isUnder25) {
-                            const maxExemption = 576601; 
-                            const exemption = Math.min(taxBase, maxExemption);
+                            const exemption = Math.min(taxBase, 576601);
                             taxBaseReduction += exemption;
-                            const listItem = document.createElement('p');
-                            listItem.classList.add('text-gray-300');
-                            listItem.textContent = `25 év alatti kedvezmény: ${formatCurrency(exemption * personalIncomeTaxRate)}`;
-                            savingsListEl.appendChild(listItem);
+                            savingsListEl.innerHTML += `<p class="text-gray-300">25 év alatti kedv.: ${formatCurrency(exemption * personalIncomeTaxRate)}</p>`;
                         }
                         if (isUnder30mother) {
-                           const maxExemption = 576601;
                            const currentTaxBase = taxBase - taxBaseReduction;
                            if(currentTaxBase > 0) {
-                                const exemption = Math.min(currentTaxBase, maxExemption);
+                                const exemption = Math.min(currentTaxBase, 576601);
                                 taxBaseReduction += exemption;
-                                const listItem = document.createElement('p');
-                                listItem.classList.add('text-gray-300');
-                                listItem.textContent = `30 év alatti anyák kedvezménye: ${formatCurrency(exemption * personalIncomeTaxRate)}`;
-                                savingsListEl.appendChild(listItem);
+                                savingsListEl.innerHTML += `<p class="text-gray-300">30 alatti anyák kedv.: ${formatCurrency(exemption * personalIncomeTaxRate)}</p>`;
                            }
                         }
                     }
 
                     if (isMarried) {
                         taxBaseReduction += 33335;
-                        const listItem = document.createElement('p');
-                        listItem.classList.add('text-gray-300');
-                        listItem.textContent = `Friss házasok kedvezménye: ${formatCurrency(5000)}`;
-                        savingsListEl.appendChild(listItem);
+                        savingsListEl.innerHTML += `<p class="text-gray-300">Friss házasok kedv.: ${formatCurrency(5000)}</p>`;
                     }
                     if (hasPersonalDeduction) {
-                        taxBaseReduction += 88933; 
-                        const listItem = document.createElement('p');
-                        listItem.classList.add('text-gray-300');
-                        listItem.textContent = `Személyi kedvezmény: ${formatCurrency(13340)}`;
-                        savingsListEl.appendChild(listItem);
+                        taxBaseReduction += 88933;
+                        savingsListEl.innerHTML += `<p class="text-gray-300">Személyi kedv.: ${formatCurrency(13340)}</p>`;
                     }
                     
-                    if(savingsListEl.innerHTML === '') {
-                        savingsPlaceholderEl.classList.remove('hidden');
-                    }
+                    if(savingsListEl.innerHTML === '') savingsPlaceholderEl.classList.remove('hidden');
                     
                     const finalTaxBase = Math.max(0, taxBase - taxBaseReduction);
                     const personalIncomeTax = finalTaxBase * personalIncomeTaxRate;
-                    const socialContributionTax = contributionBase * socialContributionTaxRate;
                     const tbContribution = contributionBase * tbContributionRate;
 
                     netto = totalBrutto - personalIncomeTax - tbContribution;
-                    savings = (taxBase - finalTaxBase) * personalIncomeTaxRate;
-                    if(isMarried) savings += 5000;
-                    if(hasPersonalDeduction) savings += 13340;
+                    savings = (taxBase - finalTaxBase) * personalIncomeTaxRate + (isMarried ? 5000 : 0) + (hasPersonalDeduction ? 13340 : 0);
                 }
                 
-                // Frissítés a képernyőn, animációval
                 animateValue(totalHoursEl, totalHours, " óra", true);
                 animateValue(baseBruttoEl, baseBrutto, " Ft");
                 animateValue(nightBreakdownEl, nightBrutto, " Ft", false, totalNightHours, " óra");
@@ -1302,11 +1318,9 @@
                     totalBenefitsContainer.classList.add('hidden');
                 }
 
-                // Diagram frissítése
                 updateChart(baseBrutto, nightBrutto, eveningBrutto, weekendBrutto, overtimeBrutto, vacationBrutto, sickLeaveBrutto, totalBenefitsValue);
             };
 
-            // Animációs funkció a számokhoz
             function animateValue(obj, end, suffix, isHours = false, prefixValue = null, prefixSuffix = null) {
                 let start = parseFloat(obj.textContent.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
                 let duration = 1000;
@@ -1342,23 +1356,14 @@
                 requestAnimationFrame(step);
             }
 
-            // Eseménykezelők a számítás indításához és a mentéshez
-            calculateBtn.addEventListener('click', calculate);
-            document.querySelectorAll('#hourlyRate, #vacationHourlyRate, #nightRate, #nightStart, #nightEnd, #eveningRate, #eveningStart, #eveningEnd, #weekendRate, #overtimeRate, #weekendOption').forEach(el => {
+            const allSettingsControls = [...settingsInputs, ...settingsCheckboxes];
+            allSettingsControls.forEach(el => {
                 el.addEventListener('change', () => {
                     saveSettings();
                     calculate();
                 });
             });
 
-            document.querySelectorAll('input[type="checkbox"], select').forEach(el => {
-                el.addEventListener('change', () => {
-                    saveSettings();
-                    calculate();
-                });
-            });
-
-            // Eseménykezelő az újonnan hozzáadott juttatási mezők értékének változására
             benefitsContainer.addEventListener('change', (e) => {
                 if (e.target.closest('.benefit-field')) {
                     saveSettings();
@@ -1366,22 +1371,11 @@
                 }
             });
 
+            calculateBtn.addEventListener('click', calculate);
 
-            // Funkció a diagram frissítéséhez
             const updateChart = (base, night, evening, weekend, overtime, vacation, sickLeave, benefitsValue) => {
                 d3.select("#chart-container svg").remove();
-                
-                const data = [
-                    { label: "Alap Bruttó", value: base },
-                    { label: "Éjszakai pótlék", value: night },
-                    { label: "Délutáni pótlék", value: evening },
-                    { label: "Hétvégi pótlék", value: weekend },
-                    { label: "Túlóra pótlék", value: overtime },
-                    { label: "Szabadság", value: vacation },
-                    { label: "Táppénz", value: sickLeave },
-                    { label: "Juttatások", value: benefitsValue },
-                ].filter(d => d.value > 0.1); // Kis értékeket ne jelenítsen meg
-
+                const data = [ { label: "Alap Bruttó", value: base }, { label: "Éjszakai pótlék", value: night }, { label: "Délutáni pótlék", value: evening }, { label: "Hétvégi pótlék", value: weekend }, { label: "Túlóra pótlék", value: overtime }, { label: "Szabadság", value: vacation }, { label: "Táppénz", value: sickLeave }, { label: "Juttatások", value: benefitsValue }, ].filter(d => d.value > 0.1);
                 if(data.length === 0) return;
 
                 const margin = { top: 20, right: 30, bottom: 40, left: 100 };
@@ -1390,74 +1384,22 @@
                 const width = fullWidth - margin.left - margin.right;
                 const height = fullHeight - margin.top - margin.bottom;
 
-                const svg = d3.select("#chart-container").append("svg")
-                    .attr("width", fullWidth)
-                    .attr("height", fullHeight)
-                    .append("g")
-                    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-                const x = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => d.value)])
-                    .range([0, width]);
-
-                const y = d3.scaleBand()
-                    .domain(data.map(d => d.label))
-                    .range([0, height])
-                    .padding(0.2);
-                
+                const svg = d3.select("#chart-container").append("svg").attr("width", fullWidth).attr("height", fullHeight).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+                const x = d3.scaleLinear().domain([0, d3.max(data, d => d.value)]).range([0, width]);
+                const y = d3.scaleBand().domain(data.map(d => d.label)).range([0, height]).padding(0.2);
                 const color = d3.scaleOrdinal(d3.schemePaired);
-                
-                // Add X axis
-                const xAxis = svg.append("g")
-                    .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x).ticks(5).tickFormat(d => `${d / 1000}k`))
-                    .attr("class", "axis");
-
-                // Add Y axis
-                const yAxis = svg.append("g")
-                    .call(d3.axisLeft(y))
-                    .attr("class", "axis");
-                
+                svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => `${d / 1000}k`)).attr("class", "axis");
+                const yAxis = svg.append("g").call(d3.axisLeft(y)).attr("class", "axis");
                 yAxis.selectAll("text").style("font-size", "12px");
-
-                // Bars
-                const bars = svg.selectAll(".bar")
-                    .data(data)
-                    .join("rect")
-                    .attr("class", "bar")
-                    .attr("x", x(0))
-                    .attr("y", d => y(d.label))
-                    .attr("height", y.bandwidth())
-                    .attr("fill", (d,i) => color(i))
-                    .attr("width", 0);
-
-                bars.transition()
-                    .duration(1000)
-                    .attr("width", d => x(d.value));
-
-
-                // Tooltip
+                const bars = svg.selectAll(".bar").data(data).join("rect").attr("class", "bar").attr("x", x(0)).attr("y", d => y(d.label)).attr("height", y.bandwidth()).attr("fill", (d,i) => color(i)).attr("width", 0);
+                bars.transition().duration(1000).attr("width", d => x(d.value));
                 const tooltip = d3.select("#tooltip");
-                svg.selectAll(".bar")
-                    .on("mouseover", (event, d) => {
-                        tooltip.style("opacity", 1)
-                            .html(`<strong>${d.label}</strong><br>${formatCurrency(d.value)}`);
-                    })
-                    .on("mousemove", (event) => {
-                        tooltip.style("left", `${event.pageX + 10}px`)
-                               .style("top", `${event.pageY - 20}px`);
-                    })
-                    .on("mouseout", () => {
-                        tooltip.style("opacity", 0);
-                    });
+                svg.selectAll(".bar").on("mouseover", (event, d) => { tooltip.style("opacity", 1).html(`<strong>${d.label}</strong><br>${formatCurrency(d.value)}`); }).on("mousemove", (event) => { tooltip.style("left", `${event.pageX + 10}px`).style("top", `${event.pageY - 20}px`); }).on("mouseout", () => { tooltip.style("opacity", 0); });
             };
 
-            // Hozzáadott eseménykezelők a PDF mentéshez
             saveAndContinueBtn.addEventListener('click', () => {
                 const resultsContainer = document.querySelector('.results-container');
-                html2canvas(resultsContainer, {
-                    backgroundColor: '#0d1117'
-                }).then(canvas => {
+                html2canvas(resultsContainer, { backgroundColor: '#0d1117' }).then(canvas => {
                     const imgData = canvas.toDataURL('image/png');
                     const { jsPDF } = window.jspdf;
                     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -1468,79 +1410,36 @@
                     pdf.save(`fizetes-osszefoglalo-${currentDate.getFullYear()}-${currentDate.getMonth() + 1}.pdf`);
                     pdfConfirmModal.style.display = 'none';
                     currentDate.setMonth(currentDate.getMonth() + monthChangeDirection);
-                    loadMonthlyData();
-                    renderCalendar();
-                    calculate();
+                    loadMonthlyData(); renderCalendar(); calculate();
                 });
             });
 
             continueWithoutSavingBtn.addEventListener('click', () => {
                 pdfConfirmModal.style.display = 'none';
                 currentDate.setMonth(currentDate.getMonth() + monthChangeDirection);
-                loadMonthlyData();
-                renderCalendar();
-                calculate();
+                loadMonthlyData(); renderCalendar(); calculate();
             });
 
-            prevBtn.addEventListener('click', () => {
-                monthChangeDirection = -1;
-                pdfConfirmModal.style.display = 'flex';
-            });
-
-            nextBtn.addEventListener('click', () => {
-                monthChangeDirection = 1;
-                pdfConfirmModal.style.display = 'flex';
-            });
+            prevBtn.addEventListener('click', () => { monthChangeDirection = -1; pdfConfirmModal.style.display = 'flex'; });
+            nextBtn.addEventListener('click', () => { monthChangeDirection = 1; pdfConfirmModal.style.display = 'flex'; });
             
             function updateModalInputsState() {
-                const isOvertime = overtimeCheckbox.checked;
-                const isVacation = vacationCheckbox.checked;
-                const isSickLeave = sickLeaveCheckbox.checked;
-                
+                const isOvertime = overtimeCheckbox.checked, isVacation = vacationCheckbox.checked, isSickLeave = sickLeaveCheckbox.checked;
                 overtimeInputsContainer.classList.toggle('hidden', !isOvertime);
-
                 const isTimeInputDisabled = isVacation || isSickLeave;
-
-                startTimeInput.disabled = isTimeInputDisabled;
-                endTimeInput.disabled = isTimeInputDisabled;
-                startTimeInput.classList.toggle('disabled-input', isTimeInputDisabled);
-                endTimeInput.classList.toggle('disabled-input', isTimeInputDisabled);
-                
+                startTimeInput.disabled = isTimeInputDisabled; endTimeInput.disabled = isTimeInputDisabled;
+                startTimeInput.classList.toggle('disabled-input', isTimeInputDisabled); endTimeInput.classList.toggle('disabled-input', isTimeInputDisabled);
                 overtimeCheckbox.disabled = isTimeInputDisabled;
-
-
-                vacationCheckbox.disabled = isSickLeave || (isOvertime);
-                sickLeaveCheckbox.disabled = isVacation || (isOvertime);
-
+                vacationCheckbox.disabled = isSickLeave || isOvertime;
+                sickLeaveCheckbox.disabled = isVacation || isOvertime;
                 vacationHoursInput.classList.toggle('disabled-input', !isVacation);
                 sickLeaveHoursInput.classList.toggle('disabled-input', !isSickLeave);
                 sickLeavePercentInput.classList.toggle('disabled-input', !isSickLeave);
             }
 
-            // Hozzáadott eseménykezelők a shift modalhoz
-            overtimeCheckbox.addEventListener('change', () => {
-                if (overtimeCheckbox.checked) {
-                    vacationCheckbox.checked = false;
-                    sickLeaveCheckbox.checked = false;
-                }
-                updateModalInputsState();
-            });
-
-            vacationCheckbox.addEventListener('change', () => {
-                if (vacationCheckbox.checked) {
-                    overtimeCheckbox.checked = false;
-                    sickLeaveCheckbox.checked = false;
-                }
-                updateModalInputsState();
-            });
-
-            sickLeaveCheckbox.addEventListener('change', () => {
-                if (sickLeaveCheckbox.checked) {
-                    overtimeCheckbox.checked = false;
-                    vacationCheckbox.checked = false;
-                }
-                updateModalInputsState();
-            });
+            overtimeCheckbox.addEventListener('change', () => { if (overtimeCheckbox.checked) { vacationCheckbox.checked = false; sickLeaveCheckbox.checked = false; } updateModalInputsState(); });
+            vacationCheckbox.addEventListener('change', () => { if (vacationCheckbox.checked) { overtimeCheckbox.checked = false; sickLeaveCheckbox.checked = false; } updateModalInputsState(); });
+            sickLeaveCheckbox.addEventListener('change', () => { if (sickLeaveCheckbox.checked) { overtimeCheckbox.checked = false; vacationCheckbox.checked = false; } updateModalInputsState(); });
 
             saveShiftBtn.addEventListener('click', () => {
                 const shiftData = {
@@ -1555,40 +1454,130 @@
                     sickLeaveHours: parseFloat(sickLeaveHoursInput.value) || 0,
                     sickLeavePercent: parseFloat(sickLeavePercentInput.value) || 0
                 };
+                
+                let hasData = shiftData.isVacation || shiftData.isSickLeave || (shiftData.startTime !== shiftData.endTime) || (shiftData.isOvertime && shiftData.overtimeStartTime !== shiftData.overtimeEndTime);
 
-                const start = new Date(`2000-01-01T${shiftData.startTime}`);
-                const end = new Date(`2000-01-01T${shiftData.endTime}`);
-                if (end < start) end.setDate(end.getDate() + 1);
-                const workHours = (end - start) / (1000 * 60 * 60);
-
-                if (!shiftData.isOvertime && !shiftData.isVacation && !shiftData.isSickLeave && workHours <= 0) {
-                    delete selectedDays[activeDate];
-                } else {
+                if (hasData) {
                     selectedDays[activeDate] = shiftData;
+                } else {
+                    delete selectedDays[activeDate];
                 }
                 shiftModal.style.display = 'none';
-                saveMonthlyData(); // Munkaórák mentése
-                renderCalendar();
-                calculate();
+                saveMonthlyData(); renderCalendar(); calculate();
             });
 
             cancelShiftBtn.addEventListener('click', () => {
                 if (activeDate) delete selectedDays[activeDate];
                 shiftModal.style.display = 'none';
-                saveMonthlyData(); // Módosítás mentése
-                renderCalendar();
-                calculate();
+                saveMonthlyData(); renderCalendar(); calculate();
+            });
+            
+            // --- PROFILE FUNCTIONS ---
+            const loadProfiles = () => {
+                const savedProfiles = JSON.parse(localStorage.getItem('calculatorProfiles'));
+                if (savedProfiles && savedProfiles.length > 0) profiles = savedProfiles;
+                const lastProfile = localStorage.getItem('calculatorLastProfile');
+                activeProfile = (lastProfile && profiles.includes(lastProfile)) ? lastProfile : profiles[0];
+            };
+            const saveProfiles = () => {
+                localStorage.setItem('calculatorProfiles', JSON.stringify(profiles));
+                localStorage.setItem('calculatorLastProfile', activeProfile);
+            };
+            const updateProfileSelector = () => {
+                profileSelector.innerHTML = '';
+                profiles.forEach(profileName => { const option = document.createElement('option'); option.value = profileName; option.textContent = profileName; profileSelector.appendChild(option); });
+                profileSelector.value = activeProfile;
+            };
+            const switchProfile = (newProfileName) => {
+                if (profiles.includes(newProfileName)) {
+                    activeProfile = newProfileName;
+                    saveProfiles();
+                    updateProfileSelector();
+                    loadSettings();
+                    loadMonthlyData();
+                    renderCalendar();
+                    calculate();
+                }
+            };
+            
+            const toggleProfileEditView = (showEdit) => {
+                if(showEdit) {
+                    editProfileNameInput.value = activeProfile;
+                    profileDisplayView.classList.add('hidden');
+                    profileEditView.classList.remove('hidden');
+                    editProfileNameInput.focus();
+                } else {
+                    profileDisplayView.classList.remove('hidden');
+                    profileEditView.classList.add('hidden');
+                }
+            };
+
+            editProfileBtn.addEventListener('click', () => toggleProfileEditView(true));
+            cancelEditProfileBtn.addEventListener('click', () => toggleProfileEditView(false));
+            
+            saveProfileNameBtn.addEventListener('click', () => {
+                const oldName = activeProfile;
+                const newName = editProfileNameInput.value.trim();
+                
+                if(!newName) { showMessageBox("A profilnév nem lehet üres."); return; }
+                if(newName !== oldName && profiles.includes(newName)) { showMessageBox("Már létezik profil ezzel a névvel."); return; }
+                
+                const profileIndex = profiles.indexOf(oldName);
+                if (profileIndex > -1) profiles[profileIndex] = newName;
+                
+                const settings = localStorage.getItem(`calculatorSettings_${oldName}`);
+                if (settings) {
+                    localStorage.setItem(`calculatorSettings_${newName}`, settings);
+                    localStorage.removeItem(`calculatorSettings_${oldName}`);
+                }
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith(`calculatorData_${oldName}-`)) {
+                        const newKey = key.replace(`calculatorData_${oldName}-`, `calculatorData_${newName}-`);
+                        localStorage.setItem(newKey, localStorage.getItem(key));
+                        localStorage.removeItem(key);
+                    }
+                });
+
+                activeProfile = newName;
+                saveProfiles();
+                updateProfileSelector();
+                toggleProfileEditView(false);
             });
 
-            // Eseménykezelők a számítás indításához és a mentéshez
-            calculateBtn.addEventListener('click', calculate);
-
-            // Kezdeti renderelés és adatok betöltése
-            loadSettings();
-            loadMonthlyData();
-            renderCalendar();
-            calculate();
+            addProfileBtn.addEventListener('click', () => {
+                const newName = newProfileNameInput.value.trim();
+                if (newName && !profiles.includes(newName)) {
+                    profiles.push(newName);
+                    newProfileNameInput.value = '';
+                    switchProfile(newName);
+                } else if (!newName) { showMessageBox("A profil neve nem lehet üres.");
+                } else { showMessageBox("Már létezik profil ezzel a névvel."); }
+            });
+            deleteProfileBtn.addEventListener('click', () => {
+                if (profiles.length <= 1) { showMessageBox("Az utolsó profilt nem lehet törölni."); return; }
+                if (confirm(`Biztosan törölni szeretnéd a(z) "${activeProfile}" profilt és minden adatát? Ez a művelet nem vonható vissza.`)) {
+                    const profileToDelete = activeProfile;
+                    profiles = profiles.filter(p => p !== profileToDelete);
+                    Object.keys(localStorage).filter(key => key.startsWith(`calculatorData_${profileToDelete}-`)).forEach(key => localStorage.removeItem(key));
+                    localStorage.removeItem(`calculatorSettings_${profileToDelete}`);
+                    switchProfile(profiles[0]);
+                    saveProfiles();
+                }
+            });
+            profileSelector.addEventListener('change', () => { switchProfile(profileSelector.value); });
+            
+            function initializeApp() {
+                loadProfiles();
+                updateProfileSelector();
+                loadSettings();
+                loadMonthlyData();
+                renderCalendar();
+                calculate();
+            }
+            
+            initializeApp();
         });
     </script>
 </body>
 </html>
+
